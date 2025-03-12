@@ -13,6 +13,7 @@ import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import StudentDashboard from "@/pages/student/StudentDashboard";
+import CoursesManagement from "./pages/admin/CoursesManagement";
 
 const queryClient = new QueryClient();
 
@@ -43,7 +44,7 @@ const App = () => (
             <Route path="/admin/courses" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
-                  <PlaceholderPage title="Courses Management" />
+                  <CoursesManagement />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
