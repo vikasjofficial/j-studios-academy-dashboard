@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,20 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/auth-context";
 import ProtectedRoute from "@/components/protected-route";
 import DashboardLayout from "@/components/dashboard-layout";
-
-// Pages
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import StudentDashboard from "./pages/student/StudentDashboard";
-
-// Create placeholder components for routes that don't have components yet
-const PlaceholderPage = ({ title }: { title: string }) => (
-  <div className="space-y-6">
-    <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-    <p className="text-muted-foreground">This page is under construction.</p>
-  </div>
-);
+import StudentsManagement from "./pages/admin/StudentsManagement";
 
 const queryClient = new QueryClient();
 
@@ -32,13 +18,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Redirect root to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-            
-            {/* Public routes */}
             <Route path="/login" element={<Login />} />
-            
-            {/* Admin routes */}
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
@@ -49,7 +30,7 @@ const App = () => (
             <Route path="/admin/students" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
-                  <PlaceholderPage title="Students Management" />
+                  <StudentsManagement />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
@@ -81,8 +62,6 @@ const App = () => (
                 </DashboardLayout>
               </ProtectedRoute>
             } />
-            
-            {/* Student routes */}
             <Route path="/student" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <DashboardLayout>
@@ -118,8 +97,6 @@ const App = () => (
                 </DashboardLayout>
               </ProtectedRoute>
             } />
-
-            {/* Settings route for both roles */}
             <Route path="/settings" element={
               <ProtectedRoute>
                 <DashboardLayout>
@@ -127,8 +104,6 @@ const App = () => (
                 </DashboardLayout>
               </ProtectedRoute>
             } />
-            
-            {/* 404 route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
