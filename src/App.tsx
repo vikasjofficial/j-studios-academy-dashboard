@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +8,11 @@ import { AuthProvider } from "@/context/auth-context";
 import ProtectedRoute from "@/components/protected-route";
 import DashboardLayout from "@/components/dashboard-layout";
 import StudentsManagement from "./pages/admin/StudentsManagement";
+import { PlaceholderPage } from "@/components/placeholder-page";
+import { Login } from "@/pages/Login";
+import { NotFound } from "@/pages/NotFound";
+import { AdminDashboard } from "@/pages/admin/AdminDashboard";
+import { StudentDashboard } from "@/pages/student/StudentDashboard";
 
 const queryClient = new QueryClient();
 

@@ -43,9 +43,19 @@ export function CreateStudentForm() {
   async function onSubmit(values: z.infer<typeof studentSchema>) {
     setIsLoading(true)
     try {
+      // Make sure values is a single object, not an array
       const { error } = await supabase
         .from('students')
-        .insert([values])
+        .insert({
+          name: values.name,
+          email: values.email,
+          student_id: values.student_id,
+          phone: values.phone || null,
+          parent_name: values.parent_name || null,
+          parent_contact: values.parent_contact || null,
+          address: values.address || null,
+          grade: values.grade || null
+        })
 
       if (error) throw error
 
