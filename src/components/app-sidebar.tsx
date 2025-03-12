@@ -70,7 +70,7 @@ export function AppSidebar() {
             <span className="text-xs text-muted-foreground truncate">{user?.role}</span>
           </div>
           {!isMobile && (
-            <SidebarTrigger asChild>
+            <SidebarTrigger>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <span className="sr-only">Toggle Sidebar</span>
                 <div className="w-4 h-4 flex flex-col justify-between">
