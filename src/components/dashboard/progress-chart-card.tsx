@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ChartIcon } from 'lucide-react';
+import { BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProgressData {
@@ -21,7 +21,7 @@ export function ProgressChartCard({ title, data, className }: ProgressChartCardP
     <Card className={cn("overflow-hidden transition-all hover-card-animation", className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium">{title}</CardTitle>
-        <ChartIcon className="h-5 w-5 text-muted-foreground" />
+        <BarChart2 className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
