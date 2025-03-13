@@ -74,8 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      // Instead of using the admin.createUser method directly, which requires admin privileges,
-      // use a regular signup method which is allowed for all users
+      // Use signUp method to create credentials
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -122,26 +121,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       // Try to authenticate with Supabase for student users
       try {
+        // Sign in with Supabase
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
 
         if (error) {
+          console.error('Login error:', error);
           toast.error('Invalid email or password');
           setIsLoading(false);
           return false;
         }
 
         if (data.user) {
+          // Get the user metadata
+          const userData = data.user.user_metadata;
+          
           // Get student data from the database
-          const { data: studentData } = await supabase
+          const { data: studentData, error: studentError } = await supabase
             .from('students')
             .select('*')
             .eq('email', email)
             .single();
 
+          if (studentError) {
+            console.error('Error fetching student data:', studentError);
+            toast.error('Could not fetch student profile');
+            setIsLoading(false);
+            return false;
+          }
+
           if (studentData) {
+            // Create the user object
             const studentUser: User = {
               id: data.user.id,
               name: studentData.name,
@@ -156,10 +168,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             toast.success(`Welcome, ${studentUser.name}!`);
             setIsLoading(false);
             return true;
+          } else {
+            toast.error('Could not find student profile');
+            setIsLoading(false);
+            return false;
           }
         }
 
-        toast.error('Could not find student profile');
+        toast.error('Login failed');
         setIsLoading(false);
         return false;
       } catch (error) {
