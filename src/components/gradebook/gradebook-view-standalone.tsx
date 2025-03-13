@@ -221,14 +221,21 @@ export function GradebookViewStandalone() {
       updatedGrades.forEach(grade => {
         const key = `${grade.student_id}-${grade.topic_id}`;
         if (existingGradeMap[key]) {
+          // For updates, include all required fields
           updates.push({
             id: existingGradeMap[key],
+            student_id: grade.student_id,
+            topic_id: grade.topic_id,
+            course_id: selectedCourse,
             score: grade.score
           });
         } else {
           inserts.push(grade);
         }
       });
+      
+      console.log("Updates:", updates);
+      console.log("Inserts:", inserts);
       
       // Perform updates
       if (updates.length > 0) {
