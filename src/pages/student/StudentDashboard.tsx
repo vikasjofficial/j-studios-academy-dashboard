@@ -7,10 +7,66 @@ import { useAuth } from '@/context/auth-context';
 import StudentAttendanceDashboard from '@/components/dashboard/student-attendance-dashboard';
 import { StudentGradebookView } from '@/components/gradebook/student-gradebook-view';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap } from 'lucide-react';
+import { Award, TrendingDown, GraduationCap } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+
+  // Fetch student grades
+  const { data: grades, isLoading: gradesLoading } = useQuery({
+    queryKey: ["student-dashboard-grades", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("grades")
+        .select(`
+          id,
+          score,
+          comment,
+          topics:topic_id(id, name, semester_id),
+          courses:course_id(id, name)
+        `)
+        .eq('student_id', user.id);
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Get high performing topics (score >= 8)
+  const highPerformingTopics = () => {
+    if (!grades) return [];
+    
+    // Filter for high scores (>= 8)
+    const highScores = grades.filter(grade => {
+      const score = Number(grade.score);
+      // Ensure score is within bounds (1-10)
+      const boundedScore = Math.min(Math.max(score, 1), 10);
+      return boundedScore >= 8;
+    });
+    
+    return highScores;
+  };
+
+  // Get low performing topics (score <= 7)
+  const lowPerformingTopics = () => {
+    if (!grades) return [];
+    
+    // Filter for low scores (<= 7)
+    const lowScores = grades.filter(grade => {
+      const score = Number(grade.score);
+      // Ensure score is within bounds (1-10)
+      const boundedScore = Math.min(Math.max(score, 1), 10);
+      return boundedScore <= 7;
+    });
+    
+    return lowScores;
+  };
 
   // Mock data for the student dashboard
   const calendarEvents = [
@@ -28,18 +84,84 @@ export default function StudentDashboard() {
     { name: 'Theory', mark: 82, average: 74 },
   ];
 
-  const tasksData = [
-    { id: '1', title: 'Sound Design Project', dueDate: 'May 20, 2025', status: 'pending' as const, priority: 'high' as const },
-    { id: '2', title: 'Theory Assignment', dueDate: 'May 18, 2025', status: 'pending' as const, priority: 'medium' as const },
-    { id: '3', title: 'Mixing Exercise', dueDate: 'May 25, 2025', status: 'pending' as const, priority: 'medium' as const },
-    { id: '4', title: 'Reading Assignment', dueDate: 'May 10, 2025', status: 'completed' as const, priority: 'low' as const },
-  ];
-
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}</h1>
         <p className="text-muted-foreground">Your personal J-Studios Academy dashboard.</p>
+      </div>
+
+      {/* Performance Overview Cards */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-yellow-500" />
+              My Strong Topics (Score 8-10)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {gradesLoading ? (
+              <p className="text-muted-foreground">Loading grade data...</p>
+            ) : highPerformingTopics().length > 0 ? (
+              <div className="space-y-4">
+                {highPerformingTopics().map(grade => (
+                  <div key={grade.id} className="flex flex-col border-b pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{grade.topics?.name}</p>
+                        <p className="text-xs text-muted-foreground">{grade.courses?.name}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-green-600">
+                          {Number(grade.score).toFixed(1)}
+                        </span>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Strong</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No strong topics found yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-orange-500" />
+              Topics I Need to Work On (Score 1-7)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {gradesLoading ? (
+              <p className="text-muted-foreground">Loading grade data...</p>
+            ) : lowPerformingTopics().length > 0 ? (
+              <div className="space-y-4">
+                {lowPerformingTopics().map(grade => (
+                  <div key={grade.id} className="flex flex-col border-b pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{grade.topics?.name}</p>
+                        <p className="text-xs text-muted-foreground">{grade.courses?.name}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-orange-600">
+                          {Number(grade.score).toFixed(1)}
+                        </span>
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Work</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No struggling topics found.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
@@ -75,11 +197,6 @@ export default function StudentDashboard() {
       <ProgressChartCard
         title="My Progress"
         data={progressData}
-      />
-
-      <TasksCard
-        title="My Assignments"
-        tasks={tasksData}
       />
     </div>
   );
