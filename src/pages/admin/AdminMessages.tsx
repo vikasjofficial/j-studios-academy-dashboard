@@ -1,318 +1,354 @@
 
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/context/auth-context';
-import { Send, MessageCircle, Search, UserRound } from 'lucide-react';
-import { format } from 'date-fns';
-import { Input } from '@/components/ui/input';
-
-interface Message {
-  id: string;
-  content: string;
-  sender_role: string;
-  created_at: string;
-  from_name: string;
-  student_id: string;
-}
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Send, Loader2, Mail, MessageSquare } from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface Student {
   id: string;
   name: string;
-  student_id: string;
   email: string;
+  student_id: string;
 }
+
+const sendMessageSchema = z.object({
+  content: z.string().min(1, { message: "Message cannot be empty" }),
+});
 
 export default function AdminMessages() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [messages, setMessages] = useState<any[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch students
+  const [messageTypeFilter, setMessageTypeFilter] = useState<string>("all");
+
+  const form = useForm<z.infer<typeof sendMessageSchema>>({
+    resolver: zodResolver(sendMessageSchema),
+    defaultValues: {
+      content: "",
+    },
+  });
+
   useEffect(() => {
     fetchStudents();
   }, []);
-  
-  // Setup real-time messages subscription when a student is selected
+
   useEffect(() => {
-    if (selectedStudentId) {
-      fetchMessages();
-      
-      // Set up real-time subscription
-      const channel = supabase
-        .channel('admin-messages')
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `student_id=eq.${selectedStudentId}`,
-        }, (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages(current => [...current, newMessage]);
-          scrollToBottom();
-        })
-        .subscribe();
-        
-      return () => {
-        supabase.removeChannel(channel);
-      };
+    if (selectedStudent) {
+      fetchMessages(selectedStudent.id);
     }
-  }, [selectedStudentId]);
-  
-  // Scroll to bottom when messages change
+  }, [selectedStudent]);
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-  
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-  
+    if (searchQuery) {
+      const lowercaseQuery = searchQuery.toLowerCase();
+      const filtered = students.filter(
+        student => 
+          student.name.toLowerCase().includes(lowercaseQuery) ||
+          student.email.toLowerCase().includes(lowercaseQuery) ||
+          student.student_id.toLowerCase().includes(lowercaseQuery)
+      );
+      setFilteredStudents(filtered);
+    } else {
+      setFilteredStudents(students);
+    }
+  }, [searchQuery, students]);
+
   const fetchStudents = async () => {
     setIsLoadingStudents(true);
     try {
       const { data, error } = await supabase
         .from('students')
-        .select('id, name, student_id, email')
+        .select('id, name, email, student_id')
         .order('name');
         
       if (error) throw error;
+      
       setStudents(data || []);
+      setFilteredStudents(data || []);
+      
+      if (data && data.length > 0 && !selectedStudent) {
+        setSelectedStudent(data[0]);
+      }
     } catch (error) {
-      console.error('Error fetching students:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load students",
-        variant: "destructive"
-      });
+      console.error('Failed to fetch students:', error);
+      toast.error('Failed to load students');
     } finally {
       setIsLoadingStudents(false);
     }
   };
-  
-  const fetchMessages = async () => {
-    if (!selectedStudentId) return;
-    
+
+  const fetchMessages = async (studentId: string) => {
     setIsLoadingMessages(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('messages')
         .select('*')
-        .eq('student_id', selectedStudentId)
-        .order('created_at', { ascending: true });
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+        
+      // Apply message type filter if not "all"
+      if (messageTypeFilter !== "all") {
+        query = query.eq('message_type', messageTypeFilter);
+      }
+      
+      const { data, error } = await query;
         
       if (error) throw error;
+      
       setMessages(data || []);
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load messages",
-        variant: "destructive"
-      });
+      console.error('Failed to fetch messages:', error);
+      toast.error('Failed to load messages');
     } finally {
       setIsLoadingMessages(false);
     }
   };
-  
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedStudentId || !user) return;
+
+  const sendMessage = async (data: z.infer<typeof sendMessageSchema>) => {
+    if (!selectedStudent) return;
     
-    setIsSending(true);
     try {
       const { error } = await supabase
         .from('messages')
         .insert({
-          student_id: selectedStudentId,
-          content: newMessage.trim(),
+          student_id: selectedStudent.id,
+          content: data.content,
+          from_name: 'Admin',
           sender_role: 'admin',
-          from_name: user.name
+          message_type: 'General'
         });
         
       if (error) throw error;
       
-      setNewMessage('');
+      form.reset();
+      toast.success('Message sent successfully');
+      fetchMessages(selectedStudent.id);
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSending(false);
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message');
     }
   };
 
-  // Filter students based on search query
-  const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
+  const handleStudentSelect = (student: Student) => {
+    setSelectedStudent(student);
+  };
+
+  const getMessageTypeBadge = (type: string | null) => {
+    if (!type) return null;
+    
+    switch (type) {
+      case "Leave Request":
+        return <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200">Leave Request</Badge>;
+      case "Absent Request":
+        return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-200 border-red-200">Absent Request</Badge>;
+      case "Submission Request":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">Submission Request</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200">General</Badge>;
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Student Messages</h1>
-        <p className="text-muted-foreground">Communicate with your students</p>
+        <p className="text-muted-foreground">
+          View and respond to student messages
+        </p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Student List */}
-        <div className="md:col-span-1">
-          <Card className="h-[70vh] flex flex-col">
-            <CardHeader className="pb-2">
-              <CardTitle>Students</CardTitle>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search students..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
+        {/* Students List */}
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Students</CardTitle>
+            <CardDescription>Select a student to view messages</CardDescription>
+            <div className="relative mt-2">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search students..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingStudents ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-2">
-              {isLoadingStudents ? (
-                <div className="flex justify-center items-center h-full">
-                  <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
-                </div>
-              ) : filteredStudents.length > 0 ? (
-                <div className="space-y-1">
-                  {filteredStudents.map((student) => (
-                    <Button
-                      key={student.id}
-                      variant={selectedStudentId === student.id ? "default" : "ghost"}
-                      className="w-full justify-start"
-                      onClick={() => setSelectedStudentId(student.id)}
-                    >
-                      <div className="flex items-center">
-                        <UserRound className="h-4 w-4 mr-2" />
-                        <div className="text-left truncate">
-                          <div className="font-medium">{student.name}</div>
-                          <div className="text-xs text-muted-foreground">{student.student_id}</div>
-                        </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No students found
+              </div>
+            ) : (
+              <div className="space-y-1 max-h-[500px] overflow-y-auto pr-2">
+                {filteredStudents.map((student) => (
+                  <Button
+                    key={student.id}
+                    variant={selectedStudent?.id === student.id ? "secondary" : "ghost"}
+                    className="w-full justify-start text-left"
+                    onClick={() => handleStudentSelect(student)}
+                  >
+                    <div className="truncate">
+                      <div className="font-medium truncate">{student.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {student.student_id}
                       </div>
-                    </Button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No students found</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
         
         {/* Messages */}
-        <div className="md:col-span-2">
-          <Card className="h-[70vh] flex flex-col">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
-                {selectedStudentId ? 
-                  `Chat with ${students.find(s => s.id === selectedStudentId)?.name}` : 
-                  'Messages'
-                }
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl">
+                {selectedStudent ? `Messages - ${selectedStudent.name}` : "Messages"}
               </CardTitle>
-            </CardHeader>
+              
+              <Select 
+                value={messageTypeFilter} 
+                onValueChange={(value) => {
+                  setMessageTypeFilter(value);
+                  if (selectedStudent) {
+                    fetchMessages(selectedStudent.id);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="General">General</SelectItem>
+                  <SelectItem value="Leave Request">Leave Request</SelectItem>
+                  <SelectItem value="Absent Request">Absent Request</SelectItem>
+                  <SelectItem value="Submission Request">Submission Request</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             
-            <CardContent className="flex-1 flex flex-col">
-              {!selectedStudentId ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                  <MessageCircle className="h-12 w-12 mb-2 opacity-20" />
-                  <p>Select a student to view messages</p>
-                </div>
-              ) : (
-                <>
-                  <div className="flex-1 overflow-y-auto pr-2 space-y-4 mb-4">
-                    {isLoadingMessages ? (
-                      <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
+            <CardDescription>
+              {selectedStudent 
+                ? `View your conversation with ${selectedStudent.name}` 
+                : "Select a student to view messages"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!selectedStudent ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Please select a student to view messages
+              </div>
+            ) : isLoadingMessages ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No messages found
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 pb-4">
+                {messages.map((message) => (
+                  <div 
+                    key={message.id} 
+                    className={`p-4 rounded-lg ${
+                      message.sender_role === 'admin' 
+                        ? 'bg-primary/10 ml-12' 
+                        : 'bg-secondary/10 mr-12'
+                    }`}
+                  >
+                    <div className="flex justify-between mb-2">
+                      <div className="font-medium flex items-center gap-2">
+                        {message.from_name}
+                        {message.message_type && getMessageTypeBadge(message.message_type)}
                       </div>
-                    ) : messages.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                        <MessageCircle className="h-12 w-12 mb-2 opacity-20" />
-                        <p>No messages yet</p>
-                        <p className="text-sm">Start a conversation with this student</p>
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
                       </div>
-                    ) : (
-                      messages.map((message) => (
-                        <div 
-                          key={message.id}
-                          className={`flex flex-col ${
-                            message.sender_role === 'admin' ? 'items-end' : 'items-start'
-                          }`}
-                        >
-                          <div 
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              message.sender_role === 'admin' 
-                                ? 'bg-primary text-primary-foreground' 
-                                : 'bg-muted'
-                            }`}
-                          >
-                            <p className="break-words">{message.content}</p>
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                            <span>{message.from_name}</span>
-                            <span>•</span>
-                            <span>{format(new Date(message.created_at), 'MMM d, h:mm a')}</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                  
-                  <div className="pt-3 border-t">
-                    <div className="flex gap-2">
-                      <Textarea
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type your message..."
-                        className="resize-none"
-                        rows={3}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            sendMessage();
-                          }
-                        }}
-                        disabled={!selectedStudentId}
-                      />
-                      <Button 
-                        onClick={sendMessage} 
-                        disabled={isSending || !newMessage.trim() || !selectedStudentId}
-                        size="icon"
-                        className="h-auto self-end"
-                      >
-                        {isSending ? (
-                          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
-                      </Button>
                     </div>
+                    <p className="text-sm">{message.content}</p>
                   </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                ))}
+              </div>
+            )}
+            
+            {selectedStudent && (
+              <div className="mt-4 pt-4 border-t">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(sendMessage)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Reply</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Type your message here..." 
+                              className="min-h-[100px]" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={form.formState.isSubmitting}
+                    >
+                      {form.formState.isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Send Message
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

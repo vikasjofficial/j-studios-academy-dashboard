@@ -121,7 +121,15 @@ export default function AttendanceManagement() {
       // Convert to a record for easier lookup
       const records: Record<string, Attendance> = {};
       data.forEach(record => {
-        records[record.student_id] = record;
+        // Ensure status is one of the allowed values
+        const status = ['present', 'absent', 'none'].includes(record.status) 
+          ? record.status as 'present' | 'absent' | 'none'
+          : 'none';
+          
+        records[record.student_id] = {
+          ...record,
+          status
+        };
       });
       
       setAttendanceRecords(records);
