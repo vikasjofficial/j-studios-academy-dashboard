@@ -97,7 +97,7 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
       </Card>
 
       <div className="flex justify-between items-center">
-        <Tabs defaultValue="semesters" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
             <TabsTrigger value="semesters" className="flex items-center gap-1">
               <CalendarDays className="h-4 w-4" />
@@ -108,6 +108,18 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
               Gradebook
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="semesters" className="mt-0 p-0">
+            <div className="mt-6">
+              <SemestersList courseId={courseId} courseName={course.name} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="gradebook" className="mt-0 p-0">
+            <div className="mt-6">
+              <GradebookView courseId={courseId} courseName={course.name} />
+            </div>
+          </TabsContent>
         </Tabs>
         
         {activeTab === "semesters" && (
@@ -121,14 +133,6 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
           </Button>
         )}
       </div>
-      
-      <TabsContent value="semesters" className="mt-0 p-0">
-        <SemestersList courseId={courseId} courseName={course.name} />
-      </TabsContent>
-      
-      <TabsContent value="gradebook" className="mt-0 p-0">
-        <GradebookView courseId={courseId} courseName={course.name} />
-      </TabsContent>
       
       <Dialog open={isCreateSemesterOpen} onOpenChange={setIsCreateSemesterOpen}>
         <DialogContent className="max-w-md">
