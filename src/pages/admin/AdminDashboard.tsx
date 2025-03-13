@@ -1,26 +1,72 @@
+
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { CalendarCard } from '@/components/dashboard/calendar-card';
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
-import { Users, BookOpen, GraduationCap, MessageSquare, Award, TrendingDown } from 'lucide-react';
+import { Users, BookOpen, MessageSquare } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function AdminDashboard() {
-  // Mock data for the stats cards
-  const statsData = [
-    { title: 'Total Students', value: 24, icon: <Users className="h-5 w-5" />, trend: { value: 12, isPositive: true } },
-    { title: 'Active Courses', value: 5, icon: <BookOpen className="h-5 w-5" />, trend: { value: 0, isPositive: true } },
-    { title: 'Graduation Rate', value: '87%', icon: <GraduationCap className="h-5 w-5" />, trend: { value: 3, isPositive: true } },
-    { title: 'Messages', value: 18, icon: <MessageSquare className="h-5 w-5" />, trend: { value: 7, isPositive: true } },
-  ];
+  // Fetch all students for the total count
+  const { data: students, isLoading: studentsLoading } = useQuery({
+    queryKey: ["admin-dashboard-students-count"],
+    queryFn: async () => {
+      const { data, error, count } = await supabase
+        .from("students")
+        .select("*", { count: 'exact' });
+        
+      if (error) throw error;
+      return { data, count: count || 0 };
+    },
+  });
 
-  const calendarEvents = [
-    { id: '1', title: 'Sound Design Basics', date: 'May 15, 2025', time: '10:00 AM', type: 'lecture' as const },
-    { id: '2', title: 'Mixing Techniques', date: 'May 16, 2025', time: '02:00 PM', type: 'lecture' as const },
-    { id: '3', title: 'Project Submission', date: 'May 20, 2025', time: '11:59 PM', type: 'assignment' as const },
-    { id: '4', title: 'End of Semester Exam', date: 'June 10, 2025', time: '09:00 AM', type: 'exam' as const },
+  // Fetch all courses for the total count
+  const { data: courses, isLoading: coursesLoading } = useQuery({
+    queryKey: ["admin-dashboard-courses-count"],
+    queryFn: async () => {
+      const { data, error, count } = await supabase
+        .from("courses")
+        .select("*", { count: 'exact' });
+        
+      if (error) throw error;
+      return { data, count: count || 0 };
+    },
+  });
+
+  // Fetch all messages for the total count
+  const { data: messages, isLoading: messagesLoading } = useQuery({
+    queryKey: ["admin-dashboard-messages-count"],
+    queryFn: async () => {
+      const { data, error, count } = await supabase
+        .from("messages")
+        .select("*", { count: 'exact' });
+        
+      if (error) throw error;
+      return { data, count: count || 0 };
+    },
+  });
+
+  // Create the stats data with actual counts
+  const statsData = [
+    { 
+      title: 'Total Students', 
+      value: studentsLoading ? '...' : students?.count || 0, 
+      icon: <Users className="h-5 w-5" />, 
+      trend: { value: 12, isPositive: true } 
+    },
+    { 
+      title: 'Active Courses', 
+      value: coursesLoading ? '...' : courses?.count || 0, 
+      icon: <BookOpen className="h-5 w-5" />, 
+      trend: { value: 0, isPositive: true } 
+    },
+    { 
+      title: 'Messages', 
+      value: messagesLoading ? '...' : messages?.count || 0, 
+      icon: <MessageSquare className="h-5 w-5" />, 
+      trend: { value: 7, isPositive: true } 
+    },
   ];
 
   const progressData = [
@@ -191,7 +237,7 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-3">
         {statsData.map((stat, index) => (
           <StatsCard
             key={index}
@@ -203,20 +249,12 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <CalendarCard
-          title="Upcoming Classes"
-          events={calendarEvents}
-          className="md:col-span-2 lg:col-span-3"
-        />
-      </div>
-
       {/* Performance Overview Cards */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-yellow-500" />
+              <Users className="h-5 w-5 text-yellow-500" />
               Top Performing Students (Score 8-10)
             </CardTitle>
           </CardHeader>
@@ -263,7 +301,7 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-orange-500" />
+              <Users className="h-5 w-5 text-orange-500" />
               Students Needing Attention (Score 1-7)
             </CardTitle>
           </CardHeader>
