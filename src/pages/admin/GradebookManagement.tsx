@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ export default function GradebookManagement() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden animate-in-subtle">
+    <div className="space-y-6 max-w-full overflow-x-auto animate-in-subtle">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <BookOpen className="h-7 w-7 text-primary" />
@@ -27,7 +27,7 @@ export default function GradebookManagement() {
         </p>
       </div>
       
-      <div className="w-full overflow-hidden">
+      <div className="w-full overflow-x-auto">
         <GradebookStyled />
       </div>
     </div>
