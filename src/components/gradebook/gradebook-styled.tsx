@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { Save, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { Input } from "@/components/ui/input";
@@ -178,10 +178,10 @@ export function GradebookStyled() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 9) return "bg-red-400"; // Using red for the image example
-    if (score >= 6) return "bg-gray-100";
-    if (score >= 3) return "bg-gray-100";
-    return "bg-gray-100";
+    if (score >= 9) return "bg-primary/20 text-primary-foreground";
+    if (score >= 6) return "bg-accent/30 text-accent-foreground";
+    if (score >= 3) return "bg-muted/30 text-muted-foreground";
+    return "bg-destructive/20 text-destructive-foreground";
   };
 
   const saveGrades = async () => {
@@ -266,10 +266,10 @@ export function GradebookStyled() {
   };
 
   const calculateAverage = (studentId: string) => {
-    if (!grades[studentId]) return '1';
+    if (!grades[studentId]) return '-';
     
     const studentGrades = Object.values(grades[studentId]);
-    if (studentGrades.length === 0) return '1';
+    if (studentGrades.length === 0) return '-';
     
     const sum = studentGrades.reduce((acc, curr) => acc + curr, 0);
     const avg = Math.round(sum / studentGrades.length * 10) / 10;
@@ -280,112 +280,119 @@ export function GradebookStyled() {
   const selectedCourseName = courses?.find(course => course.id === selectedCourse)?.name || "";
 
   return (
-    <div className="bg-white">
-      <div className="p-6">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="text-xl font-medium">⌘ Gradebook for {selectedCourseName}</div>
-        </div>
-        
-        {/* Semester selection */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {semesters?.map((semester, index) => (
-            <Button
-              key={semester.id}
-              variant={selectedSemesterId === semester.id ? "default" : "outline"}
-              onClick={() => setSelectedSemesterId(semester.id)}
-              className={`rounded-md ${selectedSemesterId === semester.id ? "bg-blue-600 text-white" : "bg-white"}`}
-            >
-              {`Semester ${index + 1}`}
-            </Button>
-          ))}
-        </div>
-        
-        {/* Gradebook table */}
-        <div className="overflow-x-auto border rounded-lg">
-          <table className="w-full min-w-full table-auto">
-            <thead>
-              <tr className="text-left bg-gray-50 border-b">
-                <th className="p-3 font-medium text-gray-600">Student</th>
-                {topics?.map(topic => (
-                  <th key={topic.id} className="p-3 font-medium text-gray-600 text-center">
-                    {topic.name}
-                  </th>
-                ))}
-                <th className="p-3 font-medium text-gray-600 text-center">Average</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students?.map((student, index) => (
-                <tr key={student.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="p-3 border-b">
-                    <div>
-                      <div className="font-medium">{student.name}</div>
-                      <div className="text-xs text-gray-500">{student.student_id}</div>
-                    </div>
-                  </td>
-                  {topics?.map(topic => (
-                    <td key={topic.id} className="p-3 border-b text-center">
-                      {isAdmin ? (
-                        <Input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={grades[student.id]?.[topic.id] || ""}
-                          onChange={(e) => handleGradeChange(
-                            student.id, 
-                            topic.id,
-                            e.target.value ? Number(e.target.value) : 1
-                          )}
-                          className={`w-12 h-8 text-center mx-auto ${
-                            grades[student.id]?.[topic.id] 
-                              ? getScoreColor(grades[student.id][topic.id]) 
-                              : "bg-gray-100"
-                          }`}
-                        />
-                      ) : (
-                        <span className={`inline-block w-12 py-1 text-center rounded ${
-                          grades[student.id]?.[topic.id]
-                            ? getScoreColor(grades[student.id][topic.id])
-                            : "bg-gray-100"
-                        }`}>
-                          {grades[student.id]?.[topic.id] || "-"}
-                        </span>
-                      )}
-                    </td>
-                  ))}
-                  <td className="p-3 border-b text-center font-medium">
-                    {calculateAverage(student.id)}
-                  </td>
-                </tr>
+    <div className="p-6 space-y-4 glass-morphism rounded-lg border border-white/10">
+      <div className="flex items-center gap-3 mb-2">
+        <BookOpen className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-medium">Gradebook for {selectedCourseName}</h2>
+      </div>
+      
+      <p className="text-muted-foreground text-sm">
+        View and manage student grades for all courses. As an admin, you can edit and save grades directly.
+      </p>
+      
+      {/* Semester selection */}
+      <div className="flex flex-wrap gap-2 my-5">
+        {semesters?.map((semester, index) => (
+          <Button
+            key={semester.id}
+            variant={selectedSemesterId === semester.id ? "default" : "outline"}
+            onClick={() => setSelectedSemesterId(semester.id)}
+            className={selectedSemesterId === semester.id 
+              ? "bg-primary text-primary-foreground" 
+              : "bg-secondary/50 text-foreground border-white/10 hover:bg-secondary"}
+            size="sm"
+          >
+            Semester {index + 1}
+          </Button>
+        ))}
+      </div>
+      
+      {/* Gradebook table */}
+      <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm">
+        <table className="w-full min-w-full table-auto">
+          <thead>
+            <tr className="text-left border-b border-white/10">
+              <th className="p-3 font-medium text-foreground">Student</th>
+              {topics?.map(topic => (
+                <th key={topic.id} className="p-3 font-medium text-foreground text-center">
+                  {topic.name}
+                </th>
               ))}
-            </tbody>
-          </table>
+              <th className="p-3 font-medium text-foreground text-center">Average</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students?.map((student, index) => (
+              <tr key={student.id} className={`border-b border-white/5 ${index % 2 === 0 ? "" : "bg-white/5"}`}>
+                <td className="p-3">
+                  <div>
+                    <div className="font-medium text-foreground">{student.name}</div>
+                    <div className="text-xs text-muted-foreground">{student.student_id}</div>
+                  </div>
+                </td>
+                {topics?.map(topic => (
+                  <td key={topic.id} className="p-3 text-center">
+                    {isAdmin ? (
+                      <Input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={grades[student.id]?.[topic.id] || ""}
+                        onChange={(e) => handleGradeChange(
+                          student.id, 
+                          topic.id,
+                          e.target.value ? Number(e.target.value) : 1
+                        )}
+                        className={`w-16 h-8 text-center mx-auto backdrop-blur-sm border border-white/10 ${
+                          grades[student.id]?.[topic.id] 
+                            ? getScoreColor(grades[student.id][topic.id]) 
+                            : "bg-secondary/50"
+                        }`}
+                      />
+                    ) : (
+                      <span className={`inline-block w-12 py-1 text-center rounded ${
+                        grades[student.id]?.[topic.id]
+                          ? getScoreColor(grades[student.id][topic.id])
+                          : "bg-secondary/50"
+                      }`}>
+                        {grades[student.id]?.[topic.id] || "-"}
+                      </span>
+                    )}
+                  </td>
+                ))}
+                <td className="p-3 text-center font-medium">
+                  {calculateAverage(student.id)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Navigation and save button */}
+      <div className="flex justify-between items-center mt-6">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="border-white/10 hover:bg-secondary">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <Button variant="outline" size="sm" className="border-white/10 hover:bg-secondary">
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
         </div>
         
-        {/* Navigation and save button */}
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            <Button variant="outline" size="sm">
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-          
-          {isAdmin && (
-            <Button 
-              onClick={saveGrades}
-              disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Grades
-            </Button>
-          )}
-        </div>
+        {isAdmin && (
+          <Button 
+            onClick={saveGrades}
+            disabled={isSaving}
+            variant="default"
+            className="gap-2"
+          >
+            <Save className="h-4 w-4" />
+            {isSaving ? "Saving..." : "Save Grades"}
+          </Button>
+        )}
       </div>
     </div>
   );

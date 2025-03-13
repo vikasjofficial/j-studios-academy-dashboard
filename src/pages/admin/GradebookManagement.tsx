@@ -16,24 +16,20 @@ export default function GradebookManagement() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden">
-      <Card className="bg-card/50 border-border/40 shadow-sm overflow-hidden w-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-xl font-medium">
-            <BookOpen className="h-5 w-5 text-primary" />
-            Gradebook Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="w-full overflow-hidden">
-          <p className="text-muted-foreground mb-6 text-sm">
-            View and manage student grades for all courses. As an admin, you can edit and save grades directly.
-          </p>
-          
-          <div className="w-full overflow-hidden rounded-md border border-border/40">
-            <GradebookStyled />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6 max-w-full overflow-hidden animate-in-subtle">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <BookOpen className="h-7 w-7 text-primary" />
+          Gradebook Management
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          View and manage student grades for all courses. As an admin, you can edit and save grades directly.
+        </p>
+      </div>
+      
+      <div className="w-full overflow-hidden">
+        <GradebookStyled />
+      </div>
     </div>
   );
 }
