@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, ListChecks, Save } from "lucide-react";
+import { ListChecks, Save } from "lucide-react";
 import { toast } from "sonner";
 import { 
   Table, 
@@ -14,7 +14,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 
 interface GradebookViewProps {
@@ -142,12 +141,23 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
     enabled: !!selectedSemesterId && !!topics && topics.length > 0,
   });
 
+  // Get color based on score
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return "bg-[#4ade80]"; // Neon Green
+    if (score >= 6) return "bg-[#86efac]"; // Faint Green
+    if (score >= 3) return "bg-[#fdba74]"; // Orange
+    return "bg-[#f87171]"; // Red
+  };
+
   const handleGradeChange = (studentId: string, topicId: string, score: number) => {
+    // Ensure score is between 1-10
+    let validScore = Math.max(1, Math.min(10, score));
+    
     setGrades(prev => ({
       ...prev,
       [studentId]: {
         ...(prev[studentId] || {}),
-        [topicId]: score
+        [topicId]: validScore
       }
     }));
   };
@@ -237,7 +247,8 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
     if (studentGrades.length === 0) return '-';
     
     const sum = studentGrades.reduce((acc, curr) => acc + curr, 0);
-    return (sum / studentGrades.length).toFixed(1);
+    const avg = Math.round(sum / studentGrades.length * 10) / 10;
+    return avg.toString();
   };
 
   return (
@@ -293,15 +304,19 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
                               <TableCell key={topic.id} className="text-center">
                                 <Input
                                   type="number"
-                                  min="0"
-                                  max="100"
+                                  min="1"
+                                  max="10"
                                   value={grades[student.id]?.[topic.id] || ""}
                                   onChange={(e) => handleGradeChange(
                                     student.id,
                                     topic.id,
-                                    e.target.value ? Number(e.target.value) : 0
+                                    e.target.value ? Number(e.target.value) : 1
                                   )}
-                                  className="w-16 text-center h-8 mx-auto"
+                                  className={`w-16 text-center h-8 mx-auto ${
+                                    grades[student.id]?.[topic.id] 
+                                      ? getScoreColor(grades[student.id][topic.id]) 
+                                      : ""
+                                  }`}
                                 />
                               </TableCell>
                             ))}

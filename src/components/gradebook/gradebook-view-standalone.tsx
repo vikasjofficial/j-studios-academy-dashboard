@@ -158,13 +158,24 @@ export function GradebookViewStandalone() {
 
   // Handle grade change
   const handleGradeChange = (studentId: string, topicId: string, score: number) => {
+    // Ensure score is between 1-10
+    let validScore = Math.max(1, Math.min(10, score));
+    
     setGrades(prev => ({
       ...prev,
       [studentId]: {
         ...(prev[studentId] || {}),
-        [topicId]: score
+        [topicId]: validScore
       }
     }));
+  };
+
+  // Get color based on score
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return "bg-[#4ade80]"; // Neon Green
+    if (score >= 6) return "bg-[#86efac]"; // Faint Green
+    if (score >= 3) return "bg-[#fdba74]"; // Orange
+    return "bg-[#f87171]"; // Red
   };
 
   // Save grades to Supabase
@@ -260,7 +271,8 @@ export function GradebookViewStandalone() {
     if (studentGrades.length === 0) return "-";
     
     const sum = studentGrades.reduce((acc, curr) => acc + curr, 0);
-    return Math.round(sum / studentGrades.length) + "%";
+    const avg = Math.round(sum / studentGrades.length * 10) / 10;
+    return avg.toString();
   };
 
   // Calculate class average for a topic
@@ -277,7 +289,10 @@ export function GradebookViewStandalone() {
       }
     });
     
-    return count > 0 ? Math.round(sum / count) + "%" : "-";
+    if (count === 0) return "-";
+    
+    const avg = Math.round(sum / count * 10) / 10;
+    return avg.toString();
   };
 
   // Calculate overall class average
@@ -295,7 +310,20 @@ export function GradebookViewStandalone() {
       }
     });
     
-    return totalCount > 0 ? Math.round(totalSum / totalCount) + "%" : "-";
+    if (totalCount === 0) return "-";
+    
+    const avg = Math.round(totalSum / totalCount * 10) / 10;
+    return avg.toString();
+  };
+
+  const getProgressColor = (score: string) => {
+    if (score === "-") return "bg-[#2A2F3C]";
+    
+    const numScore = parseFloat(score);
+    if (numScore >= 9) return "bg-[#4ade80]"; // Neon Green
+    if (numScore >= 6) return "bg-[#86efac]"; // Faint Green
+    if (numScore >= 3) return "bg-[#fdba74]"; // Orange
+    return "bg-[#f87171]"; // Red
   };
 
   return (
@@ -390,13 +418,11 @@ export function GradebookViewStandalone() {
                 />
               </div>
               
-              <div className="grid grid-cols-5 gap-2">
-                <div className="w-24 text-center text-sm font-medium">Trend</div>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="w-24 text-center text-sm font-medium">Progress</div>
                 <div className="w-24 text-center text-sm font-medium">Average</div>
-                <div className="w-24 text-center text-sm font-medium">Presence</div>
-                {topics?.slice(0, 3).map(topic => (
+                {topics?.slice(0, 2).map(topic => (
                   <div key={topic.id} className="w-24 text-center text-xs font-medium">
-                    <div className="text-xs text-gray-400">Questions 1-30 Oct</div>
                     <div className="whitespace-nowrap">{topic.name}</div>
                   </div>
                 ))}
@@ -416,15 +442,16 @@ export function GradebookViewStandalone() {
                 <span className="font-medium">Average grade</span>
               </div>
               
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <div className="w-24 text-center">
-                  <div className="mx-auto h-8 w-16 rounded-md bg-[#2A2F3C]" />
+                  <div 
+                    className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateClassAverage())}`} 
+                  />
                 </div>
                 <div className="w-24 text-center font-medium">
                   {calculateClassAverage()}
                 </div>
-                <div className="w-24 text-center">-</div>
-                {topics?.slice(0, 3).map(topic => (
+                {topics?.slice(0, 2).map(topic => (
                   <div key={topic.id} className="w-24 text-center font-medium">
                     {calculateTopicAverage(topic.id)}
                   </div>
@@ -447,43 +474,43 @@ export function GradebookViewStandalone() {
                   <span className="font-medium">{student.name}</span>
                 </div>
                 
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <div className="w-24 text-center">
                     <div 
-                      className="mx-auto h-8 w-16 rounded-md" 
-                      style={{
-                        background: `linear-gradient(180deg, #1A1F2C 0%, ${
-                          parseInt(calculateAverage(student.id)) > 70 ? '#6E59A5' : 
-                          parseInt(calculateAverage(student.id)) > 50 ? '#3B5EA9' : 
-                          '#235787'
-                        } 100%)`
-                      }}
+                      className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
                     />
                   </div>
                   <div className="w-24 text-center font-medium">
                     {calculateAverage(student.id)}
                   </div>
-                  <div className="w-24 text-center font-medium">
-                    {calculateAverage(student.id)}
-                  </div>
-                  {topics?.slice(0, 3).map(topic => (
+                  {topics?.slice(0, 2).map(topic => (
                     <div key={topic.id} className="w-24 text-center font-medium">
                       {isAdmin && selectedCourse ? (
                         <Input
                           type="number"
-                          min="0"
-                          max="100"
+                          min="1"
+                          max="10"
                           value={grades[student.id]?.[topic.id] || ""}
                           onChange={(e) => handleGradeChange(
                             student.id,
                             topic.id,
-                            e.target.value ? Number(e.target.value) : 0
+                            e.target.value ? Number(e.target.value) : 1
                           )}
-                          className="w-16 text-center h-8 mx-auto bg-[#2A2F3C] border-none text-white"
+                          className={`w-16 text-center h-8 mx-auto border-none text-white ${
+                            grades[student.id]?.[topic.id] 
+                              ? getScoreColor(grades[student.id][topic.id]) 
+                              : "bg-[#2A2F3C]"
+                          }`}
                         />
                       ) : (
-                        <span>
-                          {grades[student.id]?.[topic.id] ? `${grades[student.id][topic.id]}%` : "-"}
+                        <span 
+                          className={`inline-block w-16 py-1 px-2 rounded ${
+                            grades[student.id]?.[topic.id] 
+                              ? getScoreColor(grades[student.id][topic.id]) 
+                              : "bg-[#2A2F3C]"
+                          }`}
+                        >
+                          {grades[student.id]?.[topic.id] || "-"}
                         </span>
                       )}
                     </div>
