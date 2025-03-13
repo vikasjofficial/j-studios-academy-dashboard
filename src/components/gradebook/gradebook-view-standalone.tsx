@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -387,8 +386,8 @@ export function GradebookViewStandalone() {
   }, [refetchCourses, refetchTopics, refetchSemesters, selectedCourse]);
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden border-none bg-[#1A1F2C] text-white shadow-md">
+    <div className="space-y-6 w-full">
+      <Card className="overflow-hidden border-none bg-[#1A1F2C] text-white shadow-md w-full">
         <CardContent className="p-0">
           <div className="p-4 pb-0">
             <div className="mb-4 flex items-center justify-between">
@@ -556,7 +555,7 @@ export function GradebookViewStandalone() {
                       <div key={topic.id} className="w-20 text-center px-1">
                         <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
                           <span className="line-clamp-2">{topic.name}</span>
-                          <Badge className="mt-1 bg-[#2A2F3C] text-xs whitespace-nowrap text-ellipsis overflow-hidden max-w-full">
+                          <Badge className="mt-1 bg-[#2A2F3C] text-xs truncate max-w-full">
                             {getSemesterName(topic.semester_id)}
                           </Badge>
                         </div>
@@ -568,8 +567,8 @@ export function GradebookViewStandalone() {
             </div>
           </div>
           
-          <div className="mt-2">
-            <div className="flex items-center gap-2 border-b border-[#2A2F3C] bg-[#222430] px-4 py-3">
+          <div className="mt-2 max-w-full">
+            <div className="flex items-center gap-2 border-b border-[#2A2F3C] bg-[#222430] px-4 py-3 w-full">
               <div className="flex w-44 items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C]">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -581,10 +580,7 @@ export function GradebookViewStandalone() {
               </div>
               
               <div className="flex-1 overflow-hidden">
-                <div 
-                  ref={scrollContainerRef}
-                  className="scrollbar-none overflow-x-auto"
-                >
+                <div className="scrollbar-none overflow-x-auto">
                   <div className="inline-flex min-w-max gap-4">
                     <div className="w-16 text-center">
                       <div 
@@ -605,75 +601,75 @@ export function GradebookViewStandalone() {
               </div>
             </div>
             
-            {filteredStudents?.map((student, index) => (
-              <div 
-                key={student.id}
-                className={cn(
-                  "flex items-center gap-2 border-b border-[#2A2F3C] px-4 py-3 hover:bg-[#222430]",
-                  index % 2 === 0 ? "bg-[#1E2130]" : "bg-[#1A1F2C]"
-                )}
-              >
-                <div className="flex w-44 items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C] text-sm font-medium">
-                    {index + 1}
+            <div className="max-h-[calc(100vh-350px)] overflow-y-auto">
+              {filteredStudents?.map((student, index) => (
+                <div 
+                  key={student.id}
+                  className={cn(
+                    "flex items-center gap-2 border-b border-[#2A2F3C] px-4 py-3 hover:bg-[#222430] w-full",
+                    index % 2 === 0 ? "bg-[#1E2130]" : "bg-[#1A1F2C]"
+                  )}
+                >
+                  <div className="flex w-44 items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C] text-sm font-medium">
+                      {index + 1}
+                    </div>
+                    <div className="overflow-hidden">
+                      <span className="font-medium block truncate">{student.name}</span>
+                      <div className="text-xs text-muted-foreground truncate">{student.student_id}</div>
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <span className="font-medium block truncate">{student.name}</span>
-                    <div className="text-xs text-muted-foreground truncate">{student.student_id}</div>
-                  </div>
-                </div>
-                
-                <div className="flex-1 overflow-hidden">
-                  <div 
-                    className="scrollbar-none overflow-x-auto"
-                  >
-                    <div className="inline-flex min-w-max gap-4">
-                      <div className="w-16 text-center">
-                        <div 
-                          className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
-                        />
-                      </div>
-                      <div className="w-16 text-center font-medium">
-                        {calculateAverage(student.id)}
-                      </div>
-                      
-                      {topics?.map(topic => (
-                        <div key={topic.id} className="w-20 text-center font-medium">
-                          {isAdmin && selectedCourse ? (
-                            <Input
-                              type="number"
-                              min="1"
-                              max="10"
-                              value={grades[student.id]?.[topic.id] || ""}
-                              onChange={(e) => handleGradeChange(
-                                student.id,
-                                topic.id,
-                                e.target.value ? Number(e.target.value) : 1
-                              )}
-                              className={`w-12 text-center h-8 mx-auto border-none text-white ${
-                                grades[student.id]?.[topic.id] 
-                                  ? getScoreColor(grades[student.id][topic.id]) 
-                                  : "bg-[#2A2F3C]"
-                              }`}
-                            />
-                          ) : (
-                            <span 
-                              className={`inline-block w-12 py-1 px-2 rounded ${
-                                grades[student.id]?.[topic.id] 
-                                  ? getScoreColor(grades[student.id][topic.id]) 
-                                  : "bg-[#2A2F3C]"
-                              }`}
-                            >
-                              {grades[student.id]?.[topic.id] || "-"}
-                            </span>
-                          )}
+                  
+                  <div className="flex-1 overflow-hidden">
+                    <div className="scrollbar-none overflow-x-auto">
+                      <div className="inline-flex min-w-max gap-4">
+                        <div className="w-16 text-center">
+                          <div 
+                            className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
+                          />
                         </div>
-                      ))}
+                        <div className="w-16 text-center font-medium">
+                          {calculateAverage(student.id)}
+                        </div>
+                        
+                        {topics?.map(topic => (
+                          <div key={topic.id} className="w-20 text-center font-medium">
+                            {isAdmin && selectedCourse ? (
+                              <Input
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={grades[student.id]?.[topic.id] || ""}
+                                onChange={(e) => handleGradeChange(
+                                  student.id,
+                                  topic.id,
+                                  e.target.value ? Number(e.target.value) : 1
+                                )}
+                                className={`w-12 text-center h-8 mx-auto border-none text-white ${
+                                  grades[student.id]?.[topic.id] 
+                                    ? getScoreColor(grades[student.id][topic.id]) 
+                                    : "bg-[#2A2F3C]"
+                                }`}
+                              />
+                            ) : (
+                              <span 
+                                className={`inline-block w-12 py-1 px-2 rounded ${
+                                  grades[student.id]?.[topic.id] 
+                                    ? getScoreColor(grades[student.id][topic.id]) 
+                                    : "bg-[#2A2F3C]"
+                                }`}
+                              >
+                                {grades[student.id]?.[topic.id] || "-"}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

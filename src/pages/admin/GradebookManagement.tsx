@@ -28,11 +28,11 @@ export default function GradebookManagement() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full">
       {/* Add styles for hiding scrollbars */}
       <style>{scrollbarStyles}</style>
       
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/50 overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-xl">
             <BookOpen className="h-5 w-5 text-primary" />
@@ -44,7 +44,9 @@ export default function GradebookManagement() {
             View and manage student grades for all courses. As an admin, you can edit and save grades directly.
           </p>
           
-          <GradebookViewStandalone />
+          <div className="w-full overflow-hidden">
+            <GradebookViewStandalone />
+          </div>
         </CardContent>
       </Card>
     </div>
