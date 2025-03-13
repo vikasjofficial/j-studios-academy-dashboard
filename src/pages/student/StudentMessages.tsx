@@ -15,6 +15,7 @@ interface Message {
   sender_role: 'admin' | 'student';
   created_at: string;
   from_name: string;
+  student_id: string;
 }
 
 export default function StudentMessages() {
