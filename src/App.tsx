@@ -16,6 +16,8 @@ import StudentDashboard from "@/pages/student/StudentDashboard";
 import CoursesManagement from "./pages/admin/CoursesManagement";
 import GradebookManagement from "./pages/admin/GradebookManagement";
 import StudentMessages from "./pages/student/StudentMessages";
+import StudentCourses from "./pages/student/StudentCourses";
+import AdminMessages from "./pages/admin/AdminMessages";
 
 const queryClient = new QueryClient();
 
@@ -74,7 +76,7 @@ const App = () => (
             <Route path="/admin/messages" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
-                  <PlaceholderPage title="Messages" />
+                  <AdminMessages />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
@@ -88,7 +90,7 @@ const App = () => (
             <Route path="/student/courses" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <DashboardLayout>
-                  <PlaceholderPage title="My Courses" />
+                  <StudentCourses />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
