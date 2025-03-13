@@ -1,4 +1,3 @@
-
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { CalendarCard } from '@/components/dashboard/calendar-card';
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
@@ -79,76 +78,110 @@ export default function AdminDashboard() {
     );
   };
 
-  // Get high performing students (score > 7)
+  // Get high performing students (score >= 8)
   const highPerformingStudents = () => {
     if (!grades) return [];
     
-    // Group by student and calculate their average score
-    const studentScores: Record<string, { student: any, scores: number[], avgScore: number }> = {};
+    // Create a map of student scores by topic
+    const studentTopicScores: Record<string, { 
+      student: any, 
+      topicScores: Record<string, number>,
+      highScoreTopics: string[]
+    }> = {};
     
     grades.forEach(grade => {
-      if (!grade.students || !grade.score) return;
+      if (!grade.students || !grade.score || !grade.topics) return;
       
       const studentId = grade.students.id;
-      if (!studentScores[studentId]) {
-        studentScores[studentId] = {
+      const topicName = grade.topics.name;
+      const score = Number(grade.score);
+      
+      // Ensure score is within bounds (1-10)
+      const boundedScore = Math.min(Math.max(score, 1), 10);
+      
+      if (!studentTopicScores[studentId]) {
+        studentTopicScores[studentId] = {
           student: grade.students,
-          scores: [],
-          avgScore: 0
+          topicScores: {},
+          highScoreTopics: []
         };
       }
       
-      studentScores[studentId].scores.push(Number(grade.score));
-    });
-    
-    // Calculate average scores
-    Object.values(studentScores).forEach(entry => {
-      if (entry.scores.length > 0) {
-        const sum = entry.scores.reduce((a, b) => a + b, 0);
-        entry.avgScore = Math.round((sum / entry.scores.length) * 10) / 10;
+      studentTopicScores[studentId].topicScores[topicName] = boundedScore;
+      
+      // If score is high (>= 8), add to high score topics
+      if (boundedScore >= 8) {
+        if (!studentTopicScores[studentId].highScoreTopics.includes(topicName)) {
+          studentTopicScores[studentId].highScoreTopics.push(topicName);
+        }
       }
     });
     
-    // Filter for high performers (> 7)
-    return Object.values(studentScores)
-      .filter(entry => entry.avgScore > 7)
-      .sort((a, b) => b.avgScore - a.avgScore);
+    // Filter for high performers (>= 8 in any topic)
+    return Object.values(studentTopicScores)
+      .filter(entry => {
+        const scores = Object.values(entry.topicScores);
+        return scores.some(score => score >= 8);
+      })
+      .sort((a, b) => {
+        // Sort by highest score in any topic
+        const maxScoreA = Math.max(...Object.values(a.topicScores));
+        const maxScoreB = Math.max(...Object.values(b.topicScores));
+        return maxScoreB - maxScoreA;
+      });
   };
 
   // Get low performing students (score <= 7)
   const lowPerformingStudents = () => {
     if (!grades) return [];
     
-    // Group by student and calculate their average score
-    const studentScores: Record<string, { student: any, scores: number[], avgScore: number }> = {};
+    // Create a map of student scores by topic
+    const studentTopicScores: Record<string, { 
+      student: any, 
+      topicScores: Record<string, number>,
+      lowScoreTopics: string[]
+    }> = {};
     
     grades.forEach(grade => {
-      if (!grade.students || !grade.score) return;
+      if (!grade.students || !grade.score || !grade.topics) return;
       
       const studentId = grade.students.id;
-      if (!studentScores[studentId]) {
-        studentScores[studentId] = {
+      const topicName = grade.topics.name;
+      const score = Number(grade.score);
+      
+      // Ensure score is within bounds (1-10)
+      const boundedScore = Math.min(Math.max(score, 1), 10);
+      
+      if (!studentTopicScores[studentId]) {
+        studentTopicScores[studentId] = {
           student: grade.students,
-          scores: [],
-          avgScore: 0
+          topicScores: {},
+          lowScoreTopics: []
         };
       }
       
-      studentScores[studentId].scores.push(Number(grade.score));
-    });
-    
-    // Calculate average scores
-    Object.values(studentScores).forEach(entry => {
-      if (entry.scores.length > 0) {
-        const sum = entry.scores.reduce((a, b) => a + b, 0);
-        entry.avgScore = Math.round((sum / entry.scores.length) * 10) / 10;
+      studentTopicScores[studentId].topicScores[topicName] = boundedScore;
+      
+      // If score is low (<= 7), add to low score topics
+      if (boundedScore <= 7) {
+        if (!studentTopicScores[studentId].lowScoreTopics.includes(topicName)) {
+          studentTopicScores[studentId].lowScoreTopics.push(topicName);
+        }
       }
     });
     
-    // Filter for low performers (<= 7)
-    return Object.values(studentScores)
-      .filter(entry => entry.avgScore <= 7)
-      .sort((a, b) => a.avgScore - b.avgScore);
+    // Filter for low performers (<= 7 in any topic)
+    return Object.values(studentTopicScores)
+      .filter(entry => {
+        const scores = Object.values(entry.topicScores);
+        return scores.some(score => score <= 7);
+      })
+      .sort((a, b) => {
+        // Sort by lowest score in any topic
+        const minScoreA = Math.min(...Object.values(a.topicScores));
+        const minScoreB = Math.min(...Object.values(b.topicScores));
+        return minScoreA - minScoreB;
+      });
   };
 
   return (
@@ -184,7 +217,7 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-yellow-500" />
-              Top Performing Students (Average > 7)
+              Top Performing Students (Score 8-10)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,15 +226,31 @@ export default function AdminDashboard() {
             ) : highPerformingStudents().length > 0 ? (
               <div className="space-y-4">
                 {highPerformingStudents().map(entry => (
-                  <div key={entry.student.id} className="flex items-center justify-between border-b pb-2">
-                    <div>
-                      <p className="font-medium">{entry.student.name}</p>
-                      <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                  <div key={entry.student.id} className="flex flex-col border-b pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{entry.student.name}</p>
+                        <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-green-600">
+                          {Math.max(...Object.values(entry.topicScores)).toFixed(1)}
+                        </span>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">High</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-green-600">{entry.avgScore}</span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">High</span>
-                    </div>
+                    {entry.highScoreTopics.length > 0 && (
+                      <div className="mt-1">
+                        <p className="text-xs font-semibold text-green-700">Strong topics:</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {entry.highScoreTopics.map(topic => (
+                            <span key={topic} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -215,7 +264,7 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingDown className="h-5 w-5 text-orange-500" />
-              Students Needing Attention (Average ≤ 7)
+              Students Needing Attention (Score 1-7)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -224,15 +273,31 @@ export default function AdminDashboard() {
             ) : lowPerformingStudents().length > 0 ? (
               <div className="space-y-4">
                 {lowPerformingStudents().map(entry => (
-                  <div key={entry.student.id} className="flex items-center justify-between border-b pb-2">
-                    <div>
-                      <p className="font-medium">{entry.student.name}</p>
-                      <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                  <div key={entry.student.id} className="flex flex-col border-b pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{entry.student.name}</p>
+                        <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-orange-600">
+                          {Math.min(...Object.values(entry.topicScores)).toFixed(1)}
+                        </span>
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Help</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-orange-600">{entry.avgScore}</span>
-                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Help</span>
-                    </div>
+                    {entry.lowScoreTopics.length > 0 && (
+                      <div className="mt-1">
+                        <p className="text-xs font-semibold text-orange-700">Struggling topics:</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {entry.lowScoreTopics.map(topic => (
+                            <span key={topic} className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
