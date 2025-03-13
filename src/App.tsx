@@ -14,6 +14,7 @@ import NotFound from "@/pages/NotFound";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import StudentDashboard from "@/pages/student/StudentDashboard";
 import CoursesManagement from "./pages/admin/CoursesManagement";
+import GradebookManagement from "./pages/admin/GradebookManagement";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,13 @@ const App = () => (
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
                   <CoursesManagement />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/gradebook" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DashboardLayout>
+                  <GradebookManagement />
                 </DashboardLayout>
               </ProtectedRoute>
             } />

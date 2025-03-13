@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
@@ -14,7 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Home, Users, BookOpen, Calendar, CheckSquare, MessageSquare, Settings } from 'lucide-react';
+import { LogOut, Home, Users, BookOpen, Calendar, CheckSquare, MessageSquare, Settings, ListChecks } from 'lucide-react';
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
@@ -34,6 +33,7 @@ export function AppSidebar() {
     { href: '/admin', icon: Home, label: 'Dashboard' },
     { href: '/admin/students', icon: Users, label: 'Students' },
     { href: '/admin/courses', icon: BookOpen, label: 'Courses' },
+    { href: '/admin/gradebook', icon: ListChecks, label: 'Gradebook' },
     { href: '/admin/calendar', icon: Calendar, label: 'Calendar' },
     { href: '/admin/attendance', icon: CheckSquare, label: 'Attendance' },
     { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },

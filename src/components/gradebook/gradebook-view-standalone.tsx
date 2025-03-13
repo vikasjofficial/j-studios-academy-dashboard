@@ -1,0 +1,373 @@
+
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  Card, 
+  CardContent,
+} from "@/components/ui/card";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+
+interface Student {
+  id: string;
+  name: string;
+  student_id: string;
+}
+
+interface Grade {
+  student_id: string;
+  topic_id: string;
+  score: number;
+}
+
+interface Course {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface Topic {
+  id: string;
+  name: string;
+  order_id: number;
+}
+
+export function GradebookViewStandalone() {
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [grades, setGrades] = useState<Record<string, Record<string, number>>>({});
+  const [activeTab, setActiveTab] = useState("all");
+
+  // Fetch all courses
+  const { data: courses } = useQuery({
+    queryKey: ["all-courses"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id, name, code")
+        .order("name");
+        
+      if (error) throw error;
+      
+      if (data.length > 0 && !selectedCourse) {
+        setSelectedCourse(data[0].id);
+      }
+      
+      return data as Course[];
+    },
+  });
+
+  // Fetch students enrolled in selected course or all students
+  const { data: students, isLoading: studentsLoading } = useQuery({
+    queryKey: ["students", selectedCourse, activeTab],
+    queryFn: async () => {
+      let query;
+      
+      if (activeTab === "all" || !selectedCourse) {
+        // Fetch all students
+        const { data, error } = await supabase
+          .from("students")
+          .select("id, name, student_id")
+          .order("name");
+          
+        if (error) throw error;
+        return data as Student[];
+      } else {
+        // Fetch students enrolled in the selected course
+        const { data, error } = await supabase
+          .from("enrollments")
+          .select(`
+            student_id,
+            students:student_id(id, name, student_id)
+          `)
+          .eq("course_id", selectedCourse);
+          
+        if (error) throw error;
+        return data.map(item => item.students) as Student[];
+      }
+    },
+    enabled: true,
+  });
+
+  // Fetch topics for the selected course
+  const { data: topics } = useQuery({
+    queryKey: ["course-topics", selectedCourse],
+    queryFn: async () => {
+      if (!selectedCourse) return [];
+      
+      const { data, error } = await supabase
+        .from("topics")
+        .select("id, name, order_id")
+        .eq("course_id", selectedCourse)
+        .order("order_id");
+        
+      if (error) throw error;
+      return data as Topic[];
+    },
+    enabled: !!selectedCourse,
+  });
+
+  // Fetch existing grades
+  const { data: existingGrades } = useQuery({
+    queryKey: ["existing-grades", selectedCourse],
+    queryFn: async () => {
+      if (!selectedCourse || !topics || topics.length === 0) return [];
+      
+      const topicIds = topics.map(topic => topic.id);
+      
+      const { data, error } = await supabase
+        .from("grades")
+        .select("student_id, topic_id, score")
+        .eq("course_id", selectedCourse)
+        .in("topic_id", topicIds);
+        
+      if (error) throw error;
+      
+      // Initialize grades state
+      const gradeMap: Record<string, Record<string, number>> = {};
+      
+      data.forEach(grade => {
+        if (!gradeMap[grade.student_id]) {
+          gradeMap[grade.student_id] = {};
+        }
+        gradeMap[grade.student_id][grade.topic_id] = grade.score;
+      });
+      
+      setGrades(gradeMap);
+      
+      return data;
+    },
+    enabled: !!selectedCourse && !!topics && topics.length > 0,
+  });
+
+  // Filter students based on search query
+  const filteredStudents = students?.filter(student => 
+    student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.student_id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate average grade for a student
+  const calculateAverage = (studentId: string) => {
+    if (!grades[studentId]) return "-";
+    
+    const studentGrades = Object.values(grades[studentId]);
+    if (studentGrades.length === 0) return "-";
+    
+    const sum = studentGrades.reduce((acc, curr) => acc + curr, 0);
+    return Math.round(sum / studentGrades.length) + "%";
+  };
+
+  // Calculate class average for a topic
+  const calculateTopicAverage = (topicId: string) => {
+    if (!students || students.length === 0) return "-";
+    
+    let sum = 0;
+    let count = 0;
+    
+    students.forEach(student => {
+      if (grades[student.id]?.[topicId]) {
+        sum += grades[student.id][topicId];
+        count++;
+      }
+    });
+    
+    return count > 0 ? Math.round(sum / count) + "%" : "-";
+  };
+
+  // Calculate overall class average
+  const calculateClassAverage = () => {
+    if (!students || students.length === 0 || !topics || topics.length === 0) return "-";
+    
+    let totalSum = 0;
+    let totalCount = 0;
+    
+    students.forEach(student => {
+      if (grades[student.id]) {
+        const values = Object.values(grades[student.id]);
+        totalSum += values.reduce((acc, curr) => acc + curr, 0);
+        totalCount += values.length;
+      }
+    });
+    
+    return totalCount > 0 ? Math.round(totalSum / totalCount) + "%" : "-";
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-none bg-[#1A1F2C] text-white shadow-md">
+        <CardContent className="p-0">
+          <div className="p-4 pb-0">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="flex items-center text-2xl font-semibold">
+                <span className="mr-2">←</span> Class
+              </h2>
+            </div>
+            
+            <div className="mb-4 flex gap-3">
+              <div className="relative w-64">
+                <div className="flex items-center rounded-lg bg-[#2A2F3C] p-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6E59A5]">
+                      C
+                    </span>
+                    {courses && courses.length > 0 && (
+                      <select 
+                        className="w-full appearance-none bg-transparent focus:outline-none"
+                        value={selectedCourse || ""}
+                        onChange={(e) => setSelectedCourse(e.target.value)}
+                      >
+                        {courses.map(course => (
+                          <option key={course.id} value={course.id} className="bg-[#2A2F3C] text-white">
+                            {course.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  <span className="ml-auto">▼</span>
+                </div>
+              </div>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+                <TabsList className="flex bg-[#2A2F3C] p-1">
+                  <TabsTrigger 
+                    value="all" 
+                    className={cn(
+                      "rounded-lg px-4 py-2 text-sm data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-white",
+                      activeTab === "all" ? "bg-[#1A1F2C] text-white" : "text-gray-400"
+                    )}
+                  >
+                    All
+                    <span className="ml-1 rounded bg-[#2A2F3C] px-1 text-xs">
+                      {students?.length || 0}
+                    </span>
+                  </TabsTrigger>
+                  {courses?.map(course => (
+                    <TabsTrigger 
+                      key={course.id}
+                      value={course.id}
+                      className={cn(
+                        "rounded-lg px-4 py-2 text-sm data-[state=active]:bg-[#1A1F2C] data-[state=active]:text-white",
+                        activeTab === course.id ? "bg-[#1A1F2C] text-white" : "text-gray-400"
+                      )}
+                      onClick={() => setSelectedCourse(course.id)}
+                    >
+                      {course.name}
+                      <span className="ml-1 rounded bg-[#2A2F3C] px-1 text-xs">
+                        {students?.length || 0}
+                      </span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            <div className="flex items-center gap-2 px-4 py-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Name"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 w-full rounded-md border-none bg-[#2A2F3C] pl-9 text-sm text-white placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+              
+              <div className="grid grid-cols-5 gap-2">
+                <div className="w-24 text-center text-sm font-medium">Trend</div>
+                <div className="w-24 text-center text-sm font-medium">Average</div>
+                <div className="w-24 text-center text-sm font-medium">Presence</div>
+                {topics?.slice(0, 3).map(topic => (
+                  <div key={topic.id} className="w-24 text-center text-xs font-medium">
+                    <div className="text-xs text-gray-400">Questions 1-30 Oct</div>
+                    <div className="whitespace-nowrap">{topic.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-2">
+            <div className="flex items-center gap-2 border-b border-[#2A2F3C] bg-[#222430] px-4 py-3">
+              <div className="flex flex-1 items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 13.125C3 12.2298 3.71634 11.5 4.6 11.5H8.44134C8.7999 11.5 9.1333 11.6897 9.31913 12.0013L10.6809 14.2487C10.8667 14.5603 11.2001 14.75 11.5587 14.75H12.4413C12.7999 14.75 13.1333 14.5603 13.3191 14.2487L14.6809 12.0013C14.8667 11.6897 15.2001 11.5 15.5587 11.5H19.4C20.2837 11.5 21 12.2298 21 13.125V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V13.125Z" stroke="white" strokeWidth="1.5"/>
+                    <path d="M7.5 11.5V6.75C7.5 5.09315 8.84315 3.75 10.5 3.75H13.5C15.1569 3.75 16.5 5.09315 16.5 6.75V11.5" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                </div>
+                <span className="font-medium">Average grade</span>
+              </div>
+              
+              <div className="grid grid-cols-5 gap-2">
+                <div className="w-24 text-center">
+                  <div className="mx-auto h-8 w-16 rounded-md bg-[#2A2F3C]" />
+                </div>
+                <div className="w-24 text-center font-medium">
+                  {calculateClassAverage()}
+                </div>
+                <div className="w-24 text-center">-</div>
+                {topics?.slice(0, 3).map(topic => (
+                  <div key={topic.id} className="w-24 text-center font-medium">
+                    {calculateTopicAverage(topic.id)}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {filteredStudents?.map((student, index) => (
+              <div 
+                key={student.id}
+                className={cn(
+                  "flex items-center gap-2 border-b border-[#2A2F3C] px-4 py-3 hover:bg-[#222430]",
+                  index % 2 === 0 ? "bg-[#1E2130]" : "bg-[#1A1F2C]"
+                )}
+              >
+                <div className="flex flex-1 items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C] text-sm font-medium">
+                    {index + 1}
+                  </div>
+                  <span className="font-medium">{student.name}</span>
+                </div>
+                
+                <div className="grid grid-cols-5 gap-2">
+                  <div className="w-24 text-center">
+                    <div 
+                      className="mx-auto h-8 w-16 rounded-md" 
+                      style={{
+                        background: `linear-gradient(180deg, #1A1F2C 0%, ${
+                          parseInt(calculateAverage(student.id)) > 70 ? '#6E59A5' : 
+                          parseInt(calculateAverage(student.id)) > 50 ? '#3B5EA9' : 
+                          '#235787'
+                        } 100%)`
+                      }}
+                    />
+                  </div>
+                  <div className="w-24 text-center font-medium">
+                    {calculateAverage(student.id)}
+                  </div>
+                  <div className="w-24 text-center font-medium">
+                    {calculateAverage(student.id)}
+                  </div>
+                  {topics?.slice(0, 3).map(topic => (
+                    <div key={topic.id} className="w-24 text-center font-medium">
+                      {grades[student.id]?.[topic.id] ? `${grades[student.id][topic.id]}%` : "-"}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
