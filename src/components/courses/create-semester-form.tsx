@@ -98,6 +98,8 @@ export function CreateSemesterForm({ courseId, courseName, onSuccess }: CreateSe
       return semester;
     },
     onSuccess: () => {
+      // Invalidate both semesters and topics queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["semesters"] });
       queryClient.invalidateQueries({ queryKey: ["semesters", courseId] });
       queryClient.invalidateQueries({ queryKey: ["topics"] });
       toast.success("Semester created with 10 default topics");

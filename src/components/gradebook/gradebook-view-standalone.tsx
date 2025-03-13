@@ -55,7 +55,7 @@ export function GradebookViewStandalone() {
   const isAdmin = user?.role === 'admin';
 
   // Fetch all courses
-  const { data: courses } = useQuery({
+  const { data: courses, refetch: refetchCourses } = useQuery({
     queryKey: ["all-courses"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -72,6 +72,13 @@ export function GradebookViewStandalone() {
       return data as Course[];
     },
   });
+
+  // Effect to set selected course when courses are loaded
+  useEffect(() => {
+    if (courses && courses.length > 0 && !selectedCourse) {
+      setSelectedCourse(courses[0].id);
+    }
+  }, [courses, selectedCourse]);
 
   // Fetch students enrolled in selected course or all students
   const { data: students, isLoading: studentsLoading } = useQuery({
@@ -106,7 +113,7 @@ export function GradebookViewStandalone() {
   });
 
   // Fetch topics for the selected course
-  const { data: topics } = useQuery({
+  const { data: topics, refetch: refetchTopics } = useQuery({
     queryKey: ["course-topics", selectedCourse],
     queryFn: async () => {
       if (!selectedCourse) return [];
@@ -332,6 +339,14 @@ export function GradebookViewStandalone() {
     if (numScore >= 3) return "bg-[#fdba74]"; // Orange
     return "bg-[#f87171]"; // Red
   };
+
+  // Force refetch data when component mounts
+  useEffect(() => {
+    refetchCourses();
+    if (selectedCourse) {
+      refetchTopics();
+    }
+  }, [refetchCourses, refetchTopics, selectedCourse]);
 
   return (
     <div className="space-y-6">

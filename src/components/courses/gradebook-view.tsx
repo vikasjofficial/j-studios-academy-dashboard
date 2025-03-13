@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +52,7 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch semesters for the course
-  const { data: semesters } = useQuery({
+  const { data: semesters, refetch: refetchSemesters } = useQuery({
     queryKey: ["semesters", courseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -63,13 +63,16 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
         
       if (error) throw error;
       
-      if (data.length > 0 && !selectedSemesterId) {
-        setSelectedSemesterId(data[0].id);
-      }
-      
       return data as Semester[];
     },
   });
+
+  // Set the first semester as selected when data is loaded
+  useEffect(() => {
+    if (semesters && semesters.length > 0 && !selectedSemesterId) {
+      setSelectedSemesterId(semesters[0].id);
+    }
+  }, [semesters, selectedSemesterId]);
 
   // Fetch students enrolled in the course
   const { data: students } = useQuery({
@@ -257,6 +260,11 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
     const avg = Math.round(sum / studentGrades.length * 10) / 10;
     return avg.toString();
   };
+
+  // Force refetch semesters when component mounts
+  useEffect(() => {
+    refetchSemesters();
+  }, [refetchSemesters]);
 
   return (
     <div className="space-y-6">
