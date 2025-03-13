@@ -4,6 +4,7 @@ import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
 import { TasksCard } from '@/components/dashboard/tasks-card';
 import { useAuth } from '@/context/auth-context';
+import StudentAttendanceDashboard from '@/components/dashboard/student-attendance-dashboard';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -50,6 +51,9 @@ export default function StudentDashboard() {
           total={25}
         />
       </div>
+
+      <h2 className="text-xl font-semibold mt-6 mb-2">Attendance by Course</h2>
+      <StudentAttendanceDashboard />
 
       <ProgressChartCard
         title="My Progress"
