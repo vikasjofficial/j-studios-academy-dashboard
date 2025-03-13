@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -20,15 +20,6 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 interface Student {
   id: string;
@@ -70,8 +61,7 @@ export function GradebookViewStandalone() {
   const [grades, setGrades] = useState<Record<string, Record<string, number>>>({});
   const [activeTab, setActiveTab] = useState("all");
   const [isSaving, setIsSaving] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const topicsPerPage = 5;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isAdmin = user?.role === 'admin';
 
   const { data: courses, refetch: refetchCourses } = useQuery({
@@ -172,11 +162,6 @@ export function GradebookViewStandalone() {
     },
     enabled: !!selectedCourse,
   });
-
-  const indexOfLastTopic = currentPage * topicsPerPage;
-  const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
-  const currentTopics = topics?.slice(indexOfFirstTopic, indexOfLastTopic) || [];
-  const totalPages = topics ? Math.ceil(topics.length / topicsPerPage) : 0;
 
   const topicsBySemester = topics?.reduce((acc, topic) => {
     if (!acc[topic.semester_id]) {
@@ -381,8 +366,16 @@ export function GradebookViewStandalone() {
     return semester?.name || "Unknown Semester";
   };
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -429,7 +422,6 @@ export function GradebookViewStandalone() {
                         onChange={(e) => {
                           setSelectedCourse(e.target.value);
                           setSelectedSemesterId(null);
-                          setCurrentPage(1);
                         }}
                       >
                         {courses.map(course => (
@@ -494,7 +486,6 @@ export function GradebookViewStandalone() {
                     )}
                     onClick={() => {
                       setSelectedSemesterId("all");
-                      setCurrentPage(1);
                     }}
                   >
                     All Semesters
@@ -510,46 +501,12 @@ export function GradebookViewStandalone() {
                       )}
                       onClick={() => {
                         setSelectedSemesterId(semester.id);
-                        setCurrentPage(1);
                       }}
                     >
                       {semester.name}
                     </Button>
                   ))}
                 </div>
-              </div>
-            )}
-            
-            {topics && topics.length > 0 && (
-              <div className="mb-4 px-4">
-                <Pagination className="justify-center">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                        className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}
-                      />
-                    </PaginationItem>
-                    
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          isActive={page === currentPage}
-                          onClick={() => handlePageChange(page)}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                        className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
               </div>
             )}
             
@@ -564,21 +521,48 @@ export function GradebookViewStandalone() {
                 />
               </div>
               
-              <div className="overflow-x-auto w-[calc(100%-11rem)]">
-                <div className="inline-flex min-w-max gap-4">
-                  <div className="w-16 text-center text-sm font-medium">Progress</div>
-                  <div className="w-16 text-center text-sm font-medium">Average</div>
-                  
-                  {currentTopics.map(topic => (
-                    <div key={topic.id} className="w-20 text-center px-1">
-                      <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
-                        <span className="line-clamp-2">{topic.name}</span>
-                        <Badge className="mt-1 bg-[#2A2F3C] text-xs whitespace-nowrap text-ellipsis overflow-hidden max-w-full">
-                          {getSemesterName(topic.semester_id)}
-                        </Badge>
+              <div className="relative flex-1">
+                <div className="absolute left-0 top-1/2 z-10 -translate-y-1/2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full bg-[#2A2F3C]/80 text-gray-400 backdrop-blur-sm"
+                    onClick={scrollLeft}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="absolute right-0 top-1/2 z-10 -translate-y-1/2">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full bg-[#2A2F3C]/80 text-gray-400 backdrop-blur-sm"
+                    onClick={scrollRight}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div 
+                  ref={scrollContainerRef}
+                  className="scrollbar-none overflow-x-auto px-8"
+                >
+                  <div className="inline-flex min-w-max items-center gap-4">
+                    <div className="w-16 text-center text-sm font-medium">Progress</div>
+                    <div className="w-16 text-center text-sm font-medium">Average</div>
+                    
+                    {topics?.map(topic => (
+                      <div key={topic.id} className="w-20 text-center px-1">
+                        <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
+                          <span className="line-clamp-2">{topic.name}</span>
+                          <Badge className="mt-1 bg-[#2A2F3C] text-xs whitespace-nowrap text-ellipsis overflow-hidden max-w-full">
+                            {getSemesterName(topic.semester_id)}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -596,22 +580,27 @@ export function GradebookViewStandalone() {
                 <span className="font-medium">Average grade</span>
               </div>
               
-              <div className="overflow-x-auto w-[calc(100%-11rem)]">
-                <div className="inline-flex min-w-max gap-4">
-                  <div className="w-16 text-center">
-                    <div 
-                      className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateClassAverage())}`} 
-                    />
-                  </div>
-                  <div className="w-16 text-center font-medium">
-                    {calculateClassAverage()}
-                  </div>
-                  
-                  {currentTopics.map(topic => (
-                    <div key={topic.id} className="w-20 text-center font-medium">
-                      {calculateTopicAverage(topic.id)}
+              <div className="flex-1 overflow-hidden">
+                <div 
+                  ref={scrollContainerRef}
+                  className="scrollbar-none overflow-x-auto"
+                >
+                  <div className="inline-flex min-w-max gap-4">
+                    <div className="w-16 text-center">
+                      <div 
+                        className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateClassAverage())}`} 
+                      />
                     </div>
-                  ))}
+                    <div className="w-16 text-center font-medium">
+                      {calculateClassAverage()}
+                    </div>
+                    
+                    {topics?.map(topic => (
+                      <div key={topic.id} className="w-20 text-center font-medium">
+                        {calculateTopicAverage(topic.id)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -634,49 +623,53 @@ export function GradebookViewStandalone() {
                   </div>
                 </div>
                 
-                <div className="overflow-x-auto w-[calc(100%-11rem)]">
-                  <div className="inline-flex min-w-max gap-4">
-                    <div className="w-16 text-center">
-                      <div 
-                        className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
-                      />
-                    </div>
-                    <div className="w-16 text-center font-medium">
-                      {calculateAverage(student.id)}
-                    </div>
-                    
-                    {currentTopics.map(topic => (
-                      <div key={topic.id} className="w-20 text-center font-medium">
-                        {isAdmin && selectedCourse ? (
-                          <Input
-                            type="number"
-                            min="1"
-                            max="10"
-                            value={grades[student.id]?.[topic.id] || ""}
-                            onChange={(e) => handleGradeChange(
-                              student.id,
-                              topic.id,
-                              e.target.value ? Number(e.target.value) : 1
-                            )}
-                            className={`w-12 text-center h-8 mx-auto border-none text-white ${
-                              grades[student.id]?.[topic.id] 
-                                ? getScoreColor(grades[student.id][topic.id]) 
-                                : "bg-[#2A2F3C]"
-                            }`}
-                          />
-                        ) : (
-                          <span 
-                            className={`inline-block w-12 py-1 px-2 rounded ${
-                              grades[student.id]?.[topic.id] 
-                                ? getScoreColor(grades[student.id][topic.id]) 
-                                : "bg-[#2A2F3C]"
-                            }`}
-                          >
-                            {grades[student.id]?.[topic.id] || "-"}
-                          </span>
-                        )}
+                <div className="flex-1 overflow-hidden">
+                  <div 
+                    className="scrollbar-none overflow-x-auto"
+                  >
+                    <div className="inline-flex min-w-max gap-4">
+                      <div className="w-16 text-center">
+                        <div 
+                          className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
+                        />
                       </div>
-                    ))}
+                      <div className="w-16 text-center font-medium">
+                        {calculateAverage(student.id)}
+                      </div>
+                      
+                      {topics?.map(topic => (
+                        <div key={topic.id} className="w-20 text-center font-medium">
+                          {isAdmin && selectedCourse ? (
+                            <Input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={grades[student.id]?.[topic.id] || ""}
+                              onChange={(e) => handleGradeChange(
+                                student.id,
+                                topic.id,
+                                e.target.value ? Number(e.target.value) : 1
+                              )}
+                              className={`w-12 text-center h-8 mx-auto border-none text-white ${
+                                grades[student.id]?.[topic.id] 
+                                  ? getScoreColor(grades[student.id][topic.id]) 
+                                  : "bg-[#2A2F3C]"
+                              }`}
+                            />
+                          ) : (
+                            <span 
+                              className={`inline-block w-12 py-1 px-2 rounded ${
+                                grades[student.id]?.[topic.id] 
+                                  ? getScoreColor(grades[student.id][topic.id]) 
+                                  : "bg-[#2A2F3C]"
+                              }`}
+                            >
+                              {grades[student.id]?.[topic.id] || "-"}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -5,6 +5,18 @@ import { BookOpen } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Add global styles for the scrollbar
+const scrollbarStyles = `
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
 export default function GradebookManagement() {
   const queryClient = useQueryClient();
 
@@ -17,6 +29,9 @@ export default function GradebookManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Add styles for hiding scrollbars */}
+      <style>{scrollbarStyles}</style>
+      
       <Card className="bg-muted/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-xl">
