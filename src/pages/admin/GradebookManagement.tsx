@@ -15,7 +15,7 @@ export default function GradebookManagement() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground mb-6">
-            View and manage student grades for all courses.
+            View and manage student grades for all courses. As an admin, you can edit and save grades directly.
           </p>
           
           <GradebookViewStandalone />

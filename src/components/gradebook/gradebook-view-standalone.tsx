@@ -6,7 +6,7 @@ import {
   Card, 
   CardContent,
 } from "@/components/ui/card";
-import { Search } from "lucide-react";
+import { Search, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { 
@@ -15,6 +15,9 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useAuth } from "@/context/auth-context";
 
 interface Student {
   id: string;
@@ -23,8 +26,10 @@ interface Student {
 }
 
 interface Grade {
+  id?: string;
   student_id: string;
   topic_id: string;
+  course_id: string;
   score: number;
 }
 
@@ -41,10 +46,13 @@ interface Topic {
 }
 
 export function GradebookViewStandalone() {
+  const { user } = useAuth();
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [grades, setGrades] = useState<Record<string, Record<string, number>>>({});
   const [activeTab, setActiveTab] = useState("all");
+  const [isSaving, setIsSaving] = useState(false);
+  const isAdmin = user?.role === 'admin';
 
   // Fetch all courses
   const { data: courses } = useQuery({
@@ -125,7 +133,7 @@ export function GradebookViewStandalone() {
       
       const { data, error } = await supabase
         .from("grades")
-        .select("student_id, topic_id, score")
+        .select("id, student_id, topic_id, score")
         .eq("course_id", selectedCourse)
         .in("topic_id", topicIds);
         
@@ -147,6 +155,96 @@ export function GradebookViewStandalone() {
     },
     enabled: !!selectedCourse && !!topics && topics.length > 0,
   });
+
+  // Handle grade change
+  const handleGradeChange = (studentId: string, topicId: string, score: number) => {
+    setGrades(prev => ({
+      ...prev,
+      [studentId]: {
+        ...(prev[studentId] || {}),
+        [topicId]: score
+      }
+    }));
+  };
+
+  // Save grades to Supabase
+  const saveGrades = async () => {
+    if (!selectedCourse) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const updatedGrades: Grade[] = [];
+      
+      // Format grades for saving
+      Object.entries(grades).forEach(([studentId, topicGrades]) => {
+        Object.entries(topicGrades).forEach(([topicId, score]) => {
+          updatedGrades.push({
+            student_id: studentId,
+            topic_id: topicId,
+            course_id: selectedCourse,
+            score
+          });
+        });
+      });
+      
+      // Check for existing grades to update or insert
+      const { data: existingGradeRecords, error: checkError } = await supabase
+        .from("grades")
+        .select("id, student_id, topic_id")
+        .eq("course_id", selectedCourse);
+      
+      if (checkError) throw checkError;
+      
+      // Create a map of existing grades
+      const existingGradeMap: Record<string, string> = {};
+      existingGradeRecords.forEach(grade => {
+        const key = `${grade.student_id}-${grade.topic_id}`;
+        existingGradeMap[key] = grade.id;
+      });
+      
+      // Separate updates and inserts
+      const updates: any[] = [];
+      const inserts: any[] = [];
+      
+      updatedGrades.forEach(grade => {
+        const key = `${grade.student_id}-${grade.topic_id}`;
+        if (existingGradeMap[key]) {
+          updates.push({
+            id: existingGradeMap[key],
+            score: grade.score
+          });
+        } else {
+          inserts.push(grade);
+        }
+      });
+      
+      // Perform updates
+      if (updates.length > 0) {
+        const { error: updateError } = await supabase
+          .from("grades")
+          .upsert(updates);
+          
+        if (updateError) throw updateError;
+      }
+      
+      // Perform inserts
+      if (inserts.length > 0) {
+        const { error: insertError } = await supabase
+          .from("grades")
+          .insert(inserts);
+          
+        if (insertError) throw insertError;
+      }
+      
+      toast.success("Grades saved successfully");
+    } catch (error) {
+      console.error("Error saving grades:", error);
+      toast.error("Failed to save grades");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Filter students based on search query
   const filteredStudents = students?.filter(student => 
@@ -209,6 +307,17 @@ export function GradebookViewStandalone() {
               <h2 className="flex items-center text-2xl font-semibold">
                 <span className="mr-2">←</span> Class
               </h2>
+              
+              {isAdmin && selectedCourse && (
+                <Button 
+                  onClick={saveGrades}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 bg-[#6E59A5] hover:bg-[#5A4A87]"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "Saving..." : "Save Grades"}
+                </Button>
+              )}
             </div>
             
             <div className="mb-4 flex gap-3">
@@ -359,7 +468,24 @@ export function GradebookViewStandalone() {
                   </div>
                   {topics?.slice(0, 3).map(topic => (
                     <div key={topic.id} className="w-24 text-center font-medium">
-                      {grades[student.id]?.[topic.id] ? `${grades[student.id][topic.id]}%` : "-"}
+                      {isAdmin && selectedCourse ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={grades[student.id]?.[topic.id] || ""}
+                          onChange={(e) => handleGradeChange(
+                            student.id,
+                            topic.id,
+                            e.target.value ? Number(e.target.value) : 0
+                          )}
+                          className="w-16 text-center h-8 mx-auto bg-[#2A2F3C] border-none text-white"
+                        />
+                      ) : (
+                        <span>
+                          {grades[student.id]?.[topic.id] ? `${grades[student.id][topic.id]}%` : "-"}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
