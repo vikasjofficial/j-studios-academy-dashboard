@@ -36,6 +36,16 @@ interface AuthContextType {
   createStudentCredentials: (studentId: string, email: string, password: string) => Promise<boolean>;
 }
 
+// Define StudentCredential interface to match database table
+interface StudentCredential {
+  id?: string;
+  student_id: string;
+  email: string;
+  password: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -78,17 +88,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Store the credentials in a dedicated student_credentials table
       // This will be used during login to authenticate students
+      const credentials: StudentCredential = {
+        student_id: studentData.id,
+        email: email,
+        password: password
+      };
+
       const { error: upsertError } = await supabase
         .from('student_credentials')
-        .upsert({ 
-          student_id: studentData.id,
-          email: email,
-          // We need to store the password in hashed form for security
-          // In a real app, use a proper hashing library, but for demo:
-          // We're storing it as-is just to demonstrate the flow
-          password: password,
-          created_at: new Date().toISOString()
-        }, { 
+        .upsert(credentials, { 
           onConflict: 'student_id' 
         });
 
@@ -141,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
       
-      // Check if password matches (in a real app, use proper password verification)
+      // Check if password matches
       if (credentialData.password !== password) {
         console.error('Password does not match');
         toast.error('Invalid email or password');
