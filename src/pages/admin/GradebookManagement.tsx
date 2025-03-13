@@ -1,5 +1,4 @@
 
-import { Card } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
