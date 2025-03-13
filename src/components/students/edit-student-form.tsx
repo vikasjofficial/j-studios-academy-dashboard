@@ -342,7 +342,7 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
       </TabsContent>
       
       <TabsContent value="messages">
-        <StudentMessagesTab studentId={student.id} />
+        <StudentMessagesTab studentId={student.id} studentName={student.name} />
       </TabsContent>
     </Tabs>
   );
