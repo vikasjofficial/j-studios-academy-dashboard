@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +45,6 @@ export function GradebookStyled() {
   const [isSaving, setIsSaving] = useState(false);
   const isAdmin = user?.role === 'admin';
 
-  // Fetch all courses
   const { data: courses } = useQuery({
     queryKey: ["all-courses"],
     queryFn: async () => {
@@ -60,14 +58,12 @@ export function GradebookStyled() {
     },
   });
 
-  // Set initial selected course
   useEffect(() => {
     if (courses && courses.length > 0 && !selectedCourse) {
       setSelectedCourse(courses[0].id);
     }
   }, [courses, selectedCourse]);
 
-  // Fetch semesters for selected course
   const { data: semesters } = useQuery({
     queryKey: ["course-semesters", selectedCourse],
     queryFn: async () => {
@@ -85,14 +81,12 @@ export function GradebookStyled() {
     enabled: !!selectedCourse,
   });
 
-  // Set initial selected semester
   useEffect(() => {
     if (semesters && semesters.length > 0 && !selectedSemesterId) {
       setSelectedSemesterId(semesters[0].id);
     }
   }, [semesters, selectedSemesterId]);
 
-  // Fetch enrolled students
   const { data: students } = useQuery({
     queryKey: ["students", selectedCourse],
     queryFn: async () => {
@@ -112,7 +106,6 @@ export function GradebookStyled() {
     enabled: !!selectedCourse,
   });
 
-  // Fetch topics for the selected semester
   const { data: topics } = useQuery({
     queryKey: ["topics", selectedSemesterId],
     queryFn: async () => {
@@ -131,7 +124,6 @@ export function GradebookStyled() {
     enabled: !!selectedSemesterId && !!selectedCourse,
   });
 
-  // Fetch existing grades
   const { data: existingGrades } = useQuery({
     queryKey: ["grades", selectedCourse, selectedSemesterId],
     queryFn: async () => {
@@ -147,7 +139,6 @@ export function GradebookStyled() {
         
       if (error) throw error;
       
-      // Initialize grades state
       const gradeMap: Record<string, Record<string, number>> = {};
       
       data.forEach(grade => {
@@ -165,7 +156,6 @@ export function GradebookStyled() {
   });
 
   const handleGradeChange = (studentId: string, topicId: string, score: number) => {
-    // Ensure score is between 1-10
     let validScore = Math.max(1, Math.min(10, score));
     
     setGrades(prev => ({
@@ -178,10 +168,10 @@ export function GradebookStyled() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 9) return "bg-primary/20 text-primary-foreground";
-    if (score >= 6) return "bg-accent/30 text-accent-foreground";
-    if (score >= 3) return "bg-muted/30 text-muted-foreground";
-    return "bg-destructive/20 text-destructive-foreground";
+    if (score >= 9) return "bg-[#4ade80] text-black font-medium";
+    if (score >= 6) return "bg-[#86efac] text-black font-medium";
+    if (score >= 3) return "bg-[#fdba74] text-black font-medium";
+    return "bg-[#f87171] text-black font-medium";
   };
 
   const saveGrades = async () => {
@@ -192,7 +182,6 @@ export function GradebookStyled() {
     try {
       const updatedGrades: Grade[] = [];
       
-      // Format grades for saving
       Object.entries(grades).forEach(([studentId, topicGrades]) => {
         Object.entries(topicGrades).forEach(([topicId, score]) => {
           updatedGrades.push({
@@ -204,7 +193,6 @@ export function GradebookStyled() {
         });
       });
       
-      // Check for existing grades to update or insert
       const { data: existingGradeRecords, error: checkError } = await supabase
         .from("grades")
         .select("id, student_id, topic_id")
@@ -212,14 +200,12 @@ export function GradebookStyled() {
       
       if (checkError) throw checkError;
       
-      // Create a map of existing grades
       const existingGradeMap: Record<string, string> = {};
       existingGradeRecords.forEach(grade => {
         const key = `${grade.student_id}-${grade.topic_id}`;
         existingGradeMap[key] = grade.id;
       });
       
-      // Separate updates and inserts
       const updates: any[] = [];
       const inserts: any[] = [];
       
@@ -238,7 +224,6 @@ export function GradebookStyled() {
         }
       });
       
-      // Perform updates
       if (updates.length > 0) {
         const { error: updateError } = await supabase
           .from("grades")
@@ -247,7 +232,6 @@ export function GradebookStyled() {
         if (updateError) throw updateError;
       }
       
-      // Perform inserts
       if (inserts.length > 0) {
         const { error: insertError } = await supabase
           .from("grades")
@@ -276,7 +260,6 @@ export function GradebookStyled() {
     return avg.toString();
   };
 
-  // Get selected course name
   const selectedCourseName = courses?.find(course => course.id === selectedCourse)?.name || "";
 
   return (
@@ -290,7 +273,6 @@ export function GradebookStyled() {
         View and manage student grades for all courses. As an admin, you can edit and save grades directly.
       </p>
       
-      {/* Semester selection */}
       <div className="flex flex-wrap gap-2 my-5">
         {semesters?.map((semester, index) => (
           <Button
@@ -307,7 +289,6 @@ export function GradebookStyled() {
         ))}
       </div>
       
-      {/* Gradebook table */}
       <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm">
         <table className="w-full min-w-full table-auto">
           <thead>
@@ -369,7 +350,6 @@ export function GradebookStyled() {
         </table>
       </div>
       
-      {/* Navigation and save button */}
       <div className="flex justify-between items-center mt-6">
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="border-white/10 hover:bg-secondary">
