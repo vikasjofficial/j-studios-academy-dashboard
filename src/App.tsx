@@ -11,13 +11,15 @@ import StudentsManagement from "./pages/admin/StudentsManagement";
 import { PlaceholderPage } from "@/components/placeholder-page";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import StudentDashboard from "@/pages/student/StudentDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import StudentDashboard from "./pages/student/StudentDashboard";
 import CoursesManagement from "./pages/admin/CoursesManagement";
 import GradebookManagement from "./pages/admin/GradebookManagement";
 import StudentMessages from "./pages/student/StudentMessages";
 import StudentCourses from "./pages/student/StudentCourses";
 import AdminMessages from "./pages/admin/AdminMessages";
+import AttendanceManagementPage from "./pages/admin/AttendanceManagement";
+import StudentAttendance from "./pages/student/StudentAttendance";
 
 const queryClient = new QueryClient();
 
@@ -69,7 +71,7 @@ const App = () => (
             <Route path="/admin/attendance" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
-                  <PlaceholderPage title="Attendance Management" />
+                  <AttendanceManagementPage />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
@@ -104,7 +106,7 @@ const App = () => (
             <Route path="/student/attendance" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <DashboardLayout>
-                  <PlaceholderPage title="My Attendance" />
+                  <StudentAttendance />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
