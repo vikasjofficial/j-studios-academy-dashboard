@@ -67,7 +67,7 @@ export function CreateSemesterForm({ courseId, courseName, onSuccess }: CreateSe
       semester_id: semesterId,
       course_id: courseId,
       description: `Default topic ${index + 1} for the semester`,
-      order: index + 1
+      order_id: index + 1  // Changed from 'order' to 'order_id' to match database schema
     }));
 
     const { error } = await supabase.from("topics").insert(topics);
@@ -106,6 +106,7 @@ export function CreateSemesterForm({ courseId, courseName, onSuccess }: CreateSe
     },
     onError: (error) => {
       toast.error("Failed to create semester: " + error.message);
+      console.error("Semester creation error:", error);
     },
     onSettled: () => {
       setIsSubmitting(false);
