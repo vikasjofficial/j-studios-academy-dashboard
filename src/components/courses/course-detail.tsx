@@ -4,13 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tables } from "@/integrations/supabase/types";
 import { SemestersList } from "./semesters-list";
 import { CreateSemesterForm } from "./create-semester-form";
-import { Book, CalendarDays, GraduationCap, Info } from "lucide-react";
-import { CalendarView } from "./calendar-view";
+import { Book, CalendarDays, GraduationCap, ListChecks } from "lucide-react";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { GradebookView } from "./gradebook-view";
 
 type Course = Tables<"courses">;
 
@@ -19,7 +21,8 @@ interface CourseDetailProps {
 }
 
 export function CourseDetail({ courseId }: CourseDetailProps) {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("semesters");
+  const [isCreateSemesterOpen, setIsCreateSemesterOpen] = useState(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ["course", courseId],
@@ -61,9 +64,9 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
                 <Book className="h-5 w-5 text-primary" />
                 <CardTitle>{course.name}</CardTitle>
               </div>
-              <CardDescription className="mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Course Code: {course.code} | Instructor: {course.instructor}
-              </CardDescription>
+              </p>
             </div>
             <Badge variant="outline" className={
               course.status === "active" 
@@ -75,7 +78,7 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Duration</p>
               <p className="flex items-center gap-1">
@@ -93,53 +96,58 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="overview" className="flex items-center gap-1">
-            <Info className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="semesters" className="flex items-center gap-1">
-            <CalendarDays className="h-4 w-4" />
-            Semesters
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex items-center gap-1">
-            <CalendarDays className="h-4 w-4" />
-            Calendar
-          </TabsTrigger>
-          <TabsTrigger value="create-semester" className="flex items-center gap-1">
+      <div className="flex justify-between items-center">
+        <Tabs defaultValue="semesters" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList>
+            <TabsTrigger value="semesters" className="flex items-center gap-1">
+              <CalendarDays className="h-4 w-4" />
+              Semesters
+            </TabsTrigger>
+            <TabsTrigger value="gradebook" className="flex items-center gap-1">
+              <ListChecks className="h-4 w-4" />
+              Gradebook
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        {activeTab === "semesters" && (
+          <Button 
+            variant="outline" 
+            onClick={() => setIsCreateSemesterOpen(true)} 
+            className="ml-4 flex items-center gap-2"
+          >
             <GraduationCap className="h-4 w-4" />
-            Create Semester
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Course details and statistics will be displayed here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="semesters" className="mt-6">
-          <SemestersList courseId={courseId} courseName={course.name} />
-        </TabsContent>
-        
-        <TabsContent value="calendar" className="mt-6">
-          <CalendarView courseId={courseId} />
-        </TabsContent>
-        
-        <TabsContent value="create-semester" className="mt-6">
+            New Semester
+          </Button>
+        )}
+      </div>
+      
+      <TabsContent value="semesters" className="mt-0 p-0">
+        <SemestersList courseId={courseId} courseName={course.name} />
+      </TabsContent>
+      
+      <TabsContent value="gradebook" className="mt-0 p-0">
+        <GradebookView courseId={courseId} courseName={course.name} />
+      </TabsContent>
+      
+      <Dialog open={isCreateSemesterOpen} onOpenChange={setIsCreateSemesterOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              Create New Semester
+            </DialogTitle>
+          </DialogHeader>
           <CreateSemesterForm 
             courseId={courseId} 
             courseName={course.name} 
-            onSuccess={() => setActiveTab("semesters")} 
+            onSuccess={() => {
+              setIsCreateSemesterOpen(false);
+              setActiveTab("semesters");
+            }} 
           />
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
