@@ -12,17 +12,10 @@ interface AttendanceCardProps {
 }
 
 export function AttendanceCard({ title, percentage, present, total, className }: AttendanceCardProps) {
-  const getProgressColor = (value: number) => {
-    if (value >= 90) return 'bg-green-500';
-    if (value >= 75) return 'bg-blue-500';
-    if (value >= 60) return 'bg-amber-500';
-    return 'bg-red-500';
-  };
-
   return (
     <div className={cn(
-      "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
-      "bg-white/5 border border-white/10 hover:bg-white/10",
+      "relative p-6 rounded-xl overflow-hidden glass-morphism transition-all",
+      "hover:bg-black/30 hover:border-white/20",
       className
     )}>
       <div className="flex items-center justify-between mb-6">
@@ -46,15 +39,15 @@ export function AttendanceCard({ title, percentage, present, total, className }:
       />
       
       <div className="grid grid-cols-3 gap-3 mt-6">
-        <div className="flex flex-col items-center p-3 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex flex-col items-center p-3 rounded-lg bg-black/20 border border-white/10">
           <span className="text-xs text-muted-foreground mb-1">Present</span>
           <span className="font-medium">{present}</span>
         </div>
-        <div className="flex flex-col items-center p-3 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex flex-col items-center p-3 rounded-lg bg-black/20 border border-white/10">
           <span className="text-xs text-muted-foreground mb-1">Absent</span>
           <span className="font-medium">{total - present}</span>
         </div>
-        <div className="flex flex-col items-center p-3 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex flex-col items-center p-3 rounded-lg bg-black/20 border border-white/10">
           <span className="text-xs text-muted-foreground mb-1">Total</span>
           <span className="font-medium">{total}</span>
         </div>

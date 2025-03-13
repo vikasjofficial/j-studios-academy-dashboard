@@ -20,48 +20,48 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
+				border: 'hsl(215 20% 25% / 0.4)',
+				input: 'hsl(215 20% 25% / 0.4)',
 				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				background: 'hsl(220 20% 10%)',
+				foreground: 'hsl(210 10% 90%)',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: 'hsl(210 100% 55%)',
+					foreground: 'hsl(0 0% 100%)'
 				},
 				secondary: {
-					DEFAULT: 'hsl(var(--secondary))',
-					foreground: 'hsl(var(--secondary-foreground))'
+					DEFAULT: 'hsl(220 20% 15%)',
+					foreground: 'hsl(210 10% 90%)'
 				},
 				destructive: {
-					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
+					DEFAULT: 'hsl(0 80% 60%)',
+					foreground: 'hsl(0 0% 100%)'
 				},
 				muted: {
-					DEFAULT: 'hsl(var(--muted))',
-					foreground: 'hsl(var(--muted-foreground))'
+					DEFAULT: 'hsl(220 20% 20%)',
+					foreground: 'hsl(210 10% 70%)'
 				},
 				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
+					DEFAULT: 'hsl(220 20% 20%)',
+					foreground: 'hsl(210 10% 90%)'
 				},
 				popover: {
-					DEFAULT: 'hsl(var(--popover))',
-					foreground: 'hsl(var(--popover-foreground))'
+					DEFAULT: 'hsl(220 20% 12%)',
+					foreground: 'hsl(210 10% 90%)'
 				},
 				card: {
-					DEFAULT: 'hsl(var(--card))',
-					foreground: 'hsl(var(--card-foreground))'
+					DEFAULT: 'hsl(220 20% 14% / 0.6)',
+					foreground: 'hsl(210 10% 90%)'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
-					foreground: 'hsl(var(--sidebar-foreground))',
-					primary: 'hsl(var(--sidebar-primary))',
-					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-					accent: 'hsl(var(--sidebar-accent))',
-					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+					DEFAULT: 'hsl(220 20% 12%)',
+					foreground: 'hsl(210 10% 90%)',
+					primary: 'hsl(210 100% 55%)',
+					'primary-foreground': 'hsl(0 0% 100%)',
+					accent: 'hsl(220 20% 18%)',
+					'accent-foreground': 'hsl(210 10% 90%)',
+					border: 'hsl(215 20% 25% / 0.4)',
+					ring: 'hsl(210 100% 55%)'
 				}
 			},
 			borderRadius: {
@@ -163,6 +163,8 @@ export default {
 			},
 			boxShadow: {
 				'subtle': '0 4px 10px -2px rgba(0, 0, 0, 0.05)',
+				'glass': '0 8px 32px rgba(0, 0, 0, 0.1)',
+				'neon': '0 0 10px rgba(66, 153, 225, 0.5)',
 			},
 			animationDelay: {
 				'1000': '1000ms',

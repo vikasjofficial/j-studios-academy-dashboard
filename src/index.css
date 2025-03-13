@@ -5,7 +5,48 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 220 20% 10%;
+    --foreground: 210 10% 90%;
+
+    --card: 220 20% 14%;
+    --card-foreground: 210 10% 90%;
+
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 10% 90%;
+
+    --primary: 210 100% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 210 10% 90%;
+
+    --muted: 220 20% 20%;
+    --muted-foreground: 210 10% 70%;
+
+    --accent: 220 20% 20%;
+    --accent-foreground: 210 10% 90%;
+
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 25%;
+    --input: 215 20% 25%;
+    --ring: 210 100% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 220 20% 12%;
+    --sidebar-foreground: 210 10% 90%;
+    --sidebar-primary: 210 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 210 10% 90%;
+    --sidebar-border: 215 20% 25%;
+    --sidebar-ring: 210 100% 55%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -23,7 +64,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 221 83% 53%;
+    --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -32,9 +73,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221 83% 53%;
-
-    --radius: 0.5rem;
-
+    
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222.2 84% 4.9%;
     --sidebar-primary: 221 83% 53%;
@@ -42,45 +81,6 @@
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 221 83% 53%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 221 83% 53%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 221 83% 53%;
   }
 }
@@ -103,7 +103,7 @@
 @layer utilities {
   /* Glass card effect */
   .glass-card {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+    @apply bg-card/60 backdrop-blur-md border border-white/10 shadow-glass;
   }
   
   /* Text balancing for headings */
@@ -112,8 +112,13 @@
   }
   
   /* Glass gradient effect */
-  .from-glass {
-    @apply from-white/10 to-white/5 bg-gradient-to-br backdrop-blur-lg border border-white/10;
+  .glass-morphism {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10 shadow-glass;
+  }
+  
+  /* Card with neon glow */
+  .neon-card {
+    @apply glass-card shadow-neon;
   }
   
   /* Transition utilities */
@@ -140,11 +145,6 @@
     @apply hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ease-in-out;
   }
   
-  /* Glass morphism effect */
-  .glass-morphism {
-    @apply bg-black/5 backdrop-blur-md border border-white/10 shadow-lg dark:bg-black/40;
-  }
-  
   /* Card highlight effect */
   .card-highlight {
     @apply before:absolute before:inset-0 before:bg-white/5 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300 relative overflow-hidden;
@@ -158,5 +158,13 @@
   
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Grid pattern overlay */
+  .grid-pattern {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 }

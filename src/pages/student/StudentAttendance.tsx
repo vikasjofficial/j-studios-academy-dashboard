@@ -11,7 +11,7 @@ export default function StudentAttendance() {
         <p className="text-muted-foreground">View your attendance records for all courses</p>
       </div>
       
-      <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
+      <div className="glass-morphism rounded-xl p-6 border border-white/10">
         <div className="flex items-center gap-2 mb-4">
           <UserCheck className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-semibold">Attendance by Course</h2>

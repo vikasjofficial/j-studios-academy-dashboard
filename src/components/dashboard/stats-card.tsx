@@ -23,8 +23,8 @@ export function StatsCard({
 }: StatsCardProps) {
   return (
     <div className={cn(
-      "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
-      "bg-white/5 border border-white/10 hover:bg-white/10",
+      "relative p-6 rounded-xl overflow-hidden glass-morphism transition-all",
+      "hover:bg-black/30 hover:border-white/20",
       className
     )}>
       <div className="flex flex-col space-y-4">

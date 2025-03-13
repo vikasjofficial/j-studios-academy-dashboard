@@ -21,11 +21,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background/80">
+      <div className="min-h-screen flex w-full bg-background relative">
+        {/* Grid pattern background */}
+        <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none z-0"></div>
+        
         <AppSidebar />
         <div className="flex-1 flex flex-col relative overflow-hidden">
           {/* Subtle gradient background shapes */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
             <div className="animate-float absolute top-[5%] right-[10%] w-72 h-72 rounded-full bg-primary/5 blur-3xl"></div>
             <div className="animate-float animation-delay-2000 absolute bottom-[10%] left-[5%] w-96 h-96 rounded-full bg-blue-400/5 blur-3xl"></div>
             <div className="animate-pulse animation-delay-1000 absolute top-[35%] left-[15%] w-64 h-64 rounded-full bg-accent/5 blur-3xl"></div>
