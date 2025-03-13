@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,13 +159,20 @@ export function GradebookStyled() {
       
       const topicIds = topics.map(topic => topic.id);
       
+      console.log("Fetching grades with comments for topics:", topicIds);
+      
       const { data, error } = await supabase
         .from("grades")
         .select("id, student_id, topic_id, score, comment")
         .eq("course_id", selectedCourse)
         .in("topic_id", topicIds);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching grades:", error);
+        throw error;
+      }
+      
+      console.log("Fetched grades data:", data);
       
       const gradeMap: Record<string, Record<string, number>> = {};
       const commentMap: Record<string, Record<string, string>> = {};
@@ -182,6 +190,8 @@ export function GradebookStyled() {
           commentMap[grade.student_id][grade.topic_id] = grade.comment;
         }
       });
+      
+      console.log("Processed comment map:", commentMap);
       
       setGrades(gradeMap);
       setComments(commentMap);
@@ -204,6 +214,7 @@ export function GradebookStyled() {
   };
 
   const handleCommentChange = (studentId: string, topicId: string, comment: string) => {
+    console.log("Setting comment for student:", studentId, "topic:", topicId, "comment:", comment);
     setComments(prev => ({
       ...prev,
       [studentId]: {
@@ -224,12 +235,14 @@ export function GradebookStyled() {
     if (!selectedCourse || !selectedSemesterId) return;
     
     setIsSaving(true);
+    console.log("Starting to save grades and comments");
     
     try {
       const updatedGrades: any[] = [];
       
       Object.entries(grades).forEach(([studentId, topicGrades]) => {
         Object.entries(topicGrades).forEach(([topicId, score]) => {
+          // Get the comment for this grade if it exists
           const comment = comments[studentId]?.[topicId] || "";
           
           updatedGrades.push({
@@ -241,6 +254,8 @@ export function GradebookStyled() {
           });
         });
       });
+      
+      console.log("Grades prepared for saving:", updatedGrades);
       
       const { data: existingGradeRecords, error: checkError } = await supabase
         .from("grades")
@@ -274,12 +289,18 @@ export function GradebookStyled() {
         }
       });
       
+      console.log("Updates to perform:", updates);
+      console.log("Inserts to perform:", inserts);
+      
       if (updates.length > 0) {
         const { error: updateError } = await supabase
           .from("grades")
           .upsert(updates);
           
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Error updating grades:", updateError);
+          throw updateError;
+        }
       }
       
       if (inserts.length > 0) {
@@ -287,7 +308,10 @@ export function GradebookStyled() {
           .from("grades")
           .insert(inserts);
           
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error inserting grades:", insertError);
+          throw insertError;
+        }
       }
       
       await refetchGrades();

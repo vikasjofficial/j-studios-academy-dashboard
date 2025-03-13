@@ -2,295 +2,327 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/auth-context";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListChecks, BookOpen, MessageSquare } from "lucide-react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { MessageSquare, GraduationCap, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { useAuth } from "@/context/auth-context";
 
-interface StudentGradebookViewProps {
-  courseId?: string; // Optional to allow viewing all courses or a specific course
+interface Topic {
+  id: string;
+  name: string;
+  order_id: number;
+}
+
+interface Grade {
+  id: string;
+  topic_id: string;
+  score: number;
+  comment?: string;
 }
 
 interface Course {
   id: string;
   name: string;
-  code: string;
 }
 
-interface Topic {
-  id: string;
-  name: string;
-  course_id: string;
-  course_name: string;
-}
-
-interface Grade {
-  id: string;
-  score: number;
-  topic_id: string;
-  topic_name: string;
-  course_id: string;
-  course_name: string;
-  comment?: string;
-}
-
-export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
+export function StudentGradebookView() {
   const { user } = useAuth();
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(courseId || null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [selectedNotesCourse, setSelectedNotesCourse] = useState<string | null>(null);
+  const studentId = user?.id;
 
-  // Get color based on score
-  const getScoreColor = (score: number) => {
-    if (score >= 9) return "bg-[#4ade80] text-black font-medium"; // Neon Green
-    if (score >= 6) return "bg-[#86efac] text-black font-medium"; // Light Green
-    if (score >= 3) return "bg-[#fdba74] text-black font-medium"; // Orange
-    return "bg-[#f87171] text-black font-medium"; // Red
-  };
-
-  // Fetch student's courses
-  const { data: courses } = useQuery({
-    queryKey: ["student-courses", user?.id],
+  const { data: enrolledCourses, isLoading: isLoadingCourses } = useQuery({
+    queryKey: ["enrolled-courses", studentId],
     queryFn: async () => {
-      if (!user?.studentId) return [];
+      if (!studentId) return [];
+      
+      console.log("Fetching enrolled courses for student:", studentId);
       
       const { data, error } = await supabase
         .from("enrollments")
         .select(`
-          course_id,
-          courses:course_id(id, name, code)
+          course:course_id(id, name)
         `)
-        .eq("student_id", user.id);
+        .eq("student_id", studentId);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching enrolled courses:", error);
+        throw error;
+      }
       
-      return data.map(item => item.courses) as Course[];
+      return data.map(item => item.course) as Course[];
     },
-    enabled: !!user?.id,
+    enabled: !!studentId,
   });
 
-  // Set the first course as selected when data is loaded and no courseId is provided
   useEffect(() => {
-    if (!selectedCourseId && courses && courses.length > 0) {
-      setSelectedCourseId(courses[0].id);
+    if (enrolledCourses && enrolledCourses.length > 0 && !selectedCourse) {
+      setSelectedCourse(enrolledCourses[0].id);
+      setSelectedNotesCourse(enrolledCourses[0].id);
     }
-  }, [courses, selectedCourseId]);
+  }, [enrolledCourses, selectedCourse]);
 
-  // Fetch topics and grades for the selected course or all courses
-  const { data: gradesWithTopics, isLoading } = useQuery({
-    queryKey: ["student-grades", user?.id, selectedCourseId],
+  const { data: topics } = useQuery({
+    queryKey: ["course-topics", selectedCourse],
     queryFn: async () => {
-      if (!user?.studentId) return [];
+      if (!selectedCourse) return [];
       
-      const query = supabase
+      console.log("Fetching topics for course:", selectedCourse);
+      
+      const { data, error } = await supabase
+        .from("topics")
+        .select("id, name, order_id")
+        .eq("course_id", selectedCourse)
+        .order("order_id");
+        
+      if (error) {
+        console.error("Error fetching topics:", error);
+        throw error;
+      }
+      
+      return data as Topic[];
+    },
+    enabled: !!selectedCourse,
+  });
+
+  const { data: grades, isLoading: isLoadingGrades } = useQuery({
+    queryKey: ["student-grades", studentId, selectedCourse],
+    queryFn: async () => {
+      if (!studentId || !selectedCourse || !topics || topics.length === 0) return [];
+      
+      console.log("Fetching grades for student:", studentId, "course:", selectedCourse);
+      
+      const { data, error } = await supabase
+        .from("grades")
+        .select("id, topic_id, score, comment")
+        .eq("student_id", studentId)
+        .eq("course_id", selectedCourse);
+        
+      if (error) {
+        console.error("Error fetching grades:", error);
+        throw error;
+      }
+      
+      console.log("Fetched grades with comments:", data);
+      
+      return data as Grade[];
+    },
+    enabled: !!studentId && !!selectedCourse && !!topics && topics.length > 0,
+  });
+
+  const getGrade = (topicId: string) => {
+    if (!grades) return null;
+    return grades.find(grade => grade.topic_id === topicId);
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return "bg-[#4ade80] text-black font-medium";
+    if (score >= 6) return "bg-[#86efac] text-black font-medium";
+    if (score >= 3) return "bg-[#fdba74] text-black font-medium";
+    return "bg-[#f87171] text-black font-medium";
+  };
+
+  const calculateAverage = () => {
+    if (!grades || grades.length === 0) return "-";
+    
+    const sum = grades.reduce((acc, grade) => acc + grade.score, 0);
+    const avg = Math.round((sum / grades.length) * 10) / 10;
+    return avg.toString();
+  };
+
+  const getCommentsByTopic = () => {
+    if (!grades || !topics) return [];
+    
+    const commentsWithTopics = grades
+      .filter(grade => grade.comment && grade.comment.trim() !== "")
+      .map(grade => {
+        const topic = topics.find(t => t.id === grade.topic_id);
+        return {
+          topicId: grade.topic_id,
+          topicName: topic ? topic.name : "Unknown Topic",
+          comment: grade.comment || ""
+        };
+      });
+      
+    return commentsWithTopics;
+  };
+
+  const { data: allCourseComments } = useQuery({
+    queryKey: ["student-all-comments", studentId, selectedNotesCourse],
+    queryFn: async () => {
+      if (!studentId || !selectedNotesCourse) return [];
+      
+      console.log("Fetching all comments for student:", studentId, "course:", selectedNotesCourse);
+      
+      const { data, error } = await supabase
         .from("grades")
         .select(`
-          id,
-          score,
-          comment,
+          id, 
           topic_id,
-          topics:topic_id(name, course_id, courses:course_id(name)),
-          course_id,
-          courses:course_id(name)
+          comment,
+          topics:topic_id(name)
         `)
-        .eq("student_id", user.id);
+        .eq("student_id", studentId)
+        .eq("course_id", selectedNotesCourse)
+        .not("comment", "is", null)
+        .not("comment", "eq", "");
         
-      // Filter by course if a course is selected
-      if (selectedCourseId) {
-        query.eq("course_id", selectedCourseId);
+      if (error) {
+        console.error("Error fetching comments:", error);
+        throw error;
       }
       
-      const { data, error } = await query;
+      console.log("Fetched all comments:", data);
       
-      if (error) throw error;
-      
-      // Transform the data to a more usable format
-      return data.map(grade => ({
-        id: grade.id,
-        score: grade.score,
-        comment: grade.comment || '',
-        topic_id: grade.topic_id,
-        topic_name: grade.topics?.name || 'Unknown Topic',
-        course_id: grade.course_id,
-        course_name: grade.courses?.name || 'Unknown Course'
-      })) as Grade[];
+      return data.map(item => ({
+        topicId: item.topic_id,
+        topicName: item.topics?.name || "Unknown Topic",
+        comment: item.comment || ""
+      }));
     },
-    enabled: !!user?.id,
+    enabled: !!studentId && !!selectedNotesCourse,
   });
 
-  // Group grades by course and calculate averages
-  const groupedGrades = gradesWithTopics?.reduce((acc, grade) => {
-    if (!acc[grade.course_id]) {
-      acc[grade.course_id] = {
-        courseName: grade.course_name,
-        topics: {},
-        grades: [],
-        average: 0
-      };
-    }
-    acc[grade.course_id].grades.push(grade);
-    if (!acc[grade.course_id].topics[grade.topic_id]) {
-      acc[grade.course_id].topics[grade.topic_id] = {
-        topicName: grade.topic_name,
-        score: grade.score,
-        comment: grade.comment
-      };
-    }
-    return acc;
-  }, {} as Record<string, { 
-    courseName: string, 
-    topics: Record<string, { 
-      topicName: string, 
-      score: number, 
-      comment?: string 
-    }>, 
-    grades: Grade[], 
-    average: number 
-  }>);
+  if (isLoadingCourses) {
+    return (
+      <div className="flex justify-center p-8">
+        <div className="animate-spin h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
-  // Calculate course averages
-  if (groupedGrades) {
-    Object.keys(groupedGrades).forEach(courseId => {
-      const courseGrades = groupedGrades[courseId];
-      if (courseGrades.grades.length > 0) {
-        const sum = courseGrades.grades.reduce((acc, grade) => acc + grade.score, 0);
-        courseGrades.average = Math.round((sum / courseGrades.grades.length) * 10) / 10;
-      }
-    });
+  if (!enrolledCourses || enrolledCourses.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>My Grades</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">You are not enrolled in any courses.</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <ListChecks className="h-5 w-5" />
-            My Grades {selectedCourseId && courses?.find(c => c.id === selectedCourseId)?.name ? 
-              `for ${courses.find(c => c.id === selectedCourseId)?.name}` : ''}
+            <GraduationCap className="h-5 w-5 text-primary" />
+            My Grades & Notes
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
+          <div className="flex flex-wrap gap-2 mb-4">
+            {enrolledCourses.map(course => (
+              <Button
+                key={course.id}
+                variant={selectedCourse === course.id ? "default" : "outline"}
+                onClick={() => setSelectedCourse(course.id)}
+                size="sm"
+              >
+                {course.name}
+              </Button>
+            ))}
+          </div>
+
+          {isLoadingGrades ? (
+            <div className="flex justify-center p-4">
               <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
             </div>
-          ) : groupedGrades && Object.keys(groupedGrades).length > 0 ? (
-            <div className="space-y-8">
-              {Object.entries(groupedGrades).map(([courseId, courseData]) => (
-                <div key={courseId} className="space-y-3">
-                  {!selectedCourseId && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <BookOpen className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-medium">{courseData.courseName}</h3>
-                    </div>
-                  )}
-                  <div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="font-bold">Topic</TableHead>
-                          <TableHead className="text-center w-24 font-medium">Score</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {Object.entries(courseData.topics).map(([topicId, topic]) => (
-                          <TableRow key={topicId} className="hover:bg-muted/20">
-                            <TableCell className="font-medium">{topic.topicName}</TableCell>
-                            <TableCell className="text-center">
-                              <HoverCard>
-                                <HoverCardTrigger>
-                                  <div 
-                                    className={`rounded-md p-1 w-12 mx-auto ${getScoreColor(topic.score)}`}
-                                  >
-                                    {topic.score}
-                                  </div>
-                                </HoverCardTrigger>
-                                {topic.comment && (
-                                  <HoverCardContent className="w-64 bg-card/95 backdrop-blur-sm border border-white/10 p-3">
-                                    <div className="flex flex-col space-y-1">
-                                      <div className="flex items-center">
-                                        <MessageSquare className="h-3 w-3 mr-1 text-muted-foreground" />
-                                        <h4 className="text-sm font-medium">{topic.topicName} Note:</h4>
-                                      </div>
-                                      <p className="text-sm text-muted-foreground">{topic.comment}</p>
-                                    </div>
-                                  </HoverCardContent>
-                                )}
-                              </HoverCard>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow className="bg-muted/10 font-medium">
-                          <TableCell>Course Average</TableCell>
-                          <TableCell className="text-center">
-                            <div className="font-bold">{courseData.average}</div>
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <ListChecks className="h-12 w-12 mx-auto mb-3 opacity-20" />
-              <p>No grades available yet.</p>
-              <p className="text-sm">Your grades will appear here once they've been entered.</p>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Topic</TableHead>
+                  <TableHead className="text-center">Score</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topics && topics.map(topic => {
+                  const grade = getGrade(topic.id);
+                  return (
+                    <TableRow key={topic.id}>
+                      <TableCell>{topic.name}</TableCell>
+                      <TableCell className="text-center">
+                        {grade ? (
+                          <HoverCard>
+                            <HoverCardTrigger>
+                              <span 
+                                className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
+                              >
+                                {grade.score}
+                              </span>
+                            </HoverCardTrigger>
+                            {grade.comment && (
+                              <HoverCardContent className="w-64 p-3">
+                                <div className="flex flex-col space-y-1">
+                                  <div className="flex items-center">
+                                    <Info className="h-3 w-3 mr-1 text-muted-foreground" />
+                                    <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">{grade.comment}</p>
+                                </div>
+                              </HoverCardContent>
+                            )}
+                          </HoverCard>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow>
+                  <TableCell className="font-bold">Average</TableCell>
+                  <TableCell className="text-center font-bold">{calculateAverage()}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
-      
-      {/* Student Comments Card */}
-      {groupedGrades && Object.keys(groupedGrades).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              Notes from Your Instructors
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.entries(groupedGrades).flatMap(([courseId, courseData]) => {
-              const topicsWithComments = Object.entries(courseData.topics)
-                .filter(([_, topic]) => topic.comment && topic.comment.trim() !== '')
-                .map(([topicId, topic]) => ({
-                  topicId,
-                  topicName: topic.topicName,
-                  comment: topic.comment,
-                  courseName: courseData.courseName
-                }));
-                
-              return topicsWithComments.map((topic, index) => (
-                <div key={`${courseId}-${topic.topicId}-${index}`} className="p-3 rounded-md bg-card/50 border border-white/10 mb-3">
-                  <div className="flex items-center gap-1 mb-1">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                    <h4 className="text-sm font-medium">{topic.courseName}</h4>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-md flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            Teacher Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-2">
+              {enrolledCourses.map(course => (
+                <Button
+                  key={course.id}
+                  variant={selectedNotesCourse === course.id ? "default" : "outline"}
+                  onClick={() => setSelectedNotesCourse(course.id)}
+                  size="sm"
+                >
+                  {course.name}
+                </Button>
+              ))}
+            </div>
+
+            <div className="rounded-lg border p-4 space-y-3">
+              {allCourseComments && allCourseComments.length > 0 ? (
+                allCourseComments.map((item, index) => (
+                  <div key={index} className="p-3 rounded-md bg-card/50 border">
+                    <h4 className="font-medium mb-1">{item.topicName}</h4>
+                    <p className="text-sm text-muted-foreground">{item.comment}</p>
                   </div>
-                  <h3 className="font-medium mb-1">{topic.topicName}</h3>
-                  <p className="text-sm text-muted-foreground">{topic.comment}</p>
-                </div>
-              ));
-            })}
-            
-            {Object.entries(groupedGrades).every(([_, courseData]) => 
-              Object.values(courseData.topics).every(topic => !topic.comment || topic.comment.trim() === '')
-            ) && (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p>No notes available yet.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-4">No notes available for this course.</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
