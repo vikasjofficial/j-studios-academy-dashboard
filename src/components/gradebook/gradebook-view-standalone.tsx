@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Pagination,
   PaginationContent,
@@ -73,7 +73,6 @@ export function GradebookViewStandalone() {
   const topicsPerPage = 5;
   const isAdmin = user?.role === 'admin';
 
-  // Fetch all courses
   const { data: courses, refetch: refetchCourses } = useQuery({
     queryKey: ["all-courses"],
     queryFn: async () => {
@@ -92,14 +91,12 @@ export function GradebookViewStandalone() {
     },
   });
 
-  // Effect to set selected course when courses are loaded
   useEffect(() => {
     if (courses && courses.length > 0 && !selectedCourse) {
       setSelectedCourse(courses[0].id);
     }
   }, [courses, selectedCourse]);
 
-  // Fetch semesters for the selected course
   const { data: semesters, refetch: refetchSemesters } = useQuery({
     queryKey: ["course-semesters", selectedCourse],
     queryFn: async () => {
@@ -118,21 +115,18 @@ export function GradebookViewStandalone() {
     enabled: !!selectedCourse,
   });
 
-  // Set the first semester as selected when data is loaded
   useEffect(() => {
     if (semesters && semesters.length > 0 && !selectedSemesterId) {
       setSelectedSemesterId(semesters[0].id);
     }
   }, [semesters, selectedSemesterId]);
 
-  // Fetch students enrolled in selected course or all students
   const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ["students", selectedCourse, activeTab],
     queryFn: async () => {
       let query;
       
       if (activeTab === "all" || !selectedCourse) {
-        // Fetch all students
         const { data, error } = await supabase
           .from("students")
           .select("id, name, student_id")
@@ -141,7 +135,6 @@ export function GradebookViewStandalone() {
         if (error) throw error;
         return data as Student[];
       } else {
-        // Fetch students enrolled in the selected course
         const { data, error } = await supabase
           .from("enrollments")
           .select(`
@@ -157,7 +150,6 @@ export function GradebookViewStandalone() {
     enabled: true,
   });
 
-  // Fetch topics for the selected course and semester if selected
   const { data: topics, refetch: refetchTopics } = useQuery({
     queryKey: ["course-topics", selectedCourse, selectedSemesterId],
     queryFn: async () => {
@@ -168,7 +160,6 @@ export function GradebookViewStandalone() {
         .select("id, name, order_id, semester_id")
         .eq("course_id", selectedCourse);
       
-      // If a semester is selected, filter by semester ID
       if (selectedSemesterId && selectedSemesterId !== "all") {
         query = query.eq("semester_id", selectedSemesterId);
       }
@@ -181,13 +172,11 @@ export function GradebookViewStandalone() {
     enabled: !!selectedCourse,
   });
 
-  // Get current topics for pagination
   const indexOfLastTopic = currentPage * topicsPerPage;
   const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
   const currentTopics = topics?.slice(indexOfFirstTopic, indexOfLastTopic) || [];
   const totalPages = topics ? Math.ceil(topics.length / topicsPerPage) : 0;
 
-  // Group topics by semester
   const topicsBySemester = topics?.reduce((acc, topic) => {
     if (!acc[topic.semester_id]) {
       acc[topic.semester_id] = [];
@@ -196,7 +185,6 @@ export function GradebookViewStandalone() {
     return acc;
   }, {} as Record<string, Topic[]>) || {};
 
-  // Fetch existing grades
   const { data: existingGrades } = useQuery({
     queryKey: ["existing-grades", selectedCourse, selectedSemesterId],
     queryFn: async () => {
@@ -212,7 +200,6 @@ export function GradebookViewStandalone() {
         
       if (error) throw error;
       
-      // Initialize grades state
       const gradeMap: Record<string, Record<string, number>> = {};
       
       data.forEach(grade => {
@@ -229,9 +216,7 @@ export function GradebookViewStandalone() {
     enabled: !!selectedCourse && !!topics && topics.length > 0,
   });
 
-  // Handle grade change
   const handleGradeChange = (studentId: string, topicId: string, score: number) => {
-    // Ensure score is between 1-10
     let validScore = Math.max(1, Math.min(10, score));
     
     setGrades(prev => ({
@@ -243,15 +228,13 @@ export function GradebookViewStandalone() {
     }));
   };
 
-  // Get color based on score
   const getScoreColor = (score: number) => {
-    if (score >= 9) return "bg-[#4ade80]"; // Neon Green
-    if (score >= 6) return "bg-[#86efac]"; // Faint Green
-    if (score >= 3) return "bg-[#fdba74]"; // Orange
-    return "bg-[#f87171]"; // Red
+    if (score >= 9) return "bg-[#4ade80]";
+    if (score >= 6) return "bg-[#86efac]";
+    if (score >= 3) return "bg-[#fdba74]";
+    return "bg-[#f87171]";
   };
 
-  // Save grades to Supabase
   const saveGrades = async () => {
     if (!selectedCourse) return;
     
@@ -260,7 +243,6 @@ export function GradebookViewStandalone() {
     try {
       const updatedGrades: Grade[] = [];
       
-      // Format grades for saving
       Object.entries(grades).forEach(([studentId, topicGrades]) => {
         Object.entries(topicGrades).forEach(([topicId, score]) => {
           updatedGrades.push({
@@ -272,7 +254,6 @@ export function GradebookViewStandalone() {
         });
       });
       
-      // Check for existing grades to update or insert
       const { data: existingGradeRecords, error: checkError } = await supabase
         .from("grades")
         .select("id, student_id, topic_id")
@@ -280,21 +261,18 @@ export function GradebookViewStandalone() {
       
       if (checkError) throw checkError;
       
-      // Create a map of existing grades
       const existingGradeMap: Record<string, string> = {};
       existingGradeRecords.forEach(grade => {
         const key = `${grade.student_id}-${grade.topic_id}`;
         existingGradeMap[key] = grade.id;
       });
       
-      // Separate updates and inserts
       const updates: any[] = [];
       const inserts: any[] = [];
       
       updatedGrades.forEach(grade => {
         const key = `${grade.student_id}-${grade.topic_id}`;
         if (existingGradeMap[key]) {
-          // For updates, include all required fields
           updates.push({
             id: existingGradeMap[key],
             student_id: grade.student_id,
@@ -310,7 +288,6 @@ export function GradebookViewStandalone() {
       console.log("Updates:", updates);
       console.log("Inserts:", inserts);
       
-      // Perform updates
       if (updates.length > 0) {
         const { error: updateError } = await supabase
           .from("grades")
@@ -319,7 +296,6 @@ export function GradebookViewStandalone() {
         if (updateError) throw updateError;
       }
       
-      // Perform inserts
       if (inserts.length > 0) {
         const { error: insertError } = await supabase
           .from("grades")
@@ -337,13 +313,11 @@ export function GradebookViewStandalone() {
     }
   };
 
-  // Filter students based on search query
   const filteredStudents = students?.filter(student => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     student.student_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Calculate average grade for a student
   const calculateAverage = (studentId: string) => {
     if (!grades[studentId]) return "-";
     
@@ -355,7 +329,6 @@ export function GradebookViewStandalone() {
     return avg.toString();
   };
 
-  // Calculate class average for a topic
   const calculateTopicAverage = (topicId: string) => {
     if (!students || students.length === 0) return "-";
     
@@ -375,7 +348,6 @@ export function GradebookViewStandalone() {
     return avg.toString();
   };
 
-  // Calculate overall class average
   const calculateClassAverage = () => {
     if (!students || students.length === 0 || !topics || topics.length === 0) return "-";
     
@@ -400,24 +372,21 @@ export function GradebookViewStandalone() {
     if (score === "-") return "bg-[#2A2F3C]";
     
     const numScore = parseFloat(score);
-    if (numScore >= 9) return "bg-[#4ade80]"; // Neon Green
-    if (numScore >= 6) return "bg-[#86efac]"; // Faint Green
-    if (numScore >= 3) return "bg-[#fdba74]"; // Orange
-    return "bg-[#f87171]"; // Red
+    if (numScore >= 9) return "bg-[#4ade80]";
+    if (numScore >= 6) return "bg-[#86efac]";
+    if (numScore >= 3) return "bg-[#fdba74]";
+    return "bg-[#f87171]";
   };
 
-  // Function to get semester name by ID
   const getSemesterName = (semesterId: string) => {
     const semester = semesters?.find(s => s.id === semesterId);
     return semester?.name || "Unknown Semester";
   };
 
-  // Handle page change
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
 
-  // Force refetch data when component mounts
   useEffect(() => {
     refetchCourses();
     refetchSemesters();
@@ -461,8 +430,8 @@ export function GradebookViewStandalone() {
                         value={selectedCourse || ""}
                         onChange={(e) => {
                           setSelectedCourse(e.target.value);
-                          setSelectedSemesterId(null); // Reset semester when course changes
-                          setCurrentPage(1); // Reset pagination
+                          setSelectedSemesterId(null);
+                          setCurrentPage(1);
                         }}
                       >
                         {courses.map(course => (
@@ -511,7 +480,6 @@ export function GradebookViewStandalone() {
               </Tabs>
             </div>
             
-            {/* Semester Selector */}
             {semesters && semesters.length > 0 && (
               <div className="mb-4 px-4">
                 <div className="flex items-center gap-1 mb-2">
@@ -528,7 +496,7 @@ export function GradebookViewStandalone() {
                     )}
                     onClick={() => {
                       setSelectedSemesterId("all");
-                      setCurrentPage(1); // Reset pagination when changing semester
+                      setCurrentPage(1);
                     }}
                   >
                     All Semesters
@@ -544,7 +512,7 @@ export function GradebookViewStandalone() {
                       )}
                       onClick={() => {
                         setSelectedSemesterId(semester.id);
-                        setCurrentPage(1); // Reset pagination when changing semester
+                        setCurrentPage(1);
                       }}
                     >
                       {semester.name}
@@ -554,7 +522,6 @@ export function GradebookViewStandalone() {
               </div>
             )}
             
-            {/* Topics pagination */}
             {topics && topics.length > 0 && (
               <div className="mb-4 px-4">
                 <Pagination className="justify-center">
@@ -589,62 +556,66 @@ export function GradebookViewStandalone() {
             )}
             
             <div className="flex items-center gap-2 px-4 py-2">
-              <div className="relative flex-1">
+              <div className="relative w-[150px]">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
-                  placeholder="Name"
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-9 w-full rounded-md border-none bg-[#2A2F3C] pl-9 text-sm text-white placeholder-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
               
-              <div className="grid grid-cols-7 gap-2">
-                <div className="w-24 text-center text-sm font-medium">Progress</div>
-                <div className="w-24 text-center text-sm font-medium">Average</div>
-                
-                {/* Display current topics with semester badges */}
-                {currentTopics.map(topic => (
-                  <div key={topic.id} className="w-24 text-center text-xs font-medium">
-                    <div className="whitespace-nowrap truncate">{topic.name}</div>
-                    <Badge className="mt-1 bg-[#2A2F3C] text-xs">
-                      {getSemesterName(topic.semester_id)}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+              <ScrollArea className="w-[calc(100%-170px)]">
+                <div className="grid grid-cols-2 gap-2 min-w-[600px] pr-4">
+                  <div className="w-20 text-center text-sm font-medium">Progress</div>
+                  <div className="w-20 text-center text-sm font-medium">Average</div>
+                  
+                  {currentTopics.map(topic => (
+                    <div key={topic.id} className="w-24 text-center">
+                      <div className="text-xs font-medium break-words min-h-[40px] flex flex-col items-center justify-center">
+                        {topic.name}
+                        <Badge className="mt-1 bg-[#2A2F3C] text-xs">
+                          {getSemesterName(topic.semester_id)}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           </div>
           
           <div className="mt-2">
             <div className="flex items-center gap-2 border-b border-[#2A2F3C] bg-[#222430] px-4 py-3">
-              <div className="flex flex-1 items-center gap-2">
+              <div className="flex w-[150px] items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C]">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M3 13.125C3 12.2298 3.71634 11.5 4.6 11.5H8.44134C8.7999 11.5 9.1333 11.6897 9.31913 12.0013L10.6809 14.2487C10.8667 14.5603 11.2001 14.75 11.5587 14.75H12.4413C12.7999 14.75 13.1333 14.5603 13.3191 14.2487L14.6809 12.0013C14.8667 11.6897 15.2001 11.5 15.5587 11.5H19.4C20.2837 11.5 21 12.2298 21 13.125V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V13.125Z" stroke="white" strokeWidth="1.5"/>
                     <path d="M7.5 11.5V6.75C7.5 5.09315 8.84315 3.75 10.5 3.75H13.5C15.1569 3.75 16.5 5.09315 16.5 6.75V11.5" stroke="white" strokeWidth="1.5"/>
                   </svg>
                 </div>
-                <span className="font-medium">Average grade</span>
+                <span className="font-medium truncate">Average grade</span>
               </div>
               
-              <div className="grid grid-cols-7 gap-2">
-                <div className="w-24 text-center">
-                  <div 
-                    className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateClassAverage())}`} 
-                  />
-                </div>
-                <div className="w-24 text-center font-medium">
-                  {calculateClassAverage()}
-                </div>
-                
-                {/* Show topic averages for current page */}
-                {currentTopics.map(topic => (
-                  <div key={topic.id} className="w-24 text-center font-medium">
-                    {calculateTopicAverage(topic.id)}
+              <ScrollArea className="w-[calc(100%-170px)]">
+                <div className="grid grid-cols-2 gap-2 min-w-[600px]">
+                  <div className="w-20 text-center">
+                    <div 
+                      className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateClassAverage())}`} 
+                    />
                   </div>
-                ))}
-              </div>
+                  <div className="w-20 text-center font-medium">
+                    {calculateClassAverage()}
+                  </div>
+                  
+                  {currentTopics.map(topic => (
+                    <div key={topic.id} className="w-24 text-center font-medium">
+                      {calculateTopicAverage(topic.id)}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
             
             {filteredStudents?.map((student, index) => (
@@ -655,57 +626,61 @@ export function GradebookViewStandalone() {
                   index % 2 === 0 ? "bg-[#1E2130]" : "bg-[#1A1F2C]"
                 )}
               >
-                <div className="flex flex-1 items-center gap-2">
+                <div className="flex w-[150px] items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C] text-sm font-medium">
                     {index + 1}
                   </div>
-                  <span className="font-medium">{student.name}</span>
+                  <div className="truncate">
+                    <span className="font-medium">{student.name}</span>
+                    <div className="text-xs text-muted-foreground truncate">{student.student_id}</div>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-7 gap-2">
-                  <div className="w-24 text-center">
-                    <div 
-                      className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
-                    />
-                  </div>
-                  <div className="w-24 text-center font-medium">
-                    {calculateAverage(student.id)}
-                  </div>
-                  
-                  {/* Show student grades for current page topics */}
-                  {currentTopics.map(topic => (
-                    <div key={topic.id} className="w-24 text-center font-medium">
-                      {isAdmin && selectedCourse ? (
-                        <Input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={grades[student.id]?.[topic.id] || ""}
-                          onChange={(e) => handleGradeChange(
-                            student.id,
-                            topic.id,
-                            e.target.value ? Number(e.target.value) : 1
-                          )}
-                          className={`w-16 text-center h-8 mx-auto border-none text-white ${
-                            grades[student.id]?.[topic.id] 
-                              ? getScoreColor(grades[student.id][topic.id]) 
-                              : "bg-[#2A2F3C]"
-                          }`}
-                        />
-                      ) : (
-                        <span 
-                          className={`inline-block w-16 py-1 px-2 rounded ${
-                            grades[student.id]?.[topic.id] 
-                              ? getScoreColor(grades[student.id][topic.id]) 
-                              : "bg-[#2A2F3C]"
-                          }`}
-                        >
-                          {grades[student.id]?.[topic.id] || "-"}
-                        </span>
-                      )}
+                <ScrollArea className="w-[calc(100%-170px)]">
+                  <div className="grid grid-cols-2 gap-2 min-w-[600px]">
+                    <div className="w-20 text-center">
+                      <div 
+                        className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
+                      />
                     </div>
-                  ))}
-                </div>
+                    <div className="w-20 text-center font-medium">
+                      {calculateAverage(student.id)}
+                    </div>
+                    
+                    {currentTopics.map(topic => (
+                      <div key={topic.id} className="w-24 text-center font-medium">
+                        {isAdmin && selectedCourse ? (
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={grades[student.id]?.[topic.id] || ""}
+                            onChange={(e) => handleGradeChange(
+                              student.id,
+                              topic.id,
+                              e.target.value ? Number(e.target.value) : 1
+                            )}
+                            className={`w-16 text-center h-8 mx-auto border-none text-white ${
+                              grades[student.id]?.[topic.id] 
+                                ? getScoreColor(grades[student.id][topic.id]) 
+                                : "bg-[#2A2F3C]"
+                            }`}
+                          />
+                        ) : (
+                          <span 
+                            className={`inline-block w-16 py-1 px-2 rounded ${
+                              grades[student.id]?.[topic.id] 
+                                ? getScoreColor(grades[student.id][topic.id]) 
+                                : "bg-[#2A2F3C]"
+                            }`}
+                          >
+                            {grades[student.id]?.[topic.id] || "-"}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </div>
             ))}
           </div>
