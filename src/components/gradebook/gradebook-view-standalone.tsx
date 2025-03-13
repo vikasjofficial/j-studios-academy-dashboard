@@ -6,7 +6,7 @@ import {
   Card, 
   CardContent,
 } from "@/components/ui/card";
-import { Search, Save } from "lucide-react";
+import { Search, Save, GraduationCap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { 
@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
+import { Badge } from "@/components/ui/badge";
 
 interface Student {
   id: string;
@@ -43,11 +44,18 @@ interface Topic {
   id: string;
   name: string;
   order_id: number;
+  semester_id: string;
+}
+
+interface Semester {
+  id: string;
+  name: string;
 }
 
 export function GradebookViewStandalone() {
   const { user } = useAuth();
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [selectedSemesterId, setSelectedSemesterId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [grades, setGrades] = useState<Record<string, Record<string, number>>>({});
   const [activeTab, setActiveTab] = useState("all");
@@ -79,6 +87,32 @@ export function GradebookViewStandalone() {
       setSelectedCourse(courses[0].id);
     }
   }, [courses, selectedCourse]);
+
+  // Fetch semesters for the selected course
+  const { data: semesters, refetch: refetchSemesters } = useQuery({
+    queryKey: ["course-semesters", selectedCourse],
+    queryFn: async () => {
+      if (!selectedCourse) return [];
+      
+      const { data, error } = await supabase
+        .from("semesters")
+        .select("id, name")
+        .eq("course_id", selectedCourse)
+        .order("start_date");
+        
+      if (error) throw error;
+      
+      return data as Semester[];
+    },
+    enabled: !!selectedCourse,
+  });
+
+  // Set the first semester as selected when data is loaded
+  useEffect(() => {
+    if (semesters && semesters.length > 0 && !selectedSemesterId) {
+      setSelectedSemesterId(semesters[0].id);
+    }
+  }, [semesters, selectedSemesterId]);
 
   // Fetch students enrolled in selected course or all students
   const { data: students, isLoading: studentsLoading } = useQuery({
@@ -112,17 +146,23 @@ export function GradebookViewStandalone() {
     enabled: true,
   });
 
-  // Fetch topics for the selected course
+  // Fetch topics for the selected course and semester if selected
   const { data: topics, refetch: refetchTopics } = useQuery({
-    queryKey: ["course-topics", selectedCourse],
+    queryKey: ["course-topics", selectedCourse, selectedSemesterId],
     queryFn: async () => {
       if (!selectedCourse) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("topics")
-        .select("id, name, order_id")
-        .eq("course_id", selectedCourse)
-        .order("order_id");
+        .select("id, name, order_id, semester_id")
+        .eq("course_id", selectedCourse);
+      
+      // If a semester is selected, filter by semester ID
+      if (selectedSemesterId && selectedSemesterId !== "all") {
+        query = query.eq("semester_id", selectedSemesterId);
+      }
+        
+      const { data, error } = await query.order("order_id");
         
       if (error) throw error;
       return data as Topic[];
@@ -130,9 +170,18 @@ export function GradebookViewStandalone() {
     enabled: !!selectedCourse,
   });
 
+  // Group topics by semester
+  const topicsBySemester = topics?.reduce((acc, topic) => {
+    if (!acc[topic.semester_id]) {
+      acc[topic.semester_id] = [];
+    }
+    acc[topic.semester_id].push(topic);
+    return acc;
+  }, {} as Record<string, Topic[]>) || {};
+
   // Fetch existing grades
   const { data: existingGrades } = useQuery({
-    queryKey: ["existing-grades", selectedCourse],
+    queryKey: ["existing-grades", selectedCourse, selectedSemesterId],
     queryFn: async () => {
       if (!selectedCourse || !topics || topics.length === 0) return [];
       
@@ -340,13 +389,20 @@ export function GradebookViewStandalone() {
     return "bg-[#f87171]"; // Red
   };
 
+  // Function to get semester name by ID
+  const getSemesterName = (semesterId: string) => {
+    const semester = semesters?.find(s => s.id === semesterId);
+    return semester?.name || "Unknown Semester";
+  };
+
   // Force refetch data when component mounts
   useEffect(() => {
     refetchCourses();
+    refetchSemesters();
     if (selectedCourse) {
       refetchTopics();
     }
-  }, [refetchCourses, refetchTopics, selectedCourse]);
+  }, [refetchCourses, refetchTopics, refetchSemesters, selectedCourse]);
 
   return (
     <div className="space-y-6">
@@ -370,7 +426,7 @@ export function GradebookViewStandalone() {
               )}
             </div>
             
-            <div className="mb-4 flex gap-3">
+            <div className="mb-4 flex flex-wrap gap-3">
               <div className="relative w-64">
                 <div className="flex items-center rounded-lg bg-[#2A2F3C] p-2">
                   <div className="flex items-center gap-2 font-medium">
@@ -381,7 +437,10 @@ export function GradebookViewStandalone() {
                       <select 
                         className="w-full appearance-none bg-transparent focus:outline-none"
                         value={selectedCourse || ""}
-                        onChange={(e) => setSelectedCourse(e.target.value)}
+                        onChange={(e) => {
+                          setSelectedCourse(e.target.value);
+                          setSelectedSemesterId(null); // Reset semester when course changes
+                        }}
                       >
                         {courses.map(course => (
                           <option key={course.id} value={course.id} className="bg-[#2A2F3C] text-white">
@@ -429,6 +488,43 @@ export function GradebookViewStandalone() {
               </Tabs>
             </div>
             
+            {/* Semester Selector */}
+            {semesters && semesters.length > 0 && (
+              <div className="mb-4 px-4">
+                <div className="flex items-center gap-1 mb-2">
+                  <GraduationCap className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-400">Semesters</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={selectedSemesterId === "all" || !selectedSemesterId ? "default" : "outline"}
+                    className={cn(
+                      "bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]",
+                      (selectedSemesterId === "all" || !selectedSemesterId) && "bg-[#6E59A5] hover:bg-[#5A4A87]"
+                    )}
+                    onClick={() => setSelectedSemesterId("all")}
+                  >
+                    All Semesters
+                  </Button>
+                  {semesters.map(semester => (
+                    <Button
+                      key={semester.id}
+                      size="sm"
+                      variant={selectedSemesterId === semester.id ? "default" : "outline"}
+                      className={cn(
+                        "bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]",
+                        selectedSemesterId === semester.id && "bg-[#6E59A5] hover:bg-[#5A4A87]"
+                      )}
+                      onClick={() => setSelectedSemesterId(semester.id)}
+                    >
+                      {semester.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center gap-2 px-4 py-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -446,6 +542,9 @@ export function GradebookViewStandalone() {
                 {topics?.slice(0, 2).map(topic => (
                   <div key={topic.id} className="w-24 text-center text-xs font-medium">
                     <div className="whitespace-nowrap">{topic.name}</div>
+                    <Badge className="mt-1 bg-[#2A2F3C] text-xs">
+                      {getSemesterName(topic.semester_id)}
+                    </Badge>
                   </div>
                 ))}
               </div>
