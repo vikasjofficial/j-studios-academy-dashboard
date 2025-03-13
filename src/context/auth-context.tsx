@@ -77,9 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Check if user already exists in auth
-      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
+      const { data, error: getUserError } = await supabase.auth.admin.listUsers();
       
-      const existingUser = users?.find(u => u.email === email);
+      // Fix type error by properly typing the users array
+      const users = data?.users || [];
+      const existingUser = users.find(u => u.email === email);
+      
       if (existingUser) {
         console.log('User already exists in auth system, updating password');
         
@@ -100,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // Create new user - using admin API to automatically confirm email
-      const { data, error } = await supabase.auth.admin.createUser({
+      const { data: createData, error } = await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true, // This automatically confirms the email
@@ -159,7 +162,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.message.includes('Email not confirmed')) {
           // Try to confirm the email automatically
           try {
-            const { data: { users } } = await supabase.auth.admin.listUsers();
+            const { data: listData } = await supabase.auth.admin.listUsers();
+            // Fix type error by properly typing the users array
+            const users = listData?.users || [];
             const userToConfirm = users.find(u => u.email === email);
             
             if (userToConfirm) {
