@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define user roles
 export type UserRole = 'admin' | 'student';
@@ -12,26 +13,17 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  studentId?: string; // Add studentId for student users
 }
 
-// Mock users for demo purposes
-const MOCK_USERS = {
-  admin: {
-    id: 'admin-1',
-    name: 'Admin User',
-    email: 'admin@jstudios.com',
-    role: 'admin' as UserRole,
-    password: 'admin123',
-    avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
-  },
-  student: {
-    id: 'student-1',
-    name: 'Student User',
-    email: 'student@jstudios.com',
-    role: 'student' as UserRole,
-    password: 'student123',
-    avatarUrl: 'https://ui-avatars.com/api/?name=Student&background=2563EB&color=fff'
-  }
+// Mock admin user for demo purposes
+const MOCK_ADMIN = {
+  id: 'admin-1',
+  name: 'Admin User',
+  email: 'admin@jstudios.com',
+  role: 'admin' as UserRole,
+  password: 'admin123',
+  avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
 };
 
 // Context interface
@@ -41,6 +33,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  createStudentCredentials: (studentId: string, email: string, password: string) => Promise<boolean>;
 }
 
 // Create the auth context
@@ -65,21 +58,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Create student credentials
+  const createStudentCredentials = async (studentId: string, email: string, password: string): Promise<boolean> => {
+    try {
+      // First check if this student already has credentials
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('email', email)
+        .single();
+
+      if (!studentData) {
+        toast.error('Student not found with the provided ID and email');
+        return false;
+      }
+
+      // Create the auth record in supabase
+      const { error } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          name: studentData.name,
+          role: 'student',
+          studentId: studentId
+        }
+      });
+
+      if (error) {
+        console.error('Error creating student credentials:', error);
+        toast.error(error.message || 'Failed to create student credentials');
+        return false;
+      }
+
+      toast.success('Student credentials created successfully');
+      return true;
+    } catch (error) {
+      console.error('Error in createStudentCredentials:', error);
+      toast.error('Failed to create student credentials');
+      return false;
+    }
+  };
+
   // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Check if it's the mock admin
+    const adminMatch = email === MOCK_ADMIN.email && password === MOCK_ADMIN.password;
     
-    // Simple authentication logic for demo
-    const adminMatch = email === MOCK_USERS.admin.email && password === MOCK_USERS.admin.password;
-    const studentMatch = email === MOCK_USERS.student.email && password === MOCK_USERS.student.password;
-    
-    if (adminMatch || studentMatch) {
-      const userToLogin = adminMatch ? MOCK_USERS.admin : MOCK_USERS.student;
-      // Remove password from user object before storing
-      const { password: _, ...userWithoutPassword } = userToLogin;
+    if (adminMatch) {
+      // Handle admin login with mock data
+      const { password: _, ...userWithoutPassword } = MOCK_ADMIN;
       
       setUser(userWithoutPassword);
       localStorage.setItem('j-studios-user', JSON.stringify(userWithoutPassword));
@@ -87,17 +118,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return true;
     } else {
-      toast.error('Invalid email or password');
-      setIsLoading(false);
-      return false;
+      // Try to authenticate with Supabase for student users
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          toast.error('Invalid email or password');
+          setIsLoading(false);
+          return false;
+        }
+
+        if (data.user) {
+          // Get student data from the database
+          const { data: studentData } = await supabase
+            .from('students')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+          if (studentData) {
+            const studentUser: User = {
+              id: data.user.id,
+              name: studentData.name,
+              email: studentData.email,
+              role: 'student',
+              avatarUrl: studentData.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentData.name)}&background=2563EB&color=fff`,
+              studentId: studentData.student_id
+            };
+
+            setUser(studentUser);
+            localStorage.setItem('j-studios-user', JSON.stringify(studentUser));
+            toast.success(`Welcome, ${studentUser.name}!`);
+            setIsLoading(false);
+            return true;
+          }
+        }
+
+        toast.error('Could not find student profile');
+        setIsLoading(false);
+        return false;
+      } catch (error) {
+        console.error('Login error:', error);
+        toast.error('An error occurred during login');
+        setIsLoading(false);
+        return false;
+      }
     }
   };
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('j-studios-user');
-    setUser(null);
-    toast.success('Logged out successfully');
+    // Sign out from Supabase if there's an active session
+    supabase.auth.signOut().then(() => {
+      localStorage.removeItem('j-studios-user');
+      setUser(null);
+      toast.success('Logged out successfully');
+    });
   };
 
   const value = {
@@ -105,7 +184,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     isAuthenticated: !!user,
     login,
-    logout
+    logout,
+    createStudentCredentials
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
