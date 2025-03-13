@@ -41,6 +41,7 @@ interface StudentCredentialsFormProps {
 
 export default function StudentCredentialsForm({ student }: StudentCredentialsFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const { createStudentCredentials } = useAuth();
 
@@ -54,6 +55,8 @@ export default function StudentCredentialsForm({ student }: StudentCredentialsFo
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    setErrorMessage(null);
+    
     try {
       const success = await createStudentCredentials(
         student.student_id,
@@ -70,9 +73,11 @@ export default function StudentCredentialsForm({ student }: StudentCredentialsFo
       }
     } catch (error) {
       console.error('Error creating credentials:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to create login credentials';
+      setErrorMessage(errorMsg);
       toast({
         title: "Error",
-        description: "Failed to create login credentials. Please try again.",
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
@@ -91,6 +96,12 @@ export default function StudentCredentialsForm({ student }: StudentCredentialsFo
           <p className="text-sm text-muted-foreground mb-4">
             This will create login credentials for {student.name} using their email: {student.email}
           </p>
+          
+          {errorMessage && (
+            <div className="bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 p-3 rounded-md mb-4 text-sm">
+              {errorMessage}
+            </div>
+          )}
           
           <FormField
             control={form.control}

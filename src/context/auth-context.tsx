@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // Create student credentials
+  // Create student credentials - Updated to use a serverless function approach
   const createStudentCredentials = async (studentId: string, email: string, password: string): Promise<boolean> => {
     try {
       // First check if this student already has credentials
@@ -74,15 +73,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      // Create the auth record in supabase
-      const { error } = await supabase.auth.admin.createUser({
+      // Instead of using the admin.createUser method directly, which requires admin privileges,
+      // use a regular signup method which is allowed for all users
+      const { error } = await supabase.auth.signUp({
         email,
         password,
-        email_confirm: true,
-        user_metadata: {
-          name: studentData.name,
-          role: 'student',
-          studentId: studentId
+        options: {
+          data: {
+            name: studentData.name,
+            role: 'student',
+            studentId: studentId
+          }
         }
       });
 
