@@ -60,6 +60,53 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          course_id: string | null
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          related_id: string | null
+          time: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          related_id?: string | null
+          time: string
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          related_id?: string | null
+          time?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
@@ -253,6 +300,114 @@ export type Database = {
           },
         ]
       }
+      lectures: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          date: string
+          duration: string
+          id: string
+          location: string | null
+          notes: string | null
+          semester_id: string
+          time: string
+          title: string
+          topic_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          date: string
+          duration: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          semester_id: string
+          time: string
+          title: string
+          topic_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          date?: string
+          duration?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          semester_id?: string
+          time?: string
+          title?: string
+          topic_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lectures_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lectures_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lectures_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      semesters: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "semesters_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
@@ -323,6 +478,8 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          order_id: number | null
+          semester_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -331,6 +488,8 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          order_id?: number | null
+          semester_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -339,6 +498,8 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          order_id?: number | null
+          semester_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -347,6 +508,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topics_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
             referencedColumns: ["id"]
           },
         ]

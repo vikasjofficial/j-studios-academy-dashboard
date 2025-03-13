@@ -23,10 +23,10 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("topics")
-        .select("*, lectures(*)")
+        .select("*")
         .eq("semester_id", semesterId)
         .eq("course_id", courseId)
-        .order("order");
+        .order("order_id"); // Changed from order to order_id
         
       if (error) throw error;
       return data;
@@ -36,14 +36,26 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
   const { data: lectureCount } = useQuery({
     queryKey: ["lecture-count", semesterId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // We need to handle the lecture count differently since we can't use group
+      const { data: lectures, error } = await supabase
         .from("lectures")
-        .select("topic_id, count(*)", { count: "exact" })
-        .eq("semester_id", semesterId)
-        .group("topic_id");
+        .select("topic_id")
+        .eq("semester_id", semesterId);
         
       if (error) throw error;
-      return data;
+      
+      // Count lectures per topic
+      const counts: Record<string, number> = {};
+      lectures.forEach(lecture => {
+        if (lecture.topic_id) {
+          counts[lecture.topic_id] = (counts[lecture.topic_id] || 0) + 1;
+        }
+      });
+      
+      return Object.entries(counts).map(([topic_id, count]) => ({
+        topic_id,
+        count
+      }));
     },
   });
 
@@ -76,7 +88,7 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
             {topics && topics.length > 0 ? (
               topics.map((topic) => (
                 <TableRow key={topic.id}>
-                  <TableCell className="font-medium">{topic.order}</TableCell>
+                  <TableCell className="font-medium">{topic.order_id}</TableCell>
                   <TableCell>{topic.name}</TableCell>
                   <TableCell className="max-w-md truncate">{topic.description}</TableCell>
                   <TableCell>

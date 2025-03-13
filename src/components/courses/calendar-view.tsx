@@ -13,6 +13,7 @@ export function CalendarView({ courseId }: CalendarViewProps) {
   const { data: events, isLoading } = useQuery({
     queryKey: ["calendar-events", courseId],
     queryFn: async () => {
+      // We need to explicitly type the response to avoid TypeScript errors
       const { data, error } = await supabase
         .from("calendar_events")
         .select("*")

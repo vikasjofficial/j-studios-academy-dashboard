@@ -60,7 +60,7 @@ export function ScheduleLectureForm({
         .from("topics")
         .select("*")
         .eq("semester_id", semesterId)
-        .order("order");
+        .order("order_id"); // Changed from order to order_id
         
       if (error) throw error;
       return data;
@@ -188,7 +188,7 @@ export function ScheduleLectureForm({
                       <SelectContent>
                         {topics?.map(topic => (
                           <SelectItem key={topic.id} value={topic.id}>
-                            {topic.order}. {topic.name}
+                            {topic.order_id}. {topic.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
