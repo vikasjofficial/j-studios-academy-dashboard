@@ -22,13 +22,13 @@ export function TasksCard({ title, tasks, className }: TasksCardProps) {
   const getPriorityStyles = (priority: Task['priority']) => {
     switch (priority) {
       case 'low':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'medium':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
       case 'high':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
@@ -60,19 +60,25 @@ export function TasksCard({ title, tasks, className }: TasksCardProps) {
   });
 
   return (
-    <Card className={cn("overflow-hidden transition-all hover-card-animation", className)}>
+    <Card className={cn(
+      "overflow-hidden glass-morphism border-0 relative",
+      "before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-orange-500/30 before:to-transparent before:opacity-20 before:-z-10",
+      className
+    )}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium">{title}</CardTitle>
-        <ListTodo className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500/20 text-orange-500">
+          <ListTodo className="h-5 w-5" />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y">
+        <div className="divide-y divide-white/10">
           {sortedTasks.length > 0 ? (
             sortedTasks.map((task) => (
               <div
                 key={task.id}
                 className={cn(
-                  "p-4 flex items-center justify-between hover:bg-muted/40 transition-colors",
+                  "p-4 flex items-center justify-between hover:bg-white/5 transition-colors",
                   task.status === 'completed' && "opacity-60"
                 )}
               >

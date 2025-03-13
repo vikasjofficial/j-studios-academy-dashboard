@@ -29,27 +29,33 @@ export function CalendarCard({ title, events, className }: CalendarCardProps) {
   const getEventTypeStyles = (type: Event['type']) => {
     switch (type) {
       case 'lecture':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'assignment':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
       case 'exam':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
   return (
-    <Card className={cn("overflow-hidden transition-all hover-card-animation", className)}>
+    <Card className={cn(
+      "overflow-hidden glass-morphism border-0 relative",
+      "before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-orange-500/30 before:to-transparent before:opacity-20 before:-z-10",
+      className
+    )}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium">{title}</CardTitle>
-        <Calendar className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500/20 text-orange-500">
+          <Calendar className="h-5 w-5" />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y">
+        <div className="divide-y divide-white/10">
           {sortedEvents.length > 0 ? (
             sortedEvents.map((event) => (
-              <div key={event.id} className="p-4 flex flex-col space-y-2 hover:bg-muted/40 transition-colors">
+              <div key={event.id} className="p-4 flex flex-col space-y-2 hover:bg-white/5 transition-colors">
                 <div className="flex justify-between items-start">
                   <h4 className="font-medium text-sm">{event.title}</h4>
                   <Badge variant="outline" className={cn("text-xs", getEventTypeStyles(event.type))}>
