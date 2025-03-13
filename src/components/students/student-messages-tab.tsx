@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/auth-context';
 import { Send, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Message {
   id: string;
@@ -15,6 +16,7 @@ interface Message {
   created_at: string;
   from_name: string;
   student_id: string;
+  message_type?: string;
 }
 
 interface StudentMessagesTabProps {
@@ -24,6 +26,7 @@ interface StudentMessagesTabProps {
 export default function StudentMessagesTab({ studentId }: StudentMessagesTabProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [messageType, setMessageType] = useState<string>('General');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
@@ -95,12 +98,16 @@ export default function StudentMessagesTab({ studentId }: StudentMessagesTabProp
           student_id: studentId,
           content: newMessage.trim(),
           sender_role: user.role,
-          from_name: user.name
+          from_name: user.name,
+          message_type: user.role === 'admin' ? 'Admin Response' : messageType
         });
         
       if (error) throw error;
       
       setNewMessage('');
+      if (user.role !== 'admin') {
+        setMessageType('General');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -110,6 +117,21 @@ export default function StudentMessagesTab({ studentId }: StudentMessagesTabProp
       });
     } finally {
       setIsSending(false);
+    }
+  };
+  
+  const getMessageTypeColor = (type?: string) => {
+    switch (type) {
+      case 'Leave Request':
+        return 'bg-orange-100 text-orange-800';
+      case 'Absent Request':
+        return 'bg-red-100 text-red-800';
+      case 'Submission Request':
+        return 'bg-blue-100 text-blue-800';
+      case 'Admin Response':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
   
@@ -139,6 +161,13 @@ export default function StudentMessagesTab({ studentId }: StudentMessagesTabProp
                 message.sender_role === 'admin' ? 'items-end' : 'items-start'
               }`}
             >
+              {message.message_type && message.sender_role !== 'admin' && (
+                <div className="mb-1">
+                  <span className={`text-xs px-2 py-1 rounded-full ${getMessageTypeColor(message.message_type)}`}>
+                    {message.message_type}
+                  </span>
+                </div>
+              )}
               <div 
                 className={`max-w-[80%] rounded-lg p-3 ${
                   message.sender_role === 'admin' 
@@ -160,6 +189,21 @@ export default function StudentMessagesTab({ studentId }: StudentMessagesTabProp
       </div>
       
       <div className="p-4 border-t">
+        {user?.role !== 'admin' && (
+          <div className="mb-2">
+            <Select value={messageType} onValueChange={setMessageType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Message Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="General">General</SelectItem>
+                <SelectItem value="Leave Request">Leave Request</SelectItem>
+                <SelectItem value="Absent Request">Absent Request</SelectItem>
+                <SelectItem value="Submission Request">Submission Request</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="flex gap-2">
           <Textarea
             value={newMessage}
