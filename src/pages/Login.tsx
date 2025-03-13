@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
 import { z } from 'zod';
@@ -20,23 +20,30 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'admin' | 'student'>('admin');
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate(user.role === 'admin' ? '/admin' : '/student');
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: activeTab === 'admin' ? 'admin@jstudios.com' : 'student@jstudios.com',
-      password: activeTab === 'admin' ? 'admin123' : 'student123'
+      email: activeTab === 'admin' ? 'admin@jstudios.com' : '',
+      password: activeTab === 'admin' ? 'admin123' : ''
     }
   });
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'admin' | 'student');
-    form.setValue('email', value === 'admin' ? 'admin@jstudios.com' : 'student@jstudios.com');
-    form.setValue('password', value === 'admin' ? 'admin123' : 'student123');
+    form.setValue('email', value === 'admin' ? 'admin@jstudios.com' : '');
+    form.setValue('password', value === 'admin' ? 'admin123' : '');
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -44,12 +51,7 @@ export default function Login() {
     try {
       const success = await login(data.email, data.password);
       if (success) {
-        // Redirect to appropriate dashboard
-        if (data.email === 'admin@jstudios.com') {
-          navigate('/admin');
-        } else {
-          navigate('/student');
-        }
+        // Redirect will happen via the useEffect above
       }
     } finally {
       setIsLoading(false);
@@ -91,7 +93,7 @@ export default function Login() {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter your email"
+                          placeholder={activeTab === 'admin' ? "admin@jstudios.com" : "Enter your student email"}
                           type="email"
                           disabled={isLoading}
                           className={cn(
@@ -113,7 +115,7 @@ export default function Login() {
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter your password"
+                          placeholder={activeTab === 'admin' ? "admin123" : "Enter your password"}
                           type="password"
                           disabled={isLoading}
                           className={cn(
@@ -145,9 +147,15 @@ export default function Login() {
             </Form>
           </CardContent>
           <CardFooter className="flex flex-col text-center text-sm text-muted-foreground">
-            <p>
-              Demo credentials are pre-filled for {activeTab === 'admin' ? 'admin' : 'student'} access
-            </p>
+            {activeTab === 'admin' ? (
+              <p>
+                Demo credentials are pre-filled for admin access
+              </p>
+            ) : (
+              <p>
+                Use the login credentials created by your administrator
+              </p>
+            )}
           </CardFooter>
         </Card>
       </div>
