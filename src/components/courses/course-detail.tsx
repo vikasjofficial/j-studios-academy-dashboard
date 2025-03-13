@@ -109,16 +109,12 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="semesters" className="mt-0 p-0">
-            <div className="mt-6">
-              <SemestersList courseId={courseId} courseName={course.name} />
-            </div>
+          <TabsContent value="semesters" className="mt-6">
+            <SemestersList courseId={courseId} courseName={course.name} />
           </TabsContent>
           
-          <TabsContent value="gradebook" className="mt-0 p-0">
-            <div className="mt-6">
-              <GradebookView courseId={courseId} courseName={course.name} />
-            </div>
+          <TabsContent value="gradebook" className="mt-6">
+            <GradebookView courseId={courseId} courseName={course.name} />
           </TabsContent>
         </Tabs>
         

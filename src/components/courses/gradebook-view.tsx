@@ -3,10 +3,19 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, GraduationCap, ListChecks, Save } from "lucide-react";
+import { Check, ListChecks, Save } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 
 interface GradebookViewProps {
   courseId: string;
@@ -221,6 +230,16 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
     }
   };
 
+  const calculateAverage = (studentId: string) => {
+    if (!grades[studentId]) return '-';
+    
+    const studentGrades = Object.values(grades[studentId]);
+    if (studentGrades.length === 0) return '-';
+    
+    const sum = studentGrades.reduce((acc, curr) => acc + curr, 0);
+    return (sum / studentGrades.length).toFixed(1);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -233,80 +252,69 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
         <CardContent>
           {semesters && semesters.length > 0 ? (
             <>
-              <Tabs 
-                value={selectedSemesterId || ""} 
-                onValueChange={setSelectedSemesterId}
-                className="mb-6"
-              >
-                <TabsList className="mb-4">
-                  {semesters.map(semester => (
-                    <TabsTrigger key={semester.id} value={semester.id} className="flex items-center gap-1">
-                      <CalendarDays className="h-4 w-4" />
-                      {semester.name}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {semesters.map(semester => (
+                  <Button
+                    key={semester.id}
+                    variant={selectedSemesterId === semester.id ? "default" : "outline"}
+                    onClick={() => setSelectedSemesterId(semester.id)}
+                    size="sm"
+                  >
+                    {semester.name}
+                  </Button>
+                ))}
+              </div>
               
               {selectedSemesterId && students && students.length > 0 && topics && topics.length > 0 ? (
-                <>
+                <div className="space-y-4">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-muted">
-                          <th className="border px-4 py-2 text-left">Student</th>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="w-[200px] font-bold">Student</TableHead>
                           {topics.map(topic => (
-                            <th key={topic.id} className="border px-4 py-2 text-center">
+                            <TableHead key={topic.id} className="text-center min-w-[100px] font-medium">
                               {topic.name}
-                            </th>
+                            </TableHead>
                           ))}
-                          <th className="border px-4 py-2 text-center">Average</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {students.map(student => {
-                          // Calculate average grade
-                          const studentGrades = grades[student.id] || {};
-                          const gradeValues = Object.values(studentGrades);
-                          const average = gradeValues.length > 0
-                            ? gradeValues.reduce((sum, grade) => sum + grade, 0) / gradeValues.length
-                            : 0;
-                            
-                          return (
-                            <tr key={student.id}>
-                              <td className="border px-4 py-2">
-                                <div>
-                                  <div>{student.name}</div>
-                                  <div className="text-xs text-muted-foreground">{student.student_id}</div>
-                                </div>
-                              </td>
-                              {topics.map(topic => (
-                                <td key={topic.id} className="border px-4 py-2 text-center">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    value={grades[student.id]?.[topic.id] || ""}
-                                    onChange={(e) => handleGradeChange(
-                                      student.id,
-                                      topic.id,
-                                      e.target.value ? Number(e.target.value) : 0
-                                    )}
-                                    className="w-16 text-center border rounded px-2 py-1"
-                                  />
-                                </td>
-                              ))}
-                              <td className="border px-4 py-2 text-center font-medium">
-                                {average ? average.toFixed(1) : "-"}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                          <TableHead className="text-center min-w-[80px] font-medium">Average</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {students.map(student => (
+                          <TableRow key={student.id} className="hover:bg-muted/20">
+                            <TableCell className="font-medium">
+                              <div>
+                                <div>{student.name}</div>
+                                <div className="text-xs text-muted-foreground">{student.student_id}</div>
+                              </div>
+                            </TableCell>
+                            {topics.map(topic => (
+                              <TableCell key={topic.id} className="text-center">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={grades[student.id]?.[topic.id] || ""}
+                                  onChange={(e) => handleGradeChange(
+                                    student.id,
+                                    topic.id,
+                                    e.target.value ? Number(e.target.value) : 0
+                                  )}
+                                  className="w-16 text-center h-8 mx-auto"
+                                />
+                              </TableCell>
+                            ))}
+                            <TableCell className="text-center font-medium">
+                              {calculateAverage(student.id)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                   
-                  <div className="mt-6 flex justify-end">
+                  <div className="flex justify-end">
                     <Button 
                       onClick={saveGrades} 
                       disabled={isSaving}
@@ -316,7 +324,7 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
                       {isSaving ? "Saving..." : "Save Grades"}
                     </Button>
                   </div>
-                </>
+                </div>
               ) : (
                 <div className="text-center py-6">
                   {!topics || topics.length === 0 ? (
@@ -330,10 +338,6 @@ export function GradebookView({ courseId, courseName }: GradebookViewProps) {
           ) : (
             <div className="text-center py-6">
               <p className="text-muted-foreground mb-4">No semesters found for this course.</p>
-              <Button variant="outline" className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4" />
-                Create Semester
-              </Button>
             </div>
           )}
         </CardContent>
