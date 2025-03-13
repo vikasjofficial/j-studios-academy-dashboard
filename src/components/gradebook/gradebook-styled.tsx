@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,7 +241,6 @@ export function GradebookStyled() {
       
       Object.entries(grades).forEach(([studentId, topicGrades]) => {
         Object.entries(topicGrades).forEach(([topicId, score]) => {
-          // Get the comment for this grade if it exists
           const comment = comments[studentId]?.[topicId] || "";
           
           updatedGrades.push({
@@ -372,6 +370,31 @@ export function GradebookStyled() {
     }
     
     return studentComments;
+  };
+
+  const getAllStudentComments = () => {
+    const allComments: {studentId: string, studentName: string, topicId: string, topicName: string, comment: string}[] = [];
+    
+    if (!students || !comments) return allComments;
+
+    Object.entries(comments).forEach(([studentId, studentComments]) => {
+      const student = students.find(s => s.id === studentId);
+      if (student) {
+        Object.entries(studentComments).forEach(([topicId, comment]) => {
+          if (comment && comment.trim() !== "") {
+            allComments.push({
+              studentId,
+              studentName: student.name,
+              topicId,
+              topicName: getTopicName(topicId),
+              comment
+            });
+          }
+        });
+      }
+    });
+    
+    return allComments;
   };
 
   const selectedStudent = students?.find(s => s.id === selectedStudentForComments);
@@ -535,6 +558,17 @@ export function GradebookStyled() {
         
         <div className="flex justify-between items-center mt-6">
           <div className="flex gap-2">
+            {isAdmin && (
+              <Button 
+                onClick={saveGrades}
+                disabled={isSaving}
+                variant="default"
+                className="gap-2 mr-4"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? "Saving..." : "Save Grades"}
+              </Button>
+            )}
             <Button variant="outline" size="sm" className="border-white/10 hover:bg-secondary">
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
@@ -544,18 +578,6 @@ export function GradebookStyled() {
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-          
-          {isAdmin && (
-            <Button 
-              onClick={saveGrades}
-              disabled={isSaving}
-              variant="default"
-              className="gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {isSaving ? "Saving..." : "Save Grades"}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -572,6 +594,17 @@ export function GradebookStyled() {
             <div className="flex flex-wrap gap-2">
               <p className="text-sm text-muted-foreground mb-2">Select a student to view their topic notes:</p>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  key="all-notes"
+                  variant={selectedStudentForComments === null ? "default" : "outline"}
+                  onClick={() => setSelectedStudentForComments(null)}
+                  className={selectedStudentForComments === null 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-secondary/50 text-foreground border-white/10 hover:bg-secondary"}
+                  size="sm"
+                >
+                  All Notes
+                </Button>
                 {students?.map(student => (
                   <Button
                     key={student.id}
@@ -607,9 +640,26 @@ export function GradebookStyled() {
                 </div>
               </>
             ) : (
-              <div className="rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm p-8 text-center">
-                <p className="text-muted-foreground">Select a student to view their notes</p>
-              </div>
+              <>
+                <h3 className="text-md font-medium mt-4">
+                  All Student Notes
+                </h3>
+                <div className="rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm p-4 space-y-3">
+                  {getAllStudentComments().length > 0 ? (
+                    getAllStudentComments().map((item, index) => (
+                      <div key={index} className="p-3 rounded-md bg-card/50 border border-white/10">
+                        <div className="flex justify-between mb-1">
+                          <h4 className="font-medium">{item.topicName}</h4>
+                          <span className="text-xs text-muted-foreground">{item.studentName}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{item.comment}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">No notes available for any students.</p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </CardContent>
