@@ -6,7 +6,7 @@ import {
   Card, 
   CardContent,
 } from "@/components/ui/card";
-import { Search, Save, GraduationCap } from "lucide-react";
+import { Search, Save, GraduationCap, ChevronRight, ChevronLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { 
@@ -19,6 +19,15 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth-context";
 import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Student {
   id: string;
@@ -60,6 +69,8 @@ export function GradebookViewStandalone() {
   const [grades, setGrades] = useState<Record<string, Record<string, number>>>({});
   const [activeTab, setActiveTab] = useState("all");
   const [isSaving, setIsSaving] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const topicsPerPage = 5;
   const isAdmin = user?.role === 'admin';
 
   // Fetch all courses
@@ -169,6 +180,12 @@ export function GradebookViewStandalone() {
     },
     enabled: !!selectedCourse,
   });
+
+  // Get current topics for pagination
+  const indexOfLastTopic = currentPage * topicsPerPage;
+  const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
+  const currentTopics = topics?.slice(indexOfFirstTopic, indexOfLastTopic) || [];
+  const totalPages = topics ? Math.ceil(topics.length / topicsPerPage) : 0;
 
   // Group topics by semester
   const topicsBySemester = topics?.reduce((acc, topic) => {
@@ -395,6 +412,11 @@ export function GradebookViewStandalone() {
     return semester?.name || "Unknown Semester";
   };
 
+  // Handle page change
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
   // Force refetch data when component mounts
   useEffect(() => {
     refetchCourses();
@@ -440,6 +462,7 @@ export function GradebookViewStandalone() {
                         onChange={(e) => {
                           setSelectedCourse(e.target.value);
                           setSelectedSemesterId(null); // Reset semester when course changes
+                          setCurrentPage(1); // Reset pagination
                         }}
                       >
                         {courses.map(course => (
@@ -503,7 +526,10 @@ export function GradebookViewStandalone() {
                       "bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]",
                       (selectedSemesterId === "all" || !selectedSemesterId) && "bg-[#6E59A5] hover:bg-[#5A4A87]"
                     )}
-                    onClick={() => setSelectedSemesterId("all")}
+                    onClick={() => {
+                      setSelectedSemesterId("all");
+                      setCurrentPage(1); // Reset pagination when changing semester
+                    }}
                   >
                     All Semesters
                   </Button>
@@ -516,12 +542,49 @@ export function GradebookViewStandalone() {
                         "bg-[#2A2F3C] text-white hover:bg-[#3A3F4C]",
                         selectedSemesterId === semester.id && "bg-[#6E59A5] hover:bg-[#5A4A87]"
                       )}
-                      onClick={() => setSelectedSemesterId(semester.id)}
+                      onClick={() => {
+                        setSelectedSemesterId(semester.id);
+                        setCurrentPage(1); // Reset pagination when changing semester
+                      }}
                     >
                       {semester.name}
                     </Button>
                   ))}
                 </div>
+              </div>
+            )}
+            
+            {/* Topics pagination */}
+            {topics && topics.length > 0 && (
+              <div className="mb-4 px-4">
+                <Pagination className="justify-center">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          isActive={page === currentPage}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
             
@@ -536,12 +599,14 @@ export function GradebookViewStandalone() {
                 />
               </div>
               
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-7 gap-2">
                 <div className="w-24 text-center text-sm font-medium">Progress</div>
                 <div className="w-24 text-center text-sm font-medium">Average</div>
-                {topics?.slice(0, 2).map(topic => (
+                
+                {/* Display current topics with semester badges */}
+                {currentTopics.map(topic => (
                   <div key={topic.id} className="w-24 text-center text-xs font-medium">
-                    <div className="whitespace-nowrap">{topic.name}</div>
+                    <div className="whitespace-nowrap truncate">{topic.name}</div>
                     <Badge className="mt-1 bg-[#2A2F3C] text-xs">
                       {getSemesterName(topic.semester_id)}
                     </Badge>
@@ -563,7 +628,7 @@ export function GradebookViewStandalone() {
                 <span className="font-medium">Average grade</span>
               </div>
               
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-7 gap-2">
                 <div className="w-24 text-center">
                   <div 
                     className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateClassAverage())}`} 
@@ -572,7 +637,9 @@ export function GradebookViewStandalone() {
                 <div className="w-24 text-center font-medium">
                   {calculateClassAverage()}
                 </div>
-                {topics?.slice(0, 2).map(topic => (
+                
+                {/* Show topic averages for current page */}
+                {currentTopics.map(topic => (
                   <div key={topic.id} className="w-24 text-center font-medium">
                     {calculateTopicAverage(topic.id)}
                   </div>
@@ -595,7 +662,7 @@ export function GradebookViewStandalone() {
                   <span className="font-medium">{student.name}</span>
                 </div>
                 
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-7 gap-2">
                   <div className="w-24 text-center">
                     <div 
                       className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
@@ -604,7 +671,9 @@ export function GradebookViewStandalone() {
                   <div className="w-24 text-center font-medium">
                     {calculateAverage(student.id)}
                   </div>
-                  {topics?.slice(0, 2).map(topic => (
+                  
+                  {/* Show student grades for current page topics */}
+                  {currentTopics.map(topic => (
                     <div key={topic.id} className="w-24 text-center font-medium">
                       {isAdmin && selectedCourse ? (
                         <Input
