@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 interface Message {
   id: string;
   content: string;
-  sender_role: 'admin' | 'student';
+  sender_role: string; // Changed from 'admin' | 'student' to string to match Supabase
   created_at: string;
   from_name: string;
   student_id: string;
