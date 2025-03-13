@@ -160,8 +160,21 @@ export default {
 			},
 			backdropBlur: {
 				xs: '2px',
-			}
+			},
+			animationDelay: {
+				'1000': '1000ms',
+				'2000': '2000ms',
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities, theme }) {
+			const newUtilities = {};
+			Object.entries(theme('animationDelay')).forEach(([key, value]) => {
+				newUtilities[`.animation-delay-${key}`] = { animationDelay: value };
+			});
+			addUtilities(newUtilities);
+		}
+	],
 } satisfies Config;
