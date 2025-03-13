@@ -28,18 +28,18 @@ export default function GradebookManagement() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-6 max-w-full">
+    <div className="space-y-6 max-w-full overflow-hidden">
       {/* Add styles for hiding scrollbars */}
       <style>{scrollbarStyles}</style>
       
-      <Card className="bg-muted/50 overflow-hidden">
+      <Card className="bg-muted/50 overflow-hidden w-full">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-xl">
             <BookOpen className="h-5 w-5 text-primary" />
             Gradebook Management
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="w-full overflow-hidden">
           <p className="text-muted-foreground mb-6">
             View and manage student grades for all courses. As an admin, you can edit and save grades directly.
           </p>

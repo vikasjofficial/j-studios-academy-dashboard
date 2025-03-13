@@ -385,9 +385,31 @@ export function GradebookViewStandalone() {
     }
   }, [refetchCourses, refetchTopics, refetchSemesters, selectedCourse]);
 
+  const organizedTopics = useMemo(() => {
+    if (!topics || !semesters) return [];
+    
+    if (selectedSemesterId && selectedSemesterId !== "all") {
+      return topics;
+    }
+    
+    const sortedSemesters = [...semesters].sort((a, b) => {
+      const aNum = parseInt(a.name.replace(/\D/g, '')) || 0;
+      const bNum = parseInt(b.name.replace(/\D/g, '')) || 0;
+      return aNum - bNum;
+    });
+    
+    const organized: Topic[] = [];
+    sortedSemesters.forEach(semester => {
+      const semesterTopics = topicsBySemester[semester.id] || [];
+      organized.push(...semesterTopics);
+    });
+    
+    return organized;
+  }, [topics, semesters, selectedSemesterId, topicsBySemester]);
+
   return (
-    <div className="space-y-6 w-full">
-      <Card className="overflow-hidden border-none bg-[#1A1F2C] text-white shadow-md w-full">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
+      <Card className="overflow-hidden border-none bg-[#1A1F2C] text-white shadow-md w-full max-w-full">
         <CardContent className="p-0">
           <div className="p-4 pb-0">
             <div className="mb-4 flex items-center justify-between">
@@ -520,7 +542,7 @@ export function GradebookViewStandalone() {
                 />
               </div>
               
-              <div className="relative flex-1">
+              <div className="relative flex-1 max-w-[calc(100%-11rem)]">
                 <div className="absolute left-0 top-1/2 z-10 -translate-y-1/2">
                   <Button 
                     variant="ghost" 
@@ -547,20 +569,46 @@ export function GradebookViewStandalone() {
                   ref={scrollContainerRef}
                   className="scrollbar-none overflow-x-auto px-8"
                 >
-                  <div className="inline-flex min-w-max items-center gap-4">
+                  <div className="inline-flex items-center gap-4 min-w-max pr-4">
                     <div className="w-16 text-center text-sm font-medium">Progress</div>
                     <div className="w-16 text-center text-sm font-medium">Average</div>
                     
-                    {topics?.map(topic => (
-                      <div key={topic.id} className="w-20 text-center px-1">
-                        <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
-                          <span className="line-clamp-2">{topic.name}</span>
-                          <Badge className="mt-1 bg-[#2A2F3C] text-xs truncate max-w-full">
-                            {getSemesterName(topic.semester_id)}
-                          </Badge>
+                    {selectedSemesterId === "all" ? (
+                      semesters?.map(semester => {
+                        const semesterTopics = topicsBySemester[semester.id] || [];
+                        if (semesterTopics.length === 0) return null;
+                        
+                        return (
+                          <div key={semester.id} className="flex flex-col">
+                            <div className="text-sm font-medium text-center py-1 px-2 bg-[#2A2F3C] rounded-t-md mb-1 w-full">
+                              {semester.name}
+                            </div>
+                            <div className="flex items-center gap-4">
+                              {semesterTopics.map(topic => (
+                                <div key={topic.id} className="w-20 text-center px-1">
+                                  <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
+                                    <span className="line-clamp-2">{topic.name}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      organizedTopics.map(topic => (
+                        <div key={topic.id} className="w-20 text-center px-1">
+                          <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
+                            <span className="line-clamp-2">{topic.name}</span>
+                            {selectedSemesterId === "all" && (
+                              <Badge className="mt-1 bg-[#2A2F3C] text-xs truncate max-w-full">
+                                {getSemesterName(topic.semester_id)}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -579,9 +627,9 @@ export function GradebookViewStandalone() {
                 <span className="font-medium">Average grade</span>
               </div>
               
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-hidden max-w-[calc(100%-11rem)]">
                 <div className="scrollbar-none overflow-x-auto">
-                  <div className="inline-flex min-w-max gap-4">
+                  <div className="inline-flex min-w-max gap-4 pr-4">
                     <div className="w-16 text-center">
                       <div 
                         className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateClassAverage())}`} 
@@ -591,11 +639,28 @@ export function GradebookViewStandalone() {
                       {calculateClassAverage()}
                     </div>
                     
-                    {topics?.map(topic => (
-                      <div key={topic.id} className="w-20 text-center font-medium">
-                        {calculateTopicAverage(topic.id)}
-                      </div>
-                    ))}
+                    {selectedSemesterId === "all" ? (
+                      semesters?.map(semester => {
+                        const semesterTopics = topicsBySemester[semester.id] || [];
+                        if (semesterTopics.length === 0) return null;
+                        
+                        return (
+                          <div key={semester.id} className="flex items-center gap-4">
+                            {semesterTopics.map(topic => (
+                              <div key={topic.id} className="w-20 text-center font-medium">
+                                {calculateTopicAverage(topic.id)}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      organizedTopics.map(topic => (
+                        <div key={topic.id} className="w-20 text-center font-medium">
+                          {calculateTopicAverage(topic.id)}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -620,9 +685,9 @@ export function GradebookViewStandalone() {
                     </div>
                   </div>
                   
-                  <div className="flex-1 overflow-hidden">
+                  <div className="flex-1 overflow-hidden max-w-[calc(100%-11rem)]">
                     <div className="scrollbar-none overflow-x-auto">
-                      <div className="inline-flex min-w-max gap-4">
+                      <div className="inline-flex min-w-max gap-4 pr-4">
                         <div className="w-16 text-center">
                           <div 
                             className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
@@ -632,38 +697,82 @@ export function GradebookViewStandalone() {
                           {calculateAverage(student.id)}
                         </div>
                         
-                        {topics?.map(topic => (
-                          <div key={topic.id} className="w-20 text-center font-medium">
-                            {isAdmin && selectedCourse ? (
-                              <Input
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={grades[student.id]?.[topic.id] || ""}
-                                onChange={(e) => handleGradeChange(
-                                  student.id,
-                                  topic.id,
-                                  e.target.value ? Number(e.target.value) : 1
-                                )}
-                                className={`w-12 text-center h-8 mx-auto border-none text-white ${
-                                  grades[student.id]?.[topic.id] 
-                                    ? getScoreColor(grades[student.id][topic.id]) 
-                                    : "bg-[#2A2F3C]"
-                                }`}
-                              />
-                            ) : (
-                              <span 
-                                className={`inline-block w-12 py-1 px-2 rounded ${
-                                  grades[student.id]?.[topic.id] 
-                                    ? getScoreColor(grades[student.id][topic.id]) 
-                                    : "bg-[#2A2F3C]"
-                                }`}
-                              >
-                                {grades[student.id]?.[topic.id] || "-"}
-                              </span>
-                            )}
-                          </div>
-                        ))}
+                        {selectedSemesterId === "all" ? (
+                          semesters?.map(semester => {
+                            const semesterTopics = topicsBySemester[semester.id] || [];
+                            if (semesterTopics.length === 0) return null;
+                            
+                            return (
+                              <div key={semester.id} className="flex items-center gap-4">
+                                {semesterTopics.map(topic => (
+                                  <div key={topic.id} className="w-20 text-center font-medium">
+                                    {isAdmin && selectedCourse ? (
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        max="10"
+                                        value={grades[student.id]?.[topic.id] || ""}
+                                        onChange={(e) => handleGradeChange(
+                                          student.id,
+                                          topic.id,
+                                          e.target.value ? Number(e.target.value) : 1
+                                        )}
+                                        className={`w-12 text-center h-8 mx-auto border-none text-white ${
+                                          grades[student.id]?.[topic.id] 
+                                            ? getScoreColor(grades[student.id][topic.id]) 
+                                            : "bg-[#2A2F3C]"
+                                        }`}
+                                      />
+                                    ) : (
+                                      <span 
+                                        className={`inline-block w-12 py-1 px-2 rounded ${
+                                          grades[student.id]?.[topic.id] 
+                                            ? getScoreColor(grades[student.id][topic.id]) 
+                                            : "bg-[#2A2F3C]"
+                                        }`}
+                                      >
+                                        {grades[student.id]?.[topic.id] || "-"}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          organizedTopics.map(topic => (
+                            <div key={topic.id} className="w-20 text-center font-medium">
+                              {isAdmin && selectedCourse ? (
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="10"
+                                  value={grades[student.id]?.[topic.id] || ""}
+                                  onChange={(e) => handleGradeChange(
+                                    student.id,
+                                    topic.id,
+                                    e.target.value ? Number(e.target.value) : 1
+                                  )}
+                                  className={`w-12 text-center h-8 mx-auto border-none text-white ${
+                                    grades[student.id]?.[topic.id] 
+                                      ? getScoreColor(grades[student.id][topic.id]) 
+                                      : "bg-[#2A2F3C]"
+                                  }`}
+                                />
+                              ) : (
+                                <span 
+                                  className={`inline-block w-12 py-1 px-2 rounded ${
+                                    grades[student.id]?.[topic.id] 
+                                      ? getScoreColor(grades[student.id][topic.id]) 
+                                      : "bg-[#2A2F3C]"
+                                  }`}
+                                >
+                                  {grades[student.id]?.[topic.id] || "-"}
+                                </span>
+                              )}
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
