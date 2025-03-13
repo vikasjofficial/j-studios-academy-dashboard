@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,10 +26,14 @@ interface Course {
   name: string;
 }
 
-export function StudentGradebookView() {
+interface StudentGradebookViewProps {
+  courseId?: string;
+}
+
+export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {}) {
   const { user } = useAuth();
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [selectedNotesCourse, setSelectedNotesCourse] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(courseId || null);
+  const [selectedNotesCourse, setSelectedNotesCourse] = useState<string | null>(courseId || null);
   const studentId = user?.id;
 
   const { data: enrolledCourses, isLoading: isLoadingCourses } = useQuery({
@@ -58,11 +61,15 @@ export function StudentGradebookView() {
   });
 
   useEffect(() => {
-    if (enrolledCourses && enrolledCourses.length > 0 && !selectedCourse) {
+    if (courseId) {
+      setSelectedCourse(courseId);
+      setSelectedNotesCourse(courseId);
+    } 
+    else if (enrolledCourses && enrolledCourses.length > 0 && !selectedCourse) {
       setSelectedCourse(enrolledCourses[0].id);
       setSelectedNotesCourse(enrolledCourses[0].id);
     }
-  }, [enrolledCourses, selectedCourse]);
+  }, [enrolledCourses, selectedCourse, courseId]);
 
   const { data: topics } = useQuery({
     queryKey: ["course-topics", selectedCourse],
