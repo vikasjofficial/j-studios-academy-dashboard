@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -24,6 +25,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'admin' | 'student'>('admin');
+  const [loginAttempts, setLoginAttempts] = useState(0);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -49,10 +51,22 @@ export default function Login() {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
+      console.log(`Attempting ${activeTab} login for: ${data.email}`);
+      
+      // Track login attempts for debugging
+      setLoginAttempts(prev => prev + 1);
+      
       const success = await login(data.email, data.password);
-      if (success) {
-        // Redirect will happen via the useEffect above
+      
+      if (!success && activeTab === 'student' && loginAttempts > 0) {
+        // Show more descriptive error for students after first attempt
+        toast.error(
+          "If you're having trouble logging in, please contact your administrator to verify your credentials."
+        );
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred during login');
     } finally {
       setIsLoading(false);
     }

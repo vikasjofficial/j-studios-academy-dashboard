@@ -58,9 +58,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // Create student credentials
+  // Create student credentials with auto-confirmation
   const createStudentCredentials = async (studentId: string, email: string, password: string): Promise<boolean> => {
     try {
+      console.log('Creating credentials for student:', studentId, email);
+      
       // First check if this student already has credentials
       const { data: studentData } = await supabase
         .from('students')
@@ -74,16 +76,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      // Use signUp method to create credentials
-      const { error } = await supabase.auth.signUp({
+      // Check if user already exists in auth
+      const { data: { users }, error: getUserError } = await supabase.auth.admin.listUsers();
+      
+      const existingUser = users?.find(u => u.email === email);
+      if (existingUser) {
+        console.log('User already exists in auth system, updating password');
+        
+        // Update the user's password instead of creating a new account
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          existingUser.id,
+          { password }
+        );
+        
+        if (updateError) {
+          console.error('Error updating user password:', updateError);
+          toast.error(updateError.message || 'Failed to update student password');
+          return false;
+        }
+        
+        toast.success('Student credentials updated successfully');
+        return true;
+      }
+      
+      // Create new user - using admin API to automatically confirm email
+      const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
-        options: {
-          data: {
-            name: studentData.name,
-            role: 'student',
-            studentId: studentId
-          }
+        email_confirm: true, // This automatically confirms the email
+        user_metadata: {
+          name: studentData.name,
+          role: 'student',
+          studentId: studentId
         }
       });
 
@@ -102,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Login function - completely revised for improved student login
+  // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
@@ -130,9 +154,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Authentication error:', error);
-        toast.error('Invalid email or password');
-        setIsLoading(false);
-        return false;
+        
+        // Check if the error is due to unconfirmed email
+        if (error.message.includes('Email not confirmed')) {
+          // Try to confirm the email automatically
+          try {
+            const { data: { users } } = await supabase.auth.admin.listUsers();
+            const userToConfirm = users.find(u => u.email === email);
+            
+            if (userToConfirm) {
+              await supabase.auth.admin.updateUserById(
+                userToConfirm.id, 
+                { email_confirm: true }
+              );
+              
+              // Try logging in again
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+              });
+              
+              if (retryError) {
+                console.error('Retry authentication error:', retryError);
+                toast.error('Login failed after confirming email');
+                setIsLoading(false);
+                return false;
+              }
+              
+              if (!retryData.user) {
+                console.error('No user returned from retry authentication');
+                toast.error('Login failed - no user data');
+                setIsLoading(false);
+                return false;
+              }
+              
+              // Continue with successful login below using retryData
+              data.user = retryData.user;
+              data.session = retryData.session;
+            } else {
+              toast.error('Invalid email or password');
+              setIsLoading(false);
+              return false;
+            }
+          } catch (confirmError) {
+            console.error('Error confirming email:', confirmError);
+            toast.error('Invalid email or password');
+            setIsLoading(false);
+            return false;
+          }
+        } else {
+          toast.error('Invalid email or password');
+          setIsLoading(false);
+          return false;
+        }
       }
 
       if (!data.user) {
