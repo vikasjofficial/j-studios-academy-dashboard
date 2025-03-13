@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // Create student credentials - Updated to use a serverless function approach
+  // Create student credentials
   const createStudentCredentials = async (studentId: string, email: string, password: string): Promise<boolean> => {
     try {
       // First check if this student already has credentials
@@ -102,14 +102,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Login function
+  // Login function - completely revised for improved student login
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
     // Check if it's the mock admin
-    const adminMatch = email === MOCK_ADMIN.email && password === MOCK_ADMIN.password;
-    
-    if (adminMatch) {
+    if (email === MOCK_ADMIN.email && password === MOCK_ADMIN.password) {
       // Handle admin login with mock data
       const { password: _, ...userWithoutPassword } = MOCK_ADMIN;
       
@@ -118,72 +116,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success(`Welcome back, ${userWithoutPassword.name}!`);
       setIsLoading(false);
       return true;
-    } else {
-      // Try to authenticate with Supabase for student users
-      try {
-        // Sign in with Supabase
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+    } 
+    
+    // Authentication for student users
+    try {
+      console.log('Attempting student login for:', email);
+      
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-        if (error) {
-          console.error('Login error:', error);
-          toast.error('Invalid email or password');
-          setIsLoading(false);
-          return false;
-        }
-
-        if (data.user) {
-          // Get the user metadata
-          const userData = data.user.user_metadata;
-          
-          // Get student data from the database
-          const { data: studentData, error: studentError } = await supabase
-            .from('students')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-          if (studentError) {
-            console.error('Error fetching student data:', studentError);
-            toast.error('Could not fetch student profile');
-            setIsLoading(false);
-            return false;
-          }
-
-          if (studentData) {
-            // Create the user object
-            const studentUser: User = {
-              id: data.user.id,
-              name: studentData.name,
-              email: studentData.email,
-              role: 'student',
-              avatarUrl: studentData.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentData.name)}&background=2563EB&color=fff`,
-              studentId: studentData.student_id
-            };
-
-            setUser(studentUser);
-            localStorage.setItem('j-studios-user', JSON.stringify(studentUser));
-            toast.success(`Welcome, ${studentUser.name}!`);
-            setIsLoading(false);
-            return true;
-          } else {
-            toast.error('Could not find student profile');
-            setIsLoading(false);
-            return false;
-          }
-        }
-
-        toast.error('Login failed');
-        setIsLoading(false);
-        return false;
-      } catch (error) {
-        console.error('Login error:', error);
-        toast.error('An error occurred during login');
+      if (error) {
+        console.error('Authentication error:', error);
+        toast.error('Invalid email or password');
         setIsLoading(false);
         return false;
       }
+
+      if (!data.user) {
+        console.error('No user returned from authentication');
+        toast.error('Login failed - no user data');
+        setIsLoading(false);
+        return false;
+      }
+
+      console.log('User authenticated successfully:', data.user.id);
+      
+      // Get student data from the database using the email
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (studentError) {
+        console.error('Error fetching student data:', studentError);
+        toast.error('Could not fetch student profile');
+        // Log out from Supabase since we couldn't complete the process
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        return false;
+      }
+
+      if (!studentData) {
+        console.error('No student record found with email:', email);
+        toast.error('No student profile found for this email');
+        // Log out from Supabase since we couldn't complete the process
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        return false;
+      }
+
+      console.log('Student data retrieved:', studentData.name);
+      
+      // Create the student user object
+      const studentUser: User = {
+        id: data.user.id,
+        name: studentData.name,
+        email: studentData.email,
+        role: 'student',
+        avatarUrl: studentData.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentData.name)}&background=2563EB&color=fff`,
+        studentId: studentData.student_id
+      };
+
+      // Set the user in state and localStorage
+      setUser(studentUser);
+      localStorage.setItem('j-studios-user', JSON.stringify(studentUser));
+      toast.success(`Welcome, ${studentUser.name}!`);
+      setIsLoading(false);
+      return true;
+      
+    } catch (error) {
+      console.error('Unexpected error during login:', error);
+      toast.error('An unexpected error occurred during login');
+      setIsLoading(false);
+      return false;
     }
   };
 
