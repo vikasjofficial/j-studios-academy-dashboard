@@ -1,9 +1,9 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GradebookViewStandalone } from "@/components/gradebook/gradebook-view-standalone";
 import { BookOpen } from "lucide-react";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { GradebookStyled } from "@/components/gradebook/gradebook-styled";
 
 export default function GradebookManagement() {
   const queryClient = useQueryClient();
@@ -30,7 +30,7 @@ export default function GradebookManagement() {
           </p>
           
           <div className="w-full overflow-hidden rounded-md border border-border/40">
-            <GradebookViewStandalone />
+            <GradebookStyled />
           </div>
         </CardContent>
       </Card>
