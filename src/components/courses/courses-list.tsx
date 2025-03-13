@@ -2,17 +2,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tables } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { BadgeInfo, Book, Calendar } from "lucide-react";
+import { BadgeInfo, Book, Calendar, Eye } from "lucide-react";
 
 type Course = Tables<"courses">;
 
 interface CoursesListProps {
   courses: Course[];
   isLoading: boolean;
+  onSelectCourse: (courseId: string) => void;
 }
 
-export function CoursesList({ courses, isLoading }: CoursesListProps) {
+export function CoursesList({ courses, isLoading, onSelectCourse }: CoursesListProps) {
   if (isLoading) {
     return (
       <Card>
@@ -51,6 +53,7 @@ export function CoursesList({ courses, isLoading }: CoursesListProps) {
                   <TableHead>Instructor</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -70,6 +73,17 @@ export function CoursesList({ courses, isLoading }: CoursesListProps) {
                       }`}>
                         {course.status}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => onSelectCourse(course.id)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Manage
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
