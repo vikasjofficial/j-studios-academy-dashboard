@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Check, X, Save } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentCredentialsForm from './student-credentials-form';
-import StudentMessagesTab from './student-messages-tab';
+import { StudentMessagesTab } from './student-messages-tab';
 
 interface Student {
   id: string;
@@ -116,7 +115,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
     setIsSubmitting(true);
     
     try {
-      // Update student information
       const { error: updateError } = await supabase
         .from('students')
         .update({
@@ -131,10 +129,8 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
 
       if (updateError) throw updateError;
 
-      // Handle course enrollments
       const selectedCourses = values.selectedCourses || [];
       
-      // Delete enrollments that are no longer selected
       for (const existingCourseId of studentEnrollments) {
         if (!selectedCourses.includes(existingCourseId)) {
           const { error: deleteError } = await supabase
@@ -147,7 +143,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
         }
       }
       
-      // Add new enrollments
       for (const courseId of selectedCourses) {
         if (!studentEnrollments.includes(courseId)) {
           const { error: insertError } = await supabase
