@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 interface Message {
   id: string;
   content: string;
-  sender_role: string; // Changed from 'admin' | 'student' to string to match Supabase
+  sender_role: string;
   created_at: string;
   from_name: string;
   student_id: string;
@@ -28,7 +28,7 @@ export default function StudentMessages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    if (user?.studentId) {
+    if (user?.id) {
       fetchMessages();
       
       // Set up real-time subscription
@@ -38,7 +38,7 @@ export default function StudentMessages() {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `student_id=eq.${user.studentId}`,
+          filter: `student_id=eq.${user.id}`,
         }, (payload) => {
           const newMessage = payload.new as Message;
           setMessages(current => [...current, newMessage]);
@@ -50,7 +50,7 @@ export default function StudentMessages() {
         supabase.removeChannel(channel);
       };
     }
-  }, [user?.studentId]);
+  }, [user?.id]);
   
   useEffect(() => {
     scrollToBottom();
@@ -61,14 +61,14 @@ export default function StudentMessages() {
   };
   
   const fetchMessages = async () => {
-    if (!user?.studentId) return;
+    if (!user?.id) return;
     
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('student_id', user.studentId)
+        .eq('student_id', user.id)
         .order('created_at', { ascending: true });
         
       if (error) throw error;
@@ -86,14 +86,14 @@ export default function StudentMessages() {
   };
   
   const sendMessage = async () => {
-    if (!newMessage.trim() || !user?.studentId) return;
+    if (!newMessage.trim() || !user?.id) return;
     
     setIsSending(true);
     try {
       const { error } = await supabase
         .from('messages')
         .insert({
-          student_id: user.studentId,
+          student_id: user.id,
           content: newMessage.trim(),
           sender_role: 'student',
           from_name: user.name
@@ -174,7 +174,7 @@ export default function StudentMessages() {
                   <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                     <span>{message.from_name}</span>
                     <span>•</span>
-                    <span>{format(new Date(message.created_at), 'MMM d, h:mm a')}</span>
+                    <span>{format(new Date(message.created_at), 'MMMM d, h:mm a')}</span>
                   </div>
                 </div>
               ))

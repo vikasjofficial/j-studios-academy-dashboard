@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/auth-context';
@@ -12,7 +11,7 @@ import { format } from 'date-fns';
 interface Message {
   id: string;
   content: string;
-  sender_role: string; // Changed from 'admin' | 'student' to string to match Supabase
+  sender_role: string;
   created_at: string;
   from_name: string;
   student_id: string;
