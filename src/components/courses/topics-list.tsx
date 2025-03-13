@@ -26,7 +26,7 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
         .select("*")
         .eq("semester_id", semesterId)
         .eq("course_id", courseId)
-        .order("order_id"); // Changed from order to order_id
+        .order("order_id"); // This looks already correct
         
       if (error) throw error;
       return data;

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,7 +51,6 @@ export function ScheduleLectureForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   
-  // Fetch topics for the semester
   const { data: topics } = useQuery({
     queryKey: ["topics", semesterId],
     queryFn: async () => {
@@ -60,7 +58,7 @@ export function ScheduleLectureForm({
         .from("topics")
         .select("*")
         .eq("semester_id", semesterId)
-        .order("order_id"); // Changed from order to order_id
+        .order("order_id");
         
       if (error) throw error;
       return data;
@@ -82,10 +80,8 @@ export function ScheduleLectureForm({
 
   const scheduleLectureMutation = useMutation({
     mutationFn: async (data: LectureFormValues) => {
-      // Find the topic to get its name for the event title
       const topic = topics?.find(t => t.id === data.topic_id);
       
-      // First, create the lecture
       const { data: lecture, error } = await supabase
         .from("lectures")
         .insert({
@@ -103,7 +99,6 @@ export function ScheduleLectureForm({
         
       if (error) throw error;
       
-      // Then create a calendar event for this lecture
       const eventDate = new Date(`${data.date}T${data.time}`);
       
       const { error: eventError } = await supabase
