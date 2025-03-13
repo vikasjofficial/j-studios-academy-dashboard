@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -285,9 +286,6 @@ export function GradebookViewStandalone() {
         }
       });
       
-      console.log("Updates:", updates);
-      console.log("Inserts:", inserts);
-      
       if (updates.length > 0) {
         const { error: updateError } = await supabase
           .from("grades")
@@ -556,7 +554,7 @@ export function GradebookViewStandalone() {
             )}
             
             <div className="flex items-center gap-2 px-4 py-2">
-              <div className="relative w-[150px]">
+              <div className="relative w-44">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="Search..."
@@ -566,56 +564,56 @@ export function GradebookViewStandalone() {
                 />
               </div>
               
-              <ScrollArea className="w-[calc(100%-170px)]">
-                <div className="grid grid-cols-2 gap-2 min-w-[600px] pr-4">
-                  <div className="w-20 text-center text-sm font-medium">Progress</div>
-                  <div className="w-20 text-center text-sm font-medium">Average</div>
+              <div className="overflow-x-auto w-[calc(100%-11rem)]">
+                <div className="inline-flex min-w-max gap-4">
+                  <div className="w-16 text-center text-sm font-medium">Progress</div>
+                  <div className="w-16 text-center text-sm font-medium">Average</div>
                   
                   {currentTopics.map(topic => (
-                    <div key={topic.id} className="w-24 text-center">
-                      <div className="text-xs font-medium break-words min-h-[40px] flex flex-col items-center justify-center">
-                        {topic.name}
-                        <Badge className="mt-1 bg-[#2A2F3C] text-xs">
+                    <div key={topic.id} className="w-20 text-center px-1">
+                      <div className="text-xs font-medium min-h-[40px] flex flex-col items-center justify-center">
+                        <span className="line-clamp-2">{topic.name}</span>
+                        <Badge className="mt-1 bg-[#2A2F3C] text-xs whitespace-nowrap text-ellipsis overflow-hidden max-w-full">
                           {getSemesterName(topic.semester_id)}
                         </Badge>
                       </div>
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           </div>
           
           <div className="mt-2">
             <div className="flex items-center gap-2 border-b border-[#2A2F3C] bg-[#222430] px-4 py-3">
-              <div className="flex w-[150px] items-center gap-2">
+              <div className="flex w-44 items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C]">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M3 13.125C3 12.2298 3.71634 11.5 4.6 11.5H8.44134C8.7999 11.5 9.1333 11.6897 9.31913 12.0013L10.6809 14.2487C10.8667 14.5603 11.2001 14.75 11.5587 14.75H12.4413C12.7999 14.75 13.1333 14.5603 13.3191 14.2487L14.6809 12.0013C14.8667 11.6897 15.2001 11.5 15.5587 11.5H19.4C20.2837 11.5 21 12.2298 21 13.125V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V13.125Z" stroke="white" strokeWidth="1.5"/>
                     <path d="M7.5 11.5V6.75C7.5 5.09315 8.84315 3.75 10.5 3.75H13.5C15.1569 3.75 16.5 5.09315 16.5 6.75V11.5" stroke="white" strokeWidth="1.5"/>
                   </svg>
                 </div>
-                <span className="font-medium truncate">Average grade</span>
+                <span className="font-medium">Average grade</span>
               </div>
               
-              <ScrollArea className="w-[calc(100%-170px)]">
-                <div className="grid grid-cols-2 gap-2 min-w-[600px]">
-                  <div className="w-20 text-center">
+              <div className="overflow-x-auto w-[calc(100%-11rem)]">
+                <div className="inline-flex min-w-max gap-4">
+                  <div className="w-16 text-center">
                     <div 
-                      className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateClassAverage())}`} 
+                      className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateClassAverage())}`} 
                     />
                   </div>
-                  <div className="w-20 text-center font-medium">
+                  <div className="w-16 text-center font-medium">
                     {calculateClassAverage()}
                   </div>
                   
                   {currentTopics.map(topic => (
-                    <div key={topic.id} className="w-24 text-center font-medium">
+                    <div key={topic.id} className="w-20 text-center font-medium">
                       {calculateTopicAverage(topic.id)}
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             </div>
             
             {filteredStudents?.map((student, index) => (
@@ -626,29 +624,29 @@ export function GradebookViewStandalone() {
                   index % 2 === 0 ? "bg-[#1E2130]" : "bg-[#1A1F2C]"
                 )}
               >
-                <div className="flex w-[150px] items-center gap-2">
+                <div className="flex w-44 items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2A2F3C] text-sm font-medium">
                     {index + 1}
                   </div>
-                  <div className="truncate">
-                    <span className="font-medium">{student.name}</span>
+                  <div className="overflow-hidden">
+                    <span className="font-medium block truncate">{student.name}</span>
                     <div className="text-xs text-muted-foreground truncate">{student.student_id}</div>
                   </div>
                 </div>
                 
-                <ScrollArea className="w-[calc(100%-170px)]">
-                  <div className="grid grid-cols-2 gap-2 min-w-[600px]">
-                    <div className="w-20 text-center">
+                <div className="overflow-x-auto w-[calc(100%-11rem)]">
+                  <div className="inline-flex min-w-max gap-4">
+                    <div className="w-16 text-center">
                       <div 
-                        className={`mx-auto h-8 w-16 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
+                        className={`mx-auto h-8 w-12 rounded-md ${getProgressColor(calculateAverage(student.id))}`}
                       />
                     </div>
-                    <div className="w-20 text-center font-medium">
+                    <div className="w-16 text-center font-medium">
                       {calculateAverage(student.id)}
                     </div>
                     
                     {currentTopics.map(topic => (
-                      <div key={topic.id} className="w-24 text-center font-medium">
+                      <div key={topic.id} className="w-20 text-center font-medium">
                         {isAdmin && selectedCourse ? (
                           <Input
                             type="number"
@@ -660,7 +658,7 @@ export function GradebookViewStandalone() {
                               topic.id,
                               e.target.value ? Number(e.target.value) : 1
                             )}
-                            className={`w-16 text-center h-8 mx-auto border-none text-white ${
+                            className={`w-12 text-center h-8 mx-auto border-none text-white ${
                               grades[student.id]?.[topic.id] 
                                 ? getScoreColor(grades[student.id][topic.id]) 
                                 : "bg-[#2A2F3C]"
@@ -668,7 +666,7 @@ export function GradebookViewStandalone() {
                           />
                         ) : (
                           <span 
-                            className={`inline-block w-16 py-1 px-2 rounded ${
+                            className={`inline-block w-12 py-1 px-2 rounded ${
                               grades[student.id]?.[topic.id] 
                                 ? getScoreColor(grades[student.id][topic.id]) 
                                 : "bg-[#2A2F3C]"
@@ -680,7 +678,7 @@ export function GradebookViewStandalone() {
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             ))}
           </div>
