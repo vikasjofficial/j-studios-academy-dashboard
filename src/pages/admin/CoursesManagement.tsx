@@ -5,13 +5,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Book, Eye } from "lucide-react";
+import { Plus, Book, Eye, Pencil } from "lucide-react";
 import { CreateCourseForm } from "@/components/courses/create-course-form";
 import { CourseDetail } from "@/components/courses/course-detail";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EditCourseForm } from "@/components/courses/edit-course-form";
 
 export default function CoursesManagement() {
   const [activeTab, setActiveTab] = useState("courses");
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [courseToEdit, setCourseToEdit] = useState<any>(null);
   
   const { data: courses, isLoading } = useQuery({
     queryKey: ["courses"],
@@ -28,6 +32,11 @@ export default function CoursesManagement() {
 
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourseId(courseId);
+  };
+
+  const handleEditCourse = (course: any) => {
+    setCourseToEdit(course);
+    setIsEditDialogOpen(true);
   };
 
   return (
@@ -68,14 +77,22 @@ export default function CoursesManagement() {
                       </p>
                       <p className="mt-2 text-sm">Instructor: {course.instructor}</p>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex gap-2">
                       <Button 
                         variant="outline" 
-                        className="w-full flex items-center justify-center gap-2"
+                        className="flex-1 flex items-center justify-center gap-2"
                         onClick={() => handleCourseSelect(course.id)}
                       >
                         <Eye className="h-4 w-4" />
-                        View Details
+                        View
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        className="flex items-center justify-center gap-2"
+                        onClick={() => handleEditCourse(course)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
                       </Button>
                     </CardFooter>
                   </Card>
@@ -108,6 +125,26 @@ export default function CoursesManagement() {
           <CourseDetail courseId={selectedCourseId} />
         </div>
       )}
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Edit Course
+            </DialogTitle>
+          </DialogHeader>
+          {courseToEdit && (
+            <EditCourseForm 
+              course={courseToEdit} 
+              onSuccess={() => {
+                setIsEditDialogOpen(false);
+                setCourseToEdit(null);
+              }} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
