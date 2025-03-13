@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { X, Check } from "lucide-react";
 
 interface Student {
   id: string;
@@ -284,18 +285,24 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
               
               return (
                 <div key={course.id} className="flex items-start space-x-2">
-                  <Checkbox
-                    id={`course-${course.id}`}
-                    checked={isSelected}
-                    onCheckedChange={() => toggleCourseSelection(course.id)}
-                  />
-                  <label
-                    htmlFor={`course-${course.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  <Button
+                    type="button"
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 px-2 gap-1"
+                    onClick={() => toggleCourseSelection(course.id)}
                   >
-                    <div>{course.name}</div>
+                    {isSelected ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                    <span className="text-xs">{isSelected ? "Enrolled" : "Not Enrolled"}</span>
+                  </Button>
+                  <div className="text-sm">
+                    <div className="font-medium">{course.name}</div>
                     <div className="text-xs text-muted-foreground">{course.code}</div>
-                  </label>
+                  </div>
                 </div>
               );
             })}

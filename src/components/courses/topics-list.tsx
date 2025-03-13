@@ -1,11 +1,12 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Save, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Input } from "../ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 interface TopicsListProps {
   semesterId: string;
@@ -26,6 +27,8 @@ interface Topic {
 export function TopicsList({ semesterId, courseId }: TopicsListProps) {
   const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
   const [editTopicName, setEditTopicName] = useState("");
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [topicToDelete, setTopicToDelete] = useState<Topic | null>(null);
   const queryClient = useQueryClient();
 
   const { data: topics, isLoading } = useQuery({
@@ -54,7 +57,10 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
     try {
       const { error } = await supabase
         .from("topics")
-        .update({ name: editTopicName })
+        .update({ 
+          name: editTopicName,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", editingTopic.id);
         
       if (error) throw error;
@@ -68,19 +74,40 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
     }
   };
 
-  const handleDeleteTopic = async (topicId: string) => {
-    if (!confirm("Are you sure you want to delete this topic?")) return;
+  const handleDeleteTopic = async () => {
+    if (!topicToDelete) return;
     
     try {
+      // Check if there are grades associated with this topic
+      const { data: grades, error: checkError } = await supabase
+        .from("grades")
+        .select("id")
+        .eq("topic_id", topicToDelete.id);
+      
+      if (checkError) throw checkError;
+      
+      if (grades && grades.length > 0) {
+        // Delete associated grades first
+        const { error: gradesError } = await supabase
+          .from("grades")
+          .delete()
+          .eq("topic_id", topicToDelete.id);
+        
+        if (gradesError) throw gradesError;
+      }
+      
+      // Then delete the topic
       const { error } = await supabase
         .from("topics")
         .delete()
-        .eq("id", topicId);
+        .eq("id", topicToDelete.id);
         
       if (error) throw error;
       
       queryClient.invalidateQueries({ queryKey: ["topics", semesterId] });
       toast.success("Topic deleted successfully");
+      setIsDeleteAlertOpen(false);
+      setTopicToDelete(null);
     } catch (error) {
       console.error("Error deleting topic:", error);
       toast.error("Failed to delete topic");
@@ -113,24 +140,29 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
               <>
                 <div className="w-16 text-center">{topic.order_id}</div>
                 <div className="flex-1 pr-2">
-                  <input
+                  <Input
                     value={editTopicName}
                     onChange={(e) => setEditTopicName(e.target.value)}
-                    className="w-full px-2 py-1 border rounded"
+                    className="w-full px-2 py-1 text-sm h-8"
                     autoFocus
                   />
                 </div>
                 <div className="w-24 flex justify-end gap-1">
-                  <Button size="sm" variant="outline" className="h-7 px-2" onClick={handleSaveEdit}>
-                    Save
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-7 w-7 p-0" 
+                    onClick={handleSaveEdit}
+                  >
+                    <Save className="h-4 w-4 text-green-600" />
                   </Button>
                   <Button 
                     size="sm" 
                     variant="ghost" 
-                    className="h-7 px-2" 
+                    className="h-7 w-7 p-0" 
                     onClick={() => setEditingTopic(null)}
                   >
-                    Cancel
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </>
@@ -151,7 +183,10 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
                     size="sm" 
                     variant="ghost" 
                     className="h-7 w-7 p-0 text-red-500" 
-                    onClick={() => handleDeleteTopic(topic.id)}
+                    onClick={() => {
+                      setTopicToDelete(topic);
+                      setIsDeleteAlertOpen(true);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -161,6 +196,24 @@ export function TopicsList({ semesterId, courseId }: TopicsListProps) {
           </div>
         ))}
       </div>
+      
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the topic and any associated grades.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTopic} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

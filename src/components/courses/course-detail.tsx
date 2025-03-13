@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tables } from "@/integrations/supabase/types";
 import { SemestersList } from "./semesters-list";
 import { CreateSemesterForm } from "./create-semester-form";
-import { Book, CalendarDays, GraduationCap, ListChecks } from "lucide-react";
+import { Book, CalendarDays, GraduationCap, ListChecks, Pencil } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { GradebookView } from "./gradebook-view";
+import { EditCourseForm } from "./edit-course-form";
 
 type Course = Tables<"courses">;
 
@@ -23,6 +24,7 @@ interface CourseDetailProps {
 export function CourseDetail({ courseId }: CourseDetailProps) {
   const [activeTab, setActiveTab] = useState("semesters");
   const [isCreateSemesterOpen, setIsCreateSemesterOpen] = useState(false);
+  const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ["course", courseId],
@@ -68,13 +70,24 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
                 Course Code: {course.code} | Instructor: {course.instructor}
               </p>
             </div>
-            <Badge variant="outline" className={
-              course.status === "active" 
-                ? "bg-green-100 text-green-800 hover:bg-green-100" 
-                : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-            }>
-              {course.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={
+                course.status === "active" 
+                  ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                  : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+              }>
+                {course.status}
+              </Badge>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setIsEditCourseOpen(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit Course
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -145,6 +158,21 @@ export function CourseDetail({ courseId }: CourseDetailProps) {
               setIsCreateSemesterOpen(false);
               setActiveTab("semesters");
             }} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditCourseOpen} onOpenChange={setIsEditCourseOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Edit Course
+            </DialogTitle>
+          </DialogHeader>
+          <EditCourseForm 
+            course={course} 
+            onSuccess={() => setIsEditCourseOpen(false)} 
           />
         </DialogContent>
       </Dialog>

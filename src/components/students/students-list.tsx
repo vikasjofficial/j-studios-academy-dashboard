@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { EditIcon } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import EditStudentForm from './edit-student-form';
 import { useToast } from "@/hooks/use-toast";
@@ -104,7 +104,7 @@ export function StudentsList() {
                     size="sm" 
                     onClick={() => handleEditStudent(student)}
                   >
-                    <EditIcon className="h-4 w-4 mr-1" />
+                    <Pencil className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
                 </TableCell>
