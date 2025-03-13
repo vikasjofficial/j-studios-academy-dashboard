@@ -11,18 +11,14 @@ export default function StudentAttendance() {
         <p className="text-muted-foreground">View your attendance records for all courses</p>
       </div>
       
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5 text-primary" />
-            <span>Attendance by Course</span>
-          </CardTitle>
-        </CardHeader>
+      <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
+        <div className="flex items-center gap-2 mb-4">
+          <UserCheck className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-semibold">Attendance by Course</h2>
+        </div>
         
-        <CardContent>
-          <StudentAttendanceDashboard />
-        </CardContent>
-      </Card>
+        <StudentAttendanceDashboard />
+      </div>
     </div>
   );
 }

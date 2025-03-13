@@ -38,7 +38,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6 dark">
+    <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
         <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
@@ -60,26 +60,27 @@ export default function AdminDashboard() {
         <CalendarCard
           title="Upcoming Classes"
           events={calendarEvents}
+          className="md:col-span-2 lg:col-span-2"
+        />
+        <TasksCard
+          title="Upcoming Tasks"
+          tasks={tasksData}
           className="md:col-span-2 lg:col-span-1"
         />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
         <AttendanceCard
           title="Overall Attendance"
           percentage={88}
           present={22}
           total={25}
-          className="md:col-span-1 lg:col-span-1"
         />
-        <TasksCard
-          title="Upcoming Tasks"
-          tasks={tasksData}
-          className="md:col-span-1 lg:col-span-1"
+        <ProgressChartCard
+          title="Student Progress"
+          data={progressData}
         />
       </div>
-
-      <ProgressChartCard
-        title="Student Progress"
-        data={progressData}
-      />
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome, {user?.name}</h1>
         <p className="text-muted-foreground">Your personal J-Studios Academy dashboard.</p>
@@ -52,8 +52,10 @@ export default function StudentDashboard() {
         />
       </div>
 
-      <h2 className="text-xl font-semibold mt-6 mb-2">Attendance by Course</h2>
-      <StudentAttendanceDashboard />
+      <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
+        <h2 className="text-xl font-semibold mb-4">Attendance by Course</h2>
+        <StudentAttendanceDashboard />
+      </div>
 
       <ProgressChartCard
         title="My Progress"

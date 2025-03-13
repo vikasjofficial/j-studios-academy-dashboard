@@ -1,5 +1,4 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, CalendarIcon, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -38,45 +37,101 @@ export function CalendarCard({ title, events, className }: CalendarCardProps) {
         return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
+  
+  // Generate the days for the mini calendar at the top
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const currentDate = new Date();
+  const currentDay = currentDate.getDate();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(currentDate);
+    date.setDate(currentDay - 3 + i);
+    return {
+      day: date.getDate(),
+      weekday: daysOfWeek[date.getDay() === 0 ? 6 : date.getDay() - 1],
+      isToday: i === 3,
+    };
+  });
 
   return (
-    <Card className={cn(
-      "overflow-hidden glass-morphism border-0 relative",
-      "before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-orange-500/30 before:to-transparent before:opacity-20 before:-z-10",
+    <div className={cn(
+      "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
+      "bg-white/5 border border-white/10 hover:bg-white/10",
       className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500/20 text-orange-500">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary">
           <Calendar className="h-5 w-5" />
         </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y divide-white/10">
-          {sortedEvents.length > 0 ? (
-            sortedEvents.map((event) => (
-              <div key={event.id} className="p-4 flex flex-col space-y-2 hover:bg-white/5 transition-colors">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-medium text-sm">{event.title}</h4>
-                  <Badge variant="outline" className={cn("text-xs", getEventTypeStyles(event.type))}>
-                    {event.type}
-                  </Badge>
-                </div>
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <CalendarIcon className="mr-1 h-3 w-3" />
-                  <span className="mr-3">{event.date}</span>
-                  <Clock className="mr-1 h-3 w-3" />
-                  <span>{event.time}</span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-6 text-center text-muted-foreground">
-              No upcoming events
-            </div>
-          )}
+      </div>
+      
+      {/* Mini calendar */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-foreground/70">
+            {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </span>
+          <button className="text-xs px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+            Today
+          </button>
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className="flex justify-between mt-4">
+          {days.map((day, i) => (
+            <div 
+              key={i} 
+              className={cn(
+                "flex flex-col items-center justify-center w-10 h-10 rounded-full",
+                day.isToday ? "bg-primary text-primary-foreground" : "hover:bg-white/10"
+              )}
+            >
+              <span className="text-xs">{day.weekday}</span>
+              <span className="text-sm font-semibold">{day.day}</span>
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex justify-between mt-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div 
+              key={i} 
+              className={cn(
+                "h-1 w-1 rounded-full",
+                i === 3 ? "bg-primary" : "bg-white/20"
+              )}
+            />
+          ))}
+        </div>
+      </div>
+      
+      {/* Events list */}
+      <div className="space-y-2">
+        {sortedEvents.length > 0 ? (
+          sortedEvents.map((event) => (
+            <div 
+              key={event.id} 
+              className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-medium text-sm">{event.title}</h4>
+                <Badge variant="outline" className={cn("text-xs", getEventTypeStyles(event.type))}>
+                  {event.type}
+                </Badge>
+              </div>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <CalendarIcon className="mr-1 h-3 w-3" />
+                <span className="mr-3">{event.date}</span>
+                <Clock className="mr-1 h-3 w-3" />
+                <span>{event.time}</span>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-4 text-center text-muted-foreground bg-white/5 rounded-lg">
+            No upcoming events
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

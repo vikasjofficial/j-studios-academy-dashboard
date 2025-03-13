@@ -1,5 +1,4 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ListTodo, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -43,7 +42,7 @@ export function TasksCard({ title, tasks, className }: TasksCardProps) {
     }
   };
 
-  // Sort tasks by status (pending/overdue first, then completed) and then by priority
+  // Sort tasks by status and priority
   const sortedTasks = [...tasks].sort((a, b) => {
     // First by status
     if (a.status === 'completed' && b.status !== 'completed') return 1;
@@ -60,54 +59,62 @@ export function TasksCard({ title, tasks, className }: TasksCardProps) {
   });
 
   return (
-    <Card className={cn(
-      "overflow-hidden glass-morphism border-0 relative",
-      "before:absolute before:inset-0 before:rounded-lg before:bg-gradient-to-br before:from-orange-500/30 before:to-transparent before:opacity-20 before:-z-10",
+    <div className={cn(
+      "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
+      "bg-white/5 border border-white/10 hover:bg-white/10",
       className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg font-medium">{title}</CardTitle>
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500/20 text-orange-500">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary">
           <ListTodo className="h-5 w-5" />
         </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y divide-white/10">
-          {sortedTasks.length > 0 ? (
-            sortedTasks.map((task) => (
-              <div
-                key={task.id}
-                className={cn(
-                  "p-4 flex items-center justify-between hover:bg-white/5 transition-colors",
-                  task.status === 'completed' && "opacity-60"
-                )}
-              >
-                <div className="flex items-center space-x-3">
-                  {getStatusIcon(task.status)}
-                  <div className="space-y-1">
-                    <p className={cn(
-                      "font-medium text-sm",
-                      task.status === 'completed' && "line-through"
-                    )}>
-                      {task.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Due: {task.dueDate}
-                    </p>
-                  </div>
+      </div>
+      
+      <div className="space-y-2">
+        {sortedTasks.length > 0 ? (
+          sortedTasks.map((task) => (
+            <div
+              key={task.id}
+              className={cn(
+                "p-3 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between",
+                "hover:bg-white/10 transition-colors",
+                task.status === 'completed' && "opacity-60"
+              )}
+            >
+              <div className="flex items-center space-x-3">
+                {getStatusIcon(task.status)}
+                <div className="space-y-1">
+                  <p className={cn(
+                    "font-medium text-sm",
+                    task.status === 'completed' && "line-through"
+                  )}>
+                    {task.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Due: {task.dueDate}
+                  </p>
                 </div>
-                <Badge variant="outline" className={cn("text-xs", getPriorityStyles(task.priority))}>
-                  {task.priority}
-                </Badge>
               </div>
-            ))
-          ) : (
-            <div className="p-6 text-center text-muted-foreground">
-              No tasks available
+              <Badge variant="outline" className={cn("text-xs", getPriorityStyles(task.priority))}>
+                {task.priority}
+              </Badge>
             </div>
-          )}
+          ))
+        ) : (
+          <div className="p-4 text-center text-muted-foreground bg-white/5 rounded-lg">
+            No tasks available
+          </div>
+        )}
+      </div>
+      
+      {sortedTasks.length > 0 && (
+        <div className="mt-4 flex justify-end">
+          <button className="text-xs px-3 py-1.5 rounded-md bg-primary/20 text-primary hover:bg-primary/30 transition-colors">
+            Add Task
+          </button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
