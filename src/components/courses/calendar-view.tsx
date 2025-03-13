@@ -27,10 +27,23 @@ export function CalendarView({ courseId }: CalendarViewProps) {
         title: event.title,
         date: event.date,
         time: event.time,
-        type: event.type
+        // Ensure the type is correctly mapped to one of the expected values
+        type: mapEventType(event.type)
       }));
     },
   });
+
+  // Function to map database event types to the expected enum values
+  const mapEventType = (typeFromDb: string): "lecture" | "assignment" | "exam" => {
+    const normalizedType = typeFromDb.toLowerCase();
+    
+    if (normalizedType.includes("lecture")) return "lecture";
+    if (normalizedType.includes("assignment")) return "assignment";
+    if (normalizedType.includes("exam")) return "exam";
+    
+    // Default to "lecture" if the type doesn't match any expected values
+    return "lecture";
+  };
 
   if (isLoading) {
     return (
