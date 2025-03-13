@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListChecks, BookOpen } from "lucide-react";
+import { ListChecks, BookOpen, MessageSquare } from "lucide-react";
 import { 
   Table, 
   TableBody, 
@@ -13,6 +13,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface StudentGradebookViewProps {
   courseId?: string; // Optional to allow viewing all courses or a specific course
@@ -38,6 +39,7 @@ interface Grade {
   topic_name: string;
   course_id: string;
   course_name: string;
+  comment?: string;
 }
 
 export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
@@ -46,10 +48,10 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
 
   // Get color based on score
   const getScoreColor = (score: number) => {
-    if (score >= 9) return "bg-[#4ade80]"; // Neon Green
-    if (score >= 6) return "bg-[#86efac]"; // Faint Green
-    if (score >= 3) return "bg-[#fdba74]"; // Orange
-    return "bg-[#f87171]"; // Red
+    if (score >= 9) return "bg-[#4ade80] text-black font-medium"; // Neon Green
+    if (score >= 6) return "bg-[#86efac] text-black font-medium"; // Light Green
+    if (score >= 3) return "bg-[#fdba74] text-black font-medium"; // Orange
+    return "bg-[#f87171] text-black font-medium"; // Red
   };
 
   // Fetch student's courses
@@ -91,6 +93,7 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
         .select(`
           id,
           score,
+          comment,
           topic_id,
           topics:topic_id(name, course_id, courses:course_id(name)),
           course_id,
@@ -111,6 +114,7 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
       return data.map(grade => ({
         id: grade.id,
         score: grade.score,
+        comment: grade.comment || '',
         topic_id: grade.topic_id,
         topic_name: grade.topics?.name || 'Unknown Topic',
         course_id: grade.course_id,
@@ -134,11 +138,21 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
     if (!acc[grade.course_id].topics[grade.topic_id]) {
       acc[grade.course_id].topics[grade.topic_id] = {
         topicName: grade.topic_name,
-        score: grade.score
+        score: grade.score,
+        comment: grade.comment
       };
     }
     return acc;
-  }, {} as Record<string, { courseName: string, topics: Record<string, { topicName: string, score: number }>, grades: Grade[], average: number }>);
+  }, {} as Record<string, { 
+    courseName: string, 
+    topics: Record<string, { 
+      topicName: string, 
+      score: number, 
+      comment?: string 
+    }>, 
+    grades: Grade[], 
+    average: number 
+  }>);
 
   // Calculate course averages
   if (groupedGrades) {
@@ -189,11 +203,26 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
                           <TableRow key={topicId} className="hover:bg-muted/20">
                             <TableCell className="font-medium">{topic.topicName}</TableCell>
                             <TableCell className="text-center">
-                              <div 
-                                className={`rounded-md p-1 w-12 mx-auto ${getScoreColor(topic.score)}`}
-                              >
-                                {topic.score}
-                              </div>
+                              <HoverCard>
+                                <HoverCardTrigger>
+                                  <div 
+                                    className={`rounded-md p-1 w-12 mx-auto ${getScoreColor(topic.score)}`}
+                                  >
+                                    {topic.score}
+                                  </div>
+                                </HoverCardTrigger>
+                                {topic.comment && (
+                                  <HoverCardContent className="w-64 bg-card/95 backdrop-blur-sm border border-white/10 p-3">
+                                    <div className="flex flex-col space-y-1">
+                                      <div className="flex items-center">
+                                        <MessageSquare className="h-3 w-3 mr-1 text-muted-foreground" />
+                                        <h4 className="text-sm font-medium">{topic.topicName} Note:</h4>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">{topic.comment}</p>
+                                    </div>
+                                  </HoverCardContent>
+                                )}
+                              </HoverCard>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -218,6 +247,50 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps) {
           )}
         </CardContent>
       </Card>
+      
+      {/* Student Comments Card */}
+      {groupedGrades && Object.keys(groupedGrades).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              Notes from Your Instructors
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {Object.entries(groupedGrades).flatMap(([courseId, courseData]) => {
+              const topicsWithComments = Object.entries(courseData.topics)
+                .filter(([_, topic]) => topic.comment && topic.comment.trim() !== '')
+                .map(([topicId, topic]) => ({
+                  topicId,
+                  topicName: topic.topicName,
+                  comment: topic.comment,
+                  courseName: courseData.courseName
+                }));
+                
+              return topicsWithComments.map((topic, index) => (
+                <div key={`${courseId}-${topic.topicId}-${index}`} className="p-3 rounded-md bg-card/50 border border-white/10 mb-3">
+                  <div className="flex items-center gap-1 mb-1">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <h4 className="text-sm font-medium">{topic.courseName}</h4>
+                  </div>
+                  <h3 className="font-medium mb-1">{topic.topicName}</h3>
+                  <p className="text-sm text-muted-foreground">{topic.comment}</p>
+                </div>
+              ));
+            })}
+            
+            {Object.entries(groupedGrades).every(([_, courseData]) => 
+              Object.values(courseData.topics).every(topic => !topic.comment || topic.comment.trim() === '')
+            ) && (
+              <div className="text-center py-8 text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                <p>No notes available yet.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

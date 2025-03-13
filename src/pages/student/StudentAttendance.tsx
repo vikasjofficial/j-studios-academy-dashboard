@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserCheck } from "lucide-react";
 import StudentAttendanceDashboard from "@/components/dashboard/student-attendance-dashboard";
+import { StudentGradebookView } from "@/components/gradebook/student-gradebook-view";
 
 export default function StudentAttendance() {
   return (
@@ -18,6 +19,10 @@ export default function StudentAttendance() {
         </div>
         
         <StudentAttendanceDashboard />
+      </div>
+      
+      <div className="mt-8">
+        <StudentGradebookView />
       </div>
     </div>
   );

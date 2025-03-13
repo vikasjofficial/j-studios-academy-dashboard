@@ -5,6 +5,9 @@ import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
 import { TasksCard } from '@/components/dashboard/tasks-card';
 import { useAuth } from '@/context/auth-context';
 import StudentAttendanceDashboard from '@/components/dashboard/student-attendance-dashboard';
+import { StudentGradebookView } from '@/components/gradebook/student-gradebook-view';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GraduationCap } from 'lucide-react';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -56,6 +59,18 @@ export default function StudentDashboard() {
         <h2 className="text-xl font-semibold mb-4">Attendance by Course</h2>
         <StudentAttendanceDashboard />
       </div>
+
+      <Card className="glass-morphism rounded-xl border border-white/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            My Recent Grades & Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <StudentGradebookView />
+        </CardContent>
+      </Card>
 
       <ProgressChartCard
         title="My Progress"
