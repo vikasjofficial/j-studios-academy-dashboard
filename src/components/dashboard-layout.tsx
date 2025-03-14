@@ -1,6 +1,5 @@
 
 import { useAuth } from "@/context/auth-context";
-import { AdminNavigation } from "./admin-navigation";
 import { SidebarProvider, SidebarInset } from "./ui/sidebar";
 import { LeftSidebar } from "./left-sidebar";
 import { RightSidebar } from "./right-sidebar";
@@ -15,8 +14,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex flex-col w-full bg-gradient-to-b from-background to-background/80">        
-        {user?.role === 'admin' && <AdminNavigation />}
-        
         <div className="flex w-full flex-1">
           {/* Left Sidebar */}
           <LeftSidebar />
