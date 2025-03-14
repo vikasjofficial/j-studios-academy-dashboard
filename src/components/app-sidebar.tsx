@@ -105,7 +105,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4">
         <div className="flex flex-col gap-2">
-          <Link to="/settings" className="w-full">
+          <Link to={user?.role === 'admin' ? '/admin/settings' : '/settings'} className="w-full">
             <Button variant="outline" className="w-full justify-start">
               <Settings className="mr-2 h-4 w-4" />
               Settings

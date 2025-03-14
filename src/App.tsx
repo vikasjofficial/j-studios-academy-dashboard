@@ -85,6 +85,13 @@ function App() {
               <StudentMessages />
             </ProtectedRoute>
           } />
+          
+          {/* Common Settings Route */}
+          <Route path="/settings" element={
+            <ProtectedRoute allowedRoles={['admin', 'student']}>
+              <Settings />
+            </ProtectedRoute>
+          } />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
