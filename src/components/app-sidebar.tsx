@@ -27,12 +27,33 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const { state } = useSidebar();
 
-  // Force sidebar to be visible initially
+  // Force sidebar to be visible initially and persist state
   useEffect(() => {
+    // Apply initial expanded state
     const sidebarElement = document.querySelector('[data-sidebar="sidebar"]');
     if (sidebarElement) {
       sidebarElement.setAttribute('data-state', 'expanded');
     }
+    
+    // Create MutationObserver to ensure sidebar stays visible
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-state') {
+          const currentState = sidebarElement?.getAttribute('data-state');
+          if (currentState === 'collapsed') {
+            sidebarElement?.setAttribute('data-state', 'expanded');
+          }
+        }
+      });
+    });
+    
+    if (sidebarElement) {
+      observer.observe(sidebarElement, { attributes: true });
+    }
+    
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   const adminMenuItems = [
