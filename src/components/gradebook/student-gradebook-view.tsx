@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,7 +79,6 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
     }
   }, [enrolledCourses, selectedCourse, courseId]);
 
-  // Fetch semesters and topics for the selected course
   const { data: semesters, isLoading: isLoadingSemesters } = useQuery({
     queryKey: ["course-semesters", selectedCourse],
     queryFn: async () => {
@@ -99,7 +97,6 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
         throw semestersError;
       }
       
-      // For each semester, fetch its topics
       const semestersWithTopics = await Promise.all(
         semestersData.map(async (semester) => {
           const { data: topicsData, error: topicsError } = await supabase
@@ -122,7 +119,6 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
     enabled: !!selectedCourse,
   });
 
-  // Fetch all topics for the selected course (for topics without a semester)
   const { data: topicsWithoutSemester } = useQuery({
     queryKey: ["course-topics-no-semester", selectedCourse],
     queryFn: async () => {
@@ -296,72 +292,72 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Render topics grouped by semester */}
-              {semesters && semesters.map(semester => (
-                <div key={semester.id} className="border rounded-md overflow-hidden">
-                  <div className="bg-muted/50 p-3 border-b">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">{semester.name}</h3>
-                      <span className="text-sm font-medium">
-                        Average: {calculateSemesterAverage(semester.id)}
-                      </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {semesters && semesters.map(semester => (
+                  <div key={semester.id} className="border rounded-md overflow-hidden h-full">
+                    <div className="bg-muted/50 p-3 border-b">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">{semester.name}</h3>
+                        <span className="text-sm font-medium">
+                          Average: {calculateSemesterAverage(semester.id)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {semester.topics.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Topic</TableHead>
-                          <TableHead className="text-center">Score</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {semester.topics.map(topic => {
-                          const grade = getGrade(topic.id);
-                          return (
-                            <TableRow key={topic.id}>
-                              <TableCell>{topic.name}</TableCell>
-                              <TableCell className="text-center">
-                                {grade ? (
-                                  <HoverCard>
-                                    <HoverCardTrigger>
-                                      <span 
-                                        className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
-                                      >
-                                        {grade.score}
-                                      </span>
-                                    </HoverCardTrigger>
-                                    {grade.comment && (
-                                      <HoverCardContent className="w-64 p-3">
-                                        <div className="flex flex-col space-y-1">
-                                          <div className="flex items-center">
-                                            <Info className="h-3 w-3 mr-1 text-muted-foreground" />
-                                            <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                    
+                    {semester.topics.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Topic</TableHead>
+                            <TableHead className="text-center">Score</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {semester.topics.map(topic => {
+                            const grade = getGrade(topic.id);
+                            return (
+                              <TableRow key={topic.id}>
+                                <TableCell>{topic.name}</TableCell>
+                                <TableCell className="text-center">
+                                  {grade ? (
+                                    <HoverCard>
+                                      <HoverCardTrigger>
+                                        <span 
+                                          className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
+                                        >
+                                          {grade.score}
+                                        </span>
+                                      </HoverCardTrigger>
+                                      {grade.comment && (
+                                        <HoverCardContent className="w-64 p-3">
+                                          <div className="flex flex-col space-y-1">
+                                            <div className="flex items-center">
+                                              <Info className="h-3 w-3 mr-1 text-muted-foreground" />
+                                              <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">{grade.comment}</p>
                                           </div>
-                                          <p className="text-sm text-muted-foreground">{grade.comment}</p>
-                                        </div>
-                                      </HoverCardContent>
-                                    )}
-                                  </HoverCard>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="p-4 text-center text-muted-foreground">
-                      No topics found for this semester
-                    </div>
-                  )}
-                </div>
-              ))}
+                                        </HoverCardContent>
+                                      )}
+                                    </HoverCard>
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No topics found for this semester
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
               
-              {/* Render topics without semester */}
               {topicsWithoutSemester && topicsWithoutSemester.length > 0 && (
                 <div className="border rounded-md overflow-hidden">
                   <div className="bg-muted/50 p-3 border-b">
@@ -415,7 +411,6 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
                 </div>
               )}
               
-              {/* Overall Average */}
               <div className="border rounded-md p-3 bg-muted/20">
                 <div className="flex justify-between items-center">
                   <span className="font-bold">Overall Average</span>
@@ -470,7 +465,6 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
                   </TabsContent>
                   
                   <TabsContent value="bySemester" className="mt-4 space-y-5">
-                    {/* Group comments by semester */}
                     {Object.entries(
                       allCourseComments.reduce((acc: {[key: string]: any[]}, item) => {
                         if (!acc[item.semesterName]) {
