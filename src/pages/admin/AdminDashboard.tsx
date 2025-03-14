@@ -263,7 +263,7 @@ export default function AdminDashboard() {
         {/* Performance Overview Cards with moving border animation */}
         <div className="grid gap-6 md:grid-cols-2">
           <div className={styles.movingBorderWrapper}>
-            <Card className={`${styles.movingBorderContent} border-none bg-card`}>
+            <Card className={`${styles.movingBorderContent} border-none`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-yellow-500" />
