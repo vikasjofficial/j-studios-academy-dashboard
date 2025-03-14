@@ -14,7 +14,7 @@ interface AttendanceCardProps {
 export function AttendanceCard({ title, percentage, present, total, className }: AttendanceCardProps) {
   return (
     <div className={cn(
-      "relative p-6 rounded-xl overflow-hidden glass-morphism transition-all",
+      "relative p-6 rounded-xl overflow-hidden glass-morphism transition-all w-full",
       "hover:bg-black/30 hover:border-white/20",
       className
     )}>
