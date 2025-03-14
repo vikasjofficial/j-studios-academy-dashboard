@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { BellRing, Calendar, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export function RightSidebar() {
   const { user } = useAuth();
@@ -116,3 +117,4 @@ export function RightSidebar() {
     </Sidebar>
   );
 }
+
