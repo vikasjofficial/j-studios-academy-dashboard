@@ -10,7 +10,8 @@ import {
   SidebarMenu, 
   SidebarMenuItem, 
   SidebarMenuButton, 
-  SidebarTrigger 
+  SidebarTrigger,
+  SidebarRail
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -54,6 +55,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
+      {/* Add SidebarRail component to ensure the rail is always visible */}
+      <SidebarRail />
+      
       <SidebarHeader className="p-4 flex flex-col items-center gap-4">
         <Link to={user?.role === 'admin' ? '/admin' : '/student'} className="inline-flex items-center gap-2 py-2">
           <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
