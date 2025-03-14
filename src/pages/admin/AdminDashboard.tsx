@@ -1,4 +1,4 @@
-
+import DashboardLayout from '@/components/dashboard-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
@@ -231,178 +231,180 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
-      </div>
+    <DashboardLayout>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
+        </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {statsData.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            trend={stat.trend}
+        <div className="grid gap-6 md:grid-cols-3">
+          {statsData.map((stat, index) => (
+            <StatsCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              trend={stat.trend}
+            />
+          ))}
+        </div>
+
+        {/* Performance Overview Cards */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-yellow-500" />
+                Top Performing Students (Score 8-10)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {gradesLoading ? (
+                <p className="text-muted-foreground">Loading student data...</p>
+              ) : highPerformingStudents().length > 0 ? (
+                <div className="space-y-4">
+                  {highPerformingStudents().map(entry => (
+                    <div key={entry.student.id} className="flex flex-col border-b pb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{entry.student.name}</p>
+                          <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-green-600">
+                            {Math.max(...Object.values(entry.topicScores)).toFixed(1)}
+                          </span>
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">High</span>
+                        </div>
+                      </div>
+                      {entry.highScoreTopics.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-xs font-semibold text-green-700">Strong topics:</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {entry.highScoreTopics.map(topic => (
+                              <span key={topic} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No top performing students found.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-500" />
+                Students Needing Attention (Score 1-7)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {gradesLoading ? (
+                <p className="text-muted-foreground">Loading student data...</p>
+              ) : lowPerformingStudents().length > 0 ? (
+                <div className="space-y-4">
+                  {lowPerformingStudents().map(entry => (
+                    <div key={entry.student.id} className="flex flex-col border-b pb-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{entry.student.name}</p>
+                          <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-orange-600">
+                            {Math.min(...Object.values(entry.topicScores)).toFixed(1)}
+                          </span>
+                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Help</span>
+                        </div>
+                      </div>
+                      {entry.lowScoreTopics.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-xs font-semibold text-orange-700">Struggling topics:</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {entry.lowScoreTopics.map(topic => (
+                              <span key={topic} className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No students requiring attention found.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Semester Grade Cards */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold tracking-tight">Semester Performance</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {semestersLoading ? (
+              <p className="text-muted-foreground col-span-full">Loading semester data...</p>
+            ) : semesters && semesters.length > 0 ? (
+              semesters.map(semester => (
+                <Card key={semester.id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      {semester.name} - {semester.courses?.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {getGradesBySemester(semester.id).length > 0 ? (
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                        {getGradesBySemester(semester.id).map(grade => (
+                          <div key={grade.id} className="flex justify-between items-center border-b pb-2">
+                            <div>
+                              <p className="font-medium">{grade.students?.name}</p>
+                              <p className="text-xs text-muted-foreground">{grade.topics?.name}</p>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              Number(grade.score) > 7 
+                                ? "bg-green-100 text-green-800" 
+                                : "bg-orange-100 text-orange-800"
+                            }`}>
+                              {grade.score}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No grades found for this semester.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-muted-foreground col-span-full">No semesters found.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <AttendanceCard
+            title="Overall Attendance"
+            percentage={88}
+            present={22}
+            total={25}
           />
-        ))}
-      </div>
-
-      {/* Performance Overview Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-yellow-500" />
-              Top Performing Students (Score 8-10)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {gradesLoading ? (
-              <p className="text-muted-foreground">Loading student data...</p>
-            ) : highPerformingStudents().length > 0 ? (
-              <div className="space-y-4">
-                {highPerformingStudents().map(entry => (
-                  <div key={entry.student.id} className="flex flex-col border-b pb-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{entry.student.name}</p>
-                        <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-green-600">
-                          {Math.max(...Object.values(entry.topicScores)).toFixed(1)}
-                        </span>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">High</span>
-                      </div>
-                    </div>
-                    {entry.highScoreTopics.length > 0 && (
-                      <div className="mt-1">
-                        <p className="text-xs font-semibold text-green-700">Strong topics:</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {entry.highScoreTopics.map(topic => (
-                            <span key={topic} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
-                              {topic}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No top performing students found.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-orange-500" />
-              Students Needing Attention (Score 1-7)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {gradesLoading ? (
-              <p className="text-muted-foreground">Loading student data...</p>
-            ) : lowPerformingStudents().length > 0 ? (
-              <div className="space-y-4">
-                {lowPerformingStudents().map(entry => (
-                  <div key={entry.student.id} className="flex flex-col border-b pb-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{entry.student.name}</p>
-                        <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-orange-600">
-                          {Math.min(...Object.values(entry.topicScores)).toFixed(1)}
-                        </span>
-                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Help</span>
-                      </div>
-                    </div>
-                    {entry.lowScoreTopics.length > 0 && (
-                      <div className="mt-1">
-                        <p className="text-xs font-semibold text-orange-700">Struggling topics:</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {entry.lowScoreTopics.map(topic => (
-                            <span key={topic} className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">
-                              {topic}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No students requiring attention found.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Semester Grade Cards */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold tracking-tight">Semester Performance</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {semestersLoading ? (
-            <p className="text-muted-foreground col-span-full">Loading semester data...</p>
-          ) : semesters && semesters.length > 0 ? (
-            semesters.map(semester => (
-              <Card key={semester.id}>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    {semester.name} - {semester.courses?.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {getGradesBySemester(semester.id).length > 0 ? (
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                      {getGradesBySemester(semester.id).map(grade => (
-                        <div key={grade.id} className="flex justify-between items-center border-b pb-2">
-                          <div>
-                            <p className="font-medium">{grade.students?.name}</p>
-                            <p className="text-xs text-muted-foreground">{grade.topics?.name}</p>
-                          </div>
-                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            Number(grade.score) > 7 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-orange-100 text-orange-800"
-                          }`}>
-                            {grade.score}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No grades found for this semester.</p>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <p className="text-muted-foreground col-span-full">No semesters found.</p>
-          )}
+          <ProgressChartCard
+            title="Student Progress"
+            data={progressData}
+          />
         </div>
       </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <AttendanceCard
-          title="Overall Attendance"
-          percentage={88}
-          present={22}
-          total={25}
-        />
-        <ProgressChartCard
-          title="Student Progress"
-          data={progressData}
-        />
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }

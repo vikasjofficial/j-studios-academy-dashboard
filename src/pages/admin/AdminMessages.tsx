@@ -1,4 +1,4 @@
-
+import DashboardLayout from '@/components/dashboard-layout';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -110,7 +110,6 @@ export default function AdminMessages() {
         .eq('student_id', studentId)
         .order('created_at', { ascending: false });
         
-      // Apply message type filter if not "all"
       if (messageTypeFilter !== "all") {
         query = query.eq('message_type', messageTypeFilter);
       }
@@ -173,183 +172,183 @@ export default function AdminMessages() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Student Messages</h1>
-        <p className="text-muted-foreground">
-          View and respond to student messages
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Students List */}
-        <Card className="md:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Students</CardTitle>
-            <CardDescription>Select a student to view messages</CardDescription>
-            <div className="relative mt-2">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search students..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoadingStudents ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : filteredStudents.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No students found
-              </div>
-            ) : (
-              <div className="space-y-1 max-h-[500px] overflow-y-auto pr-2">
-                {filteredStudents.map((student) => (
-                  <Button
-                    key={student.id}
-                    variant={selectedStudent?.id === student.id ? "secondary" : "ghost"}
-                    className="w-full justify-start text-left"
-                    onClick={() => handleStudentSelect(student)}
-                  >
-                    <div className="truncate">
-                      <div className="font-medium truncate">{student.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {student.student_id}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <DashboardLayout>
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Student Messages</h1>
+          <p className="text-muted-foreground">
+            View and respond to student messages
+          </p>
+        </div>
         
-        {/* Messages */}
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl">
-                {selectedStudent ? `Messages - ${selectedStudent.name}` : "Messages"}
-              </CardTitle>
-              
-              <Select 
-                value={messageTypeFilter} 
-                onValueChange={(value) => {
-                  setMessageTypeFilter(value);
-                  if (selectedStudent) {
-                    fetchMessages(selectedStudent.id);
-                  }
-                }}
-              >
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="General">General</SelectItem>
-                  <SelectItem value="Leave Request">Leave Request</SelectItem>
-                  <SelectItem value="Absent Request">Absent Request</SelectItem>
-                  <SelectItem value="Submission Request">Submission Request</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <CardDescription>
-              {selectedStudent 
-                ? `View your conversation with ${selectedStudent.name}` 
-                : "Select a student to view messages"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!selectedStudent ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Please select a student to view messages
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="md:col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">Students</CardTitle>
+              <CardDescription>Select a student to view messages</CardDescription>
+              <div className="relative mt-2">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search students..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-            ) : isLoadingMessages ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No messages found
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 pb-4">
-                {messages.map((message) => (
-                  <div 
-                    key={message.id} 
-                    className={`p-4 rounded-lg ${
-                      message.sender_role === 'admin' 
-                        ? 'bg-primary/10 ml-12' 
-                        : 'bg-secondary/10 mr-12'
-                    }`}
-                  >
-                    <div className="flex justify-between mb-2">
-                      <div className="font-medium flex items-center gap-2">
-                        {message.from_name}
-                        {message.message_type && getMessageTypeBadge(message.message_type)}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
-                      </div>
-                    </div>
-                    <p className="text-sm">{message.content}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {selectedStudent && (
-              <div className="mt-4 pt-4 border-t">
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(sendMessage)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="content"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Reply</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Type your message here..." 
-                              className="min-h-[100px]" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={form.formState.isSubmitting}
+            </CardHeader>
+            <CardContent>
+              {isLoadingStudents ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : filteredStudents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No students found
+                </div>
+              ) : (
+                <div className="space-y-1 max-h-[500px] overflow-y-auto pr-2">
+                  {filteredStudents.map((student) => (
+                    <Button
+                      key={student.id}
+                      variant={selectedStudent?.id === student.id ? "secondary" : "ghost"}
+                      className="w-full justify-start text-left"
+                      onClick={() => handleStudentSelect(student)}
                     >
-                      {form.formState.isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="mr-2 h-4 w-4" />
-                          Send Message
-                        </>
-                      )}
+                      <div className="truncate">
+                        <div className="font-medium truncate">{student.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {student.student_id}
+                        </div>
+                      </div>
                     </Button>
-                  </form>
-                </Form>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-xl">
+                  {selectedStudent ? `Messages - ${selectedStudent.name}` : "Messages"}
+                </CardTitle>
+                
+                <Select 
+                  value={messageTypeFilter} 
+                  onValueChange={(value) => {
+                    setMessageTypeFilter(value);
+                    if (selectedStudent) {
+                      fetchMessages(selectedStudent.id);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                    <SelectItem value="Leave Request">Leave Request</SelectItem>
+                    <SelectItem value="Absent Request">Absent Request</SelectItem>
+                    <SelectItem value="Submission Request">Submission Request</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              
+              <CardDescription>
+                {selectedStudent 
+                  ? `View your conversation with ${selectedStudent.name}` 
+                  : "Select a student to view messages"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!selectedStudent ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Please select a student to view messages
+                </div>
+              ) : isLoadingMessages ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No messages found
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 pb-4">
+                  {messages.map((message) => (
+                    <div 
+                      key={message.id} 
+                      className={`p-4 rounded-lg ${
+                        message.sender_role === 'admin' 
+                          ? 'bg-primary/10 ml-12' 
+                          : 'bg-secondary/10 mr-12'
+                      }`}
+                    >
+                      <div className="flex justify-between mb-2">
+                        <div className="font-medium flex items-center gap-2">
+                          {message.from_name}
+                          {message.message_type && getMessageTypeBadge(message.message_type)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                        </div>
+                      </div>
+                      <p className="text-sm">{message.content}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {selectedStudent && (
+                <div className="mt-4 pt-4 border-t">
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(sendMessage)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="content"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Reply</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Type your message here..." 
+                                className="min-h-[100px]" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={form.formState.isSubmitting}
+                      >
+                        {form.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
