@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -28,31 +29,6 @@ export default function Login() {
   const [activeTab, setActiveTab] = useState<'admin' | 'student'>('admin');
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  // Carousel data for the hero side
-  const heroSlides = [
-    {
-      title: "Capturing Moments, Creating Memories",
-      subtitle: "Electronic Music Production Academy"
-    },
-    {
-      title: "Learn. Create. Innovate.",
-      subtitle: "Master the art of music production"
-    },
-    {
-      title: "Your Journey Starts Here",
-      subtitle: "Join our community of music creators"
-    }
-  ];
-
-  // Auto slide change effect
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -100,75 +76,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-stretch bg-[#2D2B36]">
-      {/* Left hero section */}
-      <div className="hidden md:flex flex-1 flex-col relative overflow-hidden bg-[#6E59A5] text-white">
-        <div className="absolute top-8 left-8">
-          <h1 className="text-3xl font-bold tracking-tight">J-Studios</h1>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#2D2B36] p-4">
+      <Card className="w-full max-w-md bg-[#222131] border-gray-800 shadow-xl">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl font-bold text-white">
+            J-Studios Login
+          </CardTitle>
+        </CardHeader>
         
-        <div className="absolute top-8 right-8">
-          <Button 
-            variant="outline" 
-            className="text-white border-white/30 bg-white/10 hover:bg-white/20 flex items-center gap-2 rounded-full px-4"
-          >
-            Back to website <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Hero content */}
-        <div className="flex-1 flex flex-col justify-end p-12 pb-24 relative z-10">
-          {heroSlides.map((slide, index) => (
-            <div 
-              key={index}
-              className={cn(
-                "transition-all duration-700 absolute bottom-24 left-12 right-12",
-                activeSlide === index ? "opacity-100" : "opacity-0 translate-y-8"
-              )}
-            >
-              <h2 className="text-3xl md:text-4xl font-semibold mb-2">{slide.title}</h2>
-              <p className="text-white/70">{slide.subtitle}</p>
-            </div>
-          ))}
-          
-          {/* Slide indicators */}
-          <div className="absolute bottom-12 left-12 flex space-x-2">
-            {heroSlides.map((_, index) => (
-              <button 
-                key={index} 
-                className={cn(
-                  "w-8 h-1 rounded-full transition-all", 
-                  activeSlide === index ? "bg-white" : "bg-white/30"
-                )}
-                onClick={() => setActiveSlide(index)}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Overlay image */}
-        <div 
-          className="absolute inset-0 bg-center bg-cover bg-no-repeat"
-          style={{ 
-            backgroundImage: "url('/lovable-uploads/46879141-600c-4bab-9722-46bb3c4e697a.png')",
-            opacity: 0.5
-          }}
-        />
-      </div>
-      
-      {/* Right login form section */}
-      <div className="flex-1 flex flex-col justify-center p-6 md:p-12 bg-[#222131]">
-        <div className="w-full max-w-md mx-auto">
-          <div className="text-center mb-8 md:text-left">
-            <h1 className="text-3xl font-bold text-white mb-2">
-              {activeTab === 'admin' ? 'Admin Login' : 'Student Login'}
-            </h1>
-            <p className="text-gray-400">
-              Enter your credentials to access your account
-            </p>
-          </div>
-
+        <CardContent>
           <Tabs defaultValue="admin" className="w-full" onValueChange={handleTabChange}>
             <TabsList className="grid grid-cols-2 w-full mb-6 bg-gray-800/50">
               <TabsTrigger value="admin" className="data-[state=active]:bg-[#6E59A5]">Admin</TabsTrigger>
@@ -330,13 +246,13 @@ export default function Login() {
             </TabsContent>
           </Tabs>
           
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <p className="text-gray-400 text-sm">
               Need help? Contact <a className="text-[#9b87f5] hover:underline" href="#">support@jstudios.com</a>
             </p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
