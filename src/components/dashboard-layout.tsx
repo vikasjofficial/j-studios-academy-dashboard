@@ -7,17 +7,19 @@ import { ReactNode, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PanelLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Create a persistent sidebar toggle button component
 function PersistentSidebarToggle() {
   const { toggleSidebar, state } = useSidebar();
+  const isMobile = useIsMobile();
   
   return (
     <Button 
       variant="ghost" 
       size="icon" 
       onClick={toggleSidebar}
-      className="fixed top-4 right-4 z-50 bg-primary/10 backdrop-blur-sm border border-primary/20 shadow-md hover:bg-primary/20 transition-all md:right-6"
+      className={`fixed top-3 ${isMobile ? 'left-3' : 'right-4'} z-50 bg-primary/10 backdrop-blur-sm border border-primary/20 shadow-md hover:bg-primary/20 transition-all md:right-6`}
       aria-label="Toggle Sidebar"
     >
       <PanelLeft className="h-5 w-5" />
@@ -57,7 +59,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           
           <ScrollArea className="flex-1 h-screen scrollbar-none">
-            <main className="flex-1 p-6 relative z-10">
+            <main className="flex-1 p-4 md:p-6 relative z-10 pt-14 md:pt-6">
               <div className="mx-auto max-w-7xl animate-in-subtle">
                 {children}
               </div>

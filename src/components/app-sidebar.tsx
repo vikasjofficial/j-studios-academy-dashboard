@@ -11,27 +11,21 @@ import {
   SidebarMenuItem, 
   SidebarMenuButton, 
   SidebarTrigger,
-  SidebarRail
+  SidebarRail,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Home, Users, BookOpen, Calendar, CheckSquare, MessageSquare, Settings, ListChecks } from 'lucide-react';
 import { DownloadStudentPdf } from './download-student-pdf';
 import { Separator } from '@/components/ui/separator';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useIsMobile();
+  const { state } = useSidebar();
 
   const adminMenuItems = [
     { href: '/admin', icon: Home, label: 'Dashboard' },
