@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -12,8 +11,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Send, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Send, CheckCircle, XCircle, X, MessageCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface StudentMessagesTabProps {
   studentId: string;
@@ -38,6 +38,7 @@ interface Message {
 export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTabProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [composeDialogOpen, setComposeDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof messageSchema>>({
     resolver: zodResolver(messageSchema),
@@ -90,6 +91,7 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
         message_type: "General"
       });
       
+      setComposeDialogOpen(false);
       // Refresh messages
       fetchMessages();
     } catch (err) {
@@ -145,82 +147,17 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Send Message</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Messages</CardTitle>
+            <Button onClick={() => setComposeDialogOpen(true)}>
+              <Send className="mr-2 h-4 w-4" />
+              New Message
+            </Button>
+          </div>
           <CardDescription>
-            Send a message to the admin. Your messages will be visible to all admins.
+            Send messages to the admin. Your messages will be visible to all admins.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="message_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message Type</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a message type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="General">General</SelectItem>
-                        <SelectItem value="Leave Request">Leave Request</SelectItem>
-                        <SelectItem value="Absent Request">Absent Request</SelectItem>
-                        <SelectItem value="Submission Request">Submission Request</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Select the type of message you want to send
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Message</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Type your message here..." 
-                        className="min-h-[120px]" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={form.formState.isSubmitting}
-              >
-                {form.formState.isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Send Message
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
       </Card>
       
       <Card>
@@ -237,7 +174,9 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
             </div>
           ) : messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No messages yet
+              <MessageCircle className="h-12 w-12 mb-2 opacity-20 mx-auto" />
+              <p>No messages yet</p>
+              <p className="text-sm">Start a conversation with the instructors</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -277,6 +216,105 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
           )}
         </CardContent>
       </Card>
+
+      {/* Redesigned Compose Message Dialog */}
+      <Dialog open={composeDialogOpen} onOpenChange={setComposeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              New Message
+            </DialogTitle>
+            <DialogDescription>
+              Send a message to your instructors and administrators
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="relative p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-100">
+              <div className="absolute top-0 left-0 w-full h-full opacity-30 bg-grid-pattern"></div>
+              <div className="relative">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="message_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Message Type</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a message type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="General">General</SelectItem>
+                              <SelectItem value="Leave Request">Leave Request</SelectItem>
+                              <SelectItem value="Absent Request">Absent Request</SelectItem>
+                              <SelectItem value="Submission Request">Submission Request</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Message</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Type your message here..." 
+                              className="min-h-[120px] resize-none" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-between items-center pt-2">
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        onClick={() => setComposeDialogOpen(false)}
+                      >
+                        <X className="mr-1 h-4 w-4" />
+                        Cancel
+                      </Button>
+                      
+                      <Button 
+                        type="submit" 
+                        className="px-4" 
+                        disabled={form.formState.isSubmitting}
+                      >
+                        {form.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

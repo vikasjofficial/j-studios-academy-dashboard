@@ -6,9 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/context/auth-context';
-import { Send, MessageCircle } from 'lucide-react';
+import { Send, MessageCircle, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 interface Message {
   id: string;
@@ -20,15 +25,27 @@ interface Message {
   message_type?: string;
 }
 
+const messageSchema = z.object({
+  content: z.string().min(1, { message: "Message cannot be empty" }),
+  message_type: z.string().min(1, { message: "Please select a message type" })
+});
+
 export default function StudentMessages() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [messageType, setMessageType] = useState<string>('General');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [composeDialogOpen, setComposeDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const form = useForm<z.infer<typeof messageSchema>>({
+    resolver: zodResolver(messageSchema),
+    defaultValues: {
+      content: "",
+      message_type: "General"
+    },
+  });
   
   useEffect(() => {
     if (user?.id) {
@@ -88,8 +105,8 @@ export default function StudentMessages() {
     }
   };
   
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !user?.id) return;
+  const sendMessage = async (data: z.infer<typeof messageSchema>) => {
+    if (!user?.id) return;
     
     setIsSending(true);
     try {
@@ -97,16 +114,19 @@ export default function StudentMessages() {
         .from('messages')
         .insert({
           student_id: user.id,
-          content: newMessage.trim(),
+          content: data.content,
           sender_role: 'student',
           from_name: user.name,
-          message_type: messageType
+          message_type: data.message_type
         });
         
       if (error) throw error;
       
-      setNewMessage('');
-      setMessageType('General');
+      form.reset({
+        content: "",
+        message_type: "General"
+      });
+      setComposeDialogOpen(false);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -156,10 +176,16 @@ export default function StudentMessages() {
       
       <Card className="flex flex-col h-[70vh]">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            Messages
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              Messages
+            </CardTitle>
+            <Button onClick={() => setComposeDialogOpen(true)}>
+              <Send className="mr-2 h-4 w-4" />
+              New Message
+            </Button>
+          </div>
         </CardHeader>
         
         <CardContent className="flex-1 flex flex-col">
@@ -208,51 +234,105 @@ export default function StudentMessages() {
             )}
             <div ref={messagesEndRef} />
           </div>
-          
-          <div className="pt-3 border-t">
-            <div className="mb-2">
-              <Select value={messageType} onValueChange={setMessageType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Message Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="General">General</SelectItem>
-                  <SelectItem value="Leave Request">Leave Request</SelectItem>
-                  <SelectItem value="Absent Request">Absent Request</SelectItem>
-                  <SelectItem value="Submission Request">Submission Request</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="resize-none"
-                rows={3}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-              />
-              <Button 
-                onClick={sendMessage} 
-                disabled={isSending || !newMessage.trim()}
-                size="icon"
-                className="h-auto self-end"
-              >
-                {isSending ? (
-                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
         </CardContent>
       </Card>
+
+      {/* Redesigned Compose Message Dialog */}
+      <Dialog open={composeDialogOpen} onOpenChange={setComposeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              New Message
+            </DialogTitle>
+            <DialogDescription>
+              Send a message to your instructors and administrators
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="relative p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-100">
+              <div className="absolute top-0 left-0 w-full h-full opacity-30 bg-grid-pattern"></div>
+              <div className="relative">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(sendMessage)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="message_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a message type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="General">General</SelectItem>
+                              <SelectItem value="Leave Request">Leave Request</SelectItem>
+                              <SelectItem value="Absent Request">Absent Request</SelectItem>
+                              <SelectItem value="Submission Request">Submission Request</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Type your message here..." 
+                              className="min-h-[100px] resize-none border-gray-200 focus:border-primary" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-between items-center pt-2">
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        onClick={() => setComposeDialogOpen(false)}
+                      >
+                        <X className="mr-1 h-4 w-4" />
+                        Cancel
+                      </Button>
+                      
+                      <Button 
+                        type="submit" 
+                        className="px-4"
+                        disabled={isSending || form.formState.isSubmitting}
+                      >
+                        {isSending || form.formState.isSubmitting ? (
+                          <>
+                            <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="mr-2 h-4 w-4" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

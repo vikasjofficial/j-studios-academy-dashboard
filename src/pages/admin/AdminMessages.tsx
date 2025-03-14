@@ -1,7 +1,6 @@
 import DashboardLayout from '@/components/dashboard-layout';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,11 +18,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Send, Loader2, Mail, MessageSquare, CheckCircle, XCircle } from "lucide-react";
+import { Search, Send, Loader2, Mail, MessageSquare, CheckCircle, XCircle, X } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface Student {
   id: string;
@@ -57,6 +57,7 @@ export default function AdminMessages() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [messageTypeFilter, setMessageTypeFilter] = useState<string>("all");
   const [processingMessageId, setProcessingMessageId] = useState<string | null>(null);
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof sendMessageSchema>>({
     resolver: zodResolver(sendMessageSchema),
@@ -159,6 +160,7 @@ export default function AdminMessages() {
       form.reset();
       toast.success('Message sent successfully');
       fetchMessages(selectedStudent.id);
+      setReplyDialogOpen(false);
     } catch (error) {
       console.error('Failed to send message:', error);
       toast.error('Failed to send message');
@@ -248,6 +250,11 @@ export default function AdminMessages() {
     );
   };
 
+  const openReplyDialog = () => {
+    form.reset();
+    setReplyDialogOpen(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
@@ -312,27 +319,36 @@ export default function AdminMessages() {
                   {selectedStudent ? `Messages - ${selectedStudent.name}` : "Messages"}
                 </CardTitle>
                 
-                <Select 
-                  value={messageTypeFilter} 
-                  onValueChange={(value) => {
-                    setMessageTypeFilter(value);
-                    if (selectedStudent) {
-                      fetchMessages(selectedStudent.id);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="General">General</SelectItem>
-                    <SelectItem value="Leave Request">Leave Request</SelectItem>
-                    <SelectItem value="Absent Request">Absent Request</SelectItem>
-                    <SelectItem value="Submission Request">Submission Request</SelectItem>
-                    <SelectItem value="Response">Responses</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select 
+                    value={messageTypeFilter} 
+                    onValueChange={(value) => {
+                      setMessageTypeFilter(value);
+                      if (selectedStudent) {
+                        fetchMessages(selectedStudent.id);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="General">General</SelectItem>
+                      <SelectItem value="Leave Request">Leave Request</SelectItem>
+                      <SelectItem value="Absent Request">Absent Request</SelectItem>
+                      <SelectItem value="Submission Request">Submission Request</SelectItem>
+                      <SelectItem value="Response">Responses</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  {selectedStudent && (
+                    <Button onClick={openReplyDialog}>
+                      <Send className="mr-2 h-4 w-4" />
+                      Reply
+                    </Button>
+                  )}
+                </div>
               </div>
               
               <CardDescription>
@@ -355,7 +371,7 @@ export default function AdminMessages() {
                   No messages found
                 </div>
               ) : (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 pb-4">
+                <div className="space-y-4 max-h-[550px] overflow-y-auto pr-2 pb-4">
                   {messages.map((message) => (
                     <div 
                       key={message.id} 
@@ -413,21 +429,36 @@ export default function AdminMessages() {
                   ))}
                 </div>
               )}
-              
-              {selectedStudent && (
-                <div className="mt-4 pt-4 border-t">
+            </CardContent>
+          </Card>
+        </div>
+
+        <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">
+                Reply to {selectedStudent?.name}
+              </DialogTitle>
+              <DialogDescription>
+                Send a message to the student. They will be notified immediately.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="relative p-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 border border-gray-100">
+                <div className="absolute top-0 left-0 w-full h-full opacity-30 bg-grid-pattern"></div>
+                <div className="relative">
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(sendMessage)} className="space-y-4">
                       <FormField
                         control={form.control}
                         name="content"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Reply</FormLabel>
+                          <FormItem className="space-y-3">
                             <FormControl>
                               <Textarea 
                                 placeholder="Type your message here..." 
-                                className="min-h-[100px]" 
+                                className="min-h-[100px] resize-none border-gray-200 focus:border-primary" 
                                 {...field} 
                               />
                             </FormControl>
@@ -436,30 +467,41 @@ export default function AdminMessages() {
                         )}
                       />
                       
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={form.formState.isSubmitting}
-                      >
-                        {form.formState.isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Send Message
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex justify-between items-center pt-2">
+                        <Button 
+                          type="button"
+                          variant="ghost" 
+                          onClick={() => setReplyDialogOpen(false)}
+                        >
+                          <X className="mr-1 h-4 w-4" />
+                          Cancel
+                        </Button>
+                        
+                        <Button 
+                          type="submit" 
+                          className="px-4" 
+                          disabled={form.formState.isSubmitting}
+                        >
+                          {form.formState.isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              Send Message
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </form>
                   </Form>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
