@@ -20,17 +20,17 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(215 20% 25% / 0.4)',
-				input: 'hsl(215 20% 25% / 0.4)',
+				border: 'hsl(215 20% 30% / 0.4)', /* Lightened from 25% to 30% */
+				input: 'hsl(215 20% 30% / 0.4)', /* Lightened from 25% to 30% */
 				ring: 'hsl(var(--ring))',
-				background: 'hsl(220 20% 10%)',
+				background: 'hsl(220 20% 15%)', /* Lightened from 10% to 15% */
 				foreground: 'hsl(210 10% 90%)',
 				primary: {
 					DEFAULT: 'hsl(210 100% 55%)',
 					foreground: 'hsl(0 0% 100%)'
 				},
 				secondary: {
-					DEFAULT: 'hsl(220 20% 15%)',
+					DEFAULT: 'hsl(220 20% 20%)', /* Slightly adjusted */
 					foreground: 'hsl(210 10% 90%)'
 				},
 				destructive: {
@@ -38,29 +38,29 @@ export default {
 					foreground: 'hsl(0 0% 100%)'
 				},
 				muted: {
-					DEFAULT: 'hsl(220 20% 20%)',
+					DEFAULT: 'hsl(220 20% 25%)', /* Adjusted to maintain visual hierarchy */
 					foreground: 'hsl(210 10% 70%)'
 				},
 				accent: {
-					DEFAULT: 'hsl(220 20% 20%)',
+					DEFAULT: 'hsl(220 20% 25%)', /* Adjusted to maintain visual hierarchy */
 					foreground: 'hsl(210 10% 90%)'
 				},
 				popover: {
-					DEFAULT: 'hsl(220 20% 12%)',
+					DEFAULT: 'hsl(220 20% 17%)', /* Adjusted for new background */
 					foreground: 'hsl(210 10% 90%)'
 				},
 				card: {
-					DEFAULT: 'hsl(220 20% 14% / 0.6)',
+					DEFAULT: 'hsl(220 20% 19% / 0.6)', /* Adjusted to maintain contrast with background */
 					foreground: 'hsl(210 10% 90%)'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(220 20% 12%)',
+					DEFAULT: 'hsl(220 20% 17%)', /* Lightened slightly */
 					foreground: 'hsl(210 10% 90%)',
 					primary: 'hsl(210 100% 55%)',
 					'primary-foreground': 'hsl(0 0% 100%)',
-					accent: 'hsl(220 20% 18%)',
+					accent: 'hsl(220 20% 23%)', /* Lightened slightly */
 					'accent-foreground': 'hsl(210 10% 90%)',
-					border: 'hsl(215 20% 25% / 0.4)',
+					border: 'hsl(215 20% 30% / 0.4)', /* Lightened slightly */
 					ring: 'hsl(210 100% 55%)'
 				}
 			},
