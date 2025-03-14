@@ -48,7 +48,7 @@ export default function StudentCourses() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Courses</h1>
         <p className="text-muted-foreground">View your enrolled courses and grades</p>
@@ -122,9 +122,11 @@ export default function StudentCourses() {
         </Card>
       )}
       
-      <div className="mt-8">
+      <div className="mt-8 w-full">
         <h2 className="text-2xl font-bold tracking-tight mb-4">My Overall Performance</h2>
-        <StudentGradebookView />
+        <div className="w-full px-2.5">
+          <StudentGradebookView />
+        </div>
       </div>
     </div>
   );

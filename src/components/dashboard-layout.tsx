@@ -20,8 +20,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           
           {/* Main Content */}
           <SidebarInset>
-            <div className="flex-1 p-3 sm:p-4 md:p-6 w-full">
-              <main className="pb-12 w-full mx-auto max-w-[1200px]">
+            <div className="flex-1 p-3 sm:p-4 md:p-5 w-full">
+              <main className="pb-12 w-full mx-auto max-w-[1600px]">
                 {children}
               </main>
             </div>
