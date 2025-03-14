@@ -9,10 +9,8 @@ import {
   SidebarHeader, 
   SidebarMenu, 
   SidebarMenuItem, 
-  SidebarMenuButton, 
-  SidebarTrigger,
-  SidebarRail,
-  useSidebar
+  SidebarMenuButton,
+  SidebarRail
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -25,9 +23,8 @@ export function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { state } = useSidebar();
 
-  // Force sidebar to be visible initially and persist state
+  // Force sidebar to be always visible
   useEffect(() => {
     // Apply initial expanded state
     const sidebarElement = document.querySelector('[data-sidebar="sidebar"]');
@@ -99,18 +96,6 @@ export function AppSidebar() {
             <span className="text-sm font-medium truncate">{user?.name}</span>
             <span className="text-xs text-muted-foreground truncate">{user?.role}</span>
           </div>
-          {!isMobile && (
-            <SidebarTrigger>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <span className="sr-only">Toggle Sidebar</span>
-                <div className="w-4 h-4 flex flex-col justify-between">
-                  <span className="w-full h-0.5 bg-foreground rounded-full" />
-                  <span className="w-3/4 h-0.5 bg-foreground rounded-full" />
-                  <span className="w-1/2 h-0.5 bg-foreground rounded-full" />
-                </div>
-              </Button>
-            </SidebarTrigger>
-          )}
         </div>
       </SidebarHeader>
 
