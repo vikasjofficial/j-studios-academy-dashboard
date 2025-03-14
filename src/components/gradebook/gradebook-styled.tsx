@@ -432,8 +432,8 @@ export function GradebookStyled({ selectedCourseId }: GradebookStyledProps) {
   const displayCourseName = courseDetails?.name || selectedCourseName || "Selected Course";
 
   return (
-    <div className="space-y-6 w-full">
-      <div className="space-y-4 glass-morphism rounded-lg border border-white/10 w-full px-6 py-4 max-w-full">
+    <div className="space-y-6 w-full max-w-full">
+      <div className="space-y-4 glass-morphism rounded-lg border border-white/10 w-full px-4 sm:px-6 py-4 max-w-full">
         <div className="flex items-center gap-3 mb-2">
           <BookOpen className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-medium">Gradebook for {displayCourseName}</h2>
@@ -459,7 +459,7 @@ export function GradebookStyled({ selectedCourseId }: GradebookStyledProps) {
           ))}
         </div>
         
-        <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm">
+        <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm w-full">
           <table className="w-full min-w-full table-auto">
             <thead>
               <tr className="text-left border-b border-white/10">

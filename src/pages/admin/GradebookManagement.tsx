@@ -54,8 +54,8 @@ export default function GradebookManagement() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-full overflow-x-auto animate-in-subtle px-2">
-        <div>
+      <div className="space-y-6 max-w-full overflow-x-auto animate-in-subtle px-4 md:px-6">
+        <div className="w-full">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <BookOpen className="h-7 w-7 text-primary" />
             Gradebook Management
@@ -66,8 +66,8 @@ export default function GradebookManagement() {
         </div>
         
         {courses && courses.length > 0 ? (
-          <Card className="bg-card/50 backdrop-blur-sm border border-white/10 w-full">
-            <CardContent className="pt-6 w-full">
+          <Card className="bg-card/50 backdrop-blur-sm border border-white/10 w-full mx-auto">
+            <CardContent className="pt-6 w-full mx-auto">
               <div className="flex items-center gap-3 mb-6">
                 <label htmlFor="course-select" className="text-sm font-medium">
                   Select Course:
@@ -90,7 +90,9 @@ export default function GradebookManagement() {
               </div>
               
               {selectedCourse && (
-                <GradebookStyled selectedCourseId={selectedCourse} />
+                <div className="w-full flex justify-center">
+                  <GradebookStyled selectedCourseId={selectedCourse} />
+                </div>
               )}
             </CardContent>
           </Card>
