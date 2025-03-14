@@ -5,8 +5,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { fetchStudentData, generateStudentPDF } from '@/lib/pdf-generator';
 import { FileDown, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function DownloadStudentPdf() {
+interface DownloadStudentPdfProps {
+  className?: string;
+}
+
+export function DownloadStudentPdf({ className }: DownloadStudentPdfProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -76,7 +81,7 @@ export function DownloadStudentPdf() {
   return (
     <Button 
       variant="outline" 
-      className="w-full justify-start gap-2" 
+      className={cn("w-full justify-start gap-2", className)}
       onClick={handleDownload}
       disabled={isLoading}
     >
