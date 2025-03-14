@@ -55,3 +55,34 @@
   color: hsl(var(--muted-foreground));
   font-size: 0.875rem;
 }
+
+/* Animation utilities */
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Add utility classes for the sidebar */
+.bg-sidebar {
+  background-color: hsl(var(--sidebar-background));
+  color: hsl(var(--sidebar-foreground));
+}

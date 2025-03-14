@@ -1,61 +1,19 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
-import { 
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  LogOut, 
-  Home, 
-  Users, 
-  BookOpen, 
-  Calendar, 
-  CheckSquare, 
-  MessageSquare, 
-  Settings,
-  ListChecks,
-  Menu
-} from 'lucide-react';
+import { LogOut, Menu, Settings } from 'lucide-react';
 import { DownloadStudentPdf } from './download-student-pdf';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function TopNavigation() {
   const { user, logout } = useAuth();
-  const location = useLocation();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
-
-  const adminMenuItems = [
-    { href: '/admin', icon: Home, label: 'Dashboard' },
-    { href: '/admin/students', icon: Users, label: 'Students' },
-    { href: '/admin/courses', icon: BookOpen, label: 'Courses' },
-    { href: '/admin/gradebook', icon: ListChecks, label: 'Gradebook' },
-    { href: '/admin/attendance', icon: CheckSquare, label: 'Attendance' },
-    { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },
-  ];
-
-  const studentMenuItems = [
-    { href: '/student', icon: Home, label: 'Dashboard' },
-    { href: '/student/courses', icon: BookOpen, label: 'My Courses' },
-    { href: '/student/calendar', icon: Calendar, label: 'Schedule' },
-    { href: '/student/attendance', icon: CheckSquare, label: 'Attendance' },
-    { href: '/student/messages', icon: MessageSquare, label: 'Messages' },
-  ];
-
-  const menuItems = user?.role === 'admin' ? adminMenuItems : studentMenuItems;
 
   const MobileMenu = () => (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -75,37 +33,7 @@ export function TopNavigation() {
         </div>
         
         <div className="flex flex-col space-y-1 px-2">
-          {menuItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 p-2 rounded-md text-sm transition-colors",
-                location.pathname === item.href 
-                  ? "bg-primary/10 text-primary font-medium" 
-                  : "hover:bg-muted"
-              )}
-              onClick={() => setIsOpen(false)}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-          
-          <Link
-            to={user?.role === 'admin' ? '/admin/settings' : '/settings'}
-            className={cn(
-              "flex items-center gap-3 p-2 rounded-md text-sm transition-colors mt-4",
-              location.pathname.includes('/settings') 
-                ? "bg-primary/10 text-primary font-medium" 
-                : "hover:bg-muted"
-            )}
-            onClick={() => setIsOpen(false)}
-          >
-            <Settings className="h-5 w-5" />
-            <span>Settings</span>
-          </Link>
-          
+          {/* Mobile menu items */}
           <DownloadStudentPdf className="mt-2" />
           
           <Button 
@@ -123,8 +51,9 @@ export function TopNavigation() {
 
   return (
     <div className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center px-4 md:px-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 mr-4">
+      <div className="flex h-14 items-center px-4 max-w-full justify-between">
+        <div className="flex items-center gap-2">
+          <MobileMenu />
           <Link to={user?.role === 'admin' ? '/admin' : '/student'} className="inline-flex items-center gap-2">
             <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
               J-Studios
@@ -132,41 +61,13 @@ export function TopNavigation() {
           </Link>
         </div>
         
-        <MobileMenu />
-        
-        <NavigationMenu className="hidden md:flex mx-6">
-          <NavigationMenuList>
-            {menuItems.map((item) => (
-              <NavigationMenuItem key={item.href}>
-                <Link to={item.href}>
-                  <NavigationMenuLink 
-                    className={cn(
-                      navigationMenuTriggerStyle(),
-                      location.pathname === item.href && "bg-accent/50 text-accent-foreground"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 mr-2" />
-                    {item.label}
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            ))}
-          </NavigationMenuList>
-        </NavigationMenu>
-        
-        <div className="flex items-center ml-auto gap-2">
+        <div className="flex items-center gap-2">
           <div className="hidden md:block mr-2">
             <DownloadStudentPdf />
           </div>
           
           <Link to={user?.role === 'admin' ? '/admin/settings' : '/settings'} className="hidden md:inline-flex">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className={cn(
-                location.pathname.includes('/settings') && "bg-accent/50"
-              )}
-            >
+            <Button variant="ghost" size="icon">
               <Settings className="h-4 w-4" />
               <span className="sr-only">Settings</span>
             </Button>
