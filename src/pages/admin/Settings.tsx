@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Shield, User } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 
 // Define form schema for admin credential updates
 const formSchema = z.object({
@@ -117,17 +118,17 @@ export default function Settings() {
                 <div className="grid gap-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <FormLabel>Full Name</FormLabel>
+                      <Label>Full Name</Label>
                       <Input value={user?.name} readOnly />
                     </div>
                     <div className="space-y-2">
-                      <FormLabel>Role</FormLabel>
+                      <Label>Role</Label>
                       <Input value={user?.role} readOnly className="capitalize" />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <FormLabel>Email</FormLabel>
+                    <Label>Email</Label>
                     <Input value={user?.email} readOnly />
                   </div>
                 </div>
