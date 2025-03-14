@@ -3,7 +3,6 @@ import { useAuth } from "@/context/auth-context";
 import { TopNavigation } from "./top-navigation";
 import { AppSidebar } from "./app-sidebar";
 import { ScrollArea } from "./ui/scroll-area";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable";
 import { cn } from "@/lib/utils";
 import { 
   Menubar, 

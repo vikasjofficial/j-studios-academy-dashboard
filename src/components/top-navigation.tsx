@@ -3,14 +3,11 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Menu, Settings } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { DownloadStudentPdf } from './download-student-pdf';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from 'react';
 
 export function TopNavigation() {
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="sticky top-0 z-40 w-[1200px] mx-auto border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
