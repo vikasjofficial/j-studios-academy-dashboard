@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useState } from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const studentSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -164,7 +165,19 @@ export function CreateStudentForm() {
               <FormItem>
                 <FormLabel>Grade (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Grade/Class" {...field} />
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Intermediate Level">Intermediate Level</SelectItem>
+                      <SelectItem value="Progressive Level">Progressive Level</SelectItem>
+                      <SelectItem value="Advance Level">Advance Level</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

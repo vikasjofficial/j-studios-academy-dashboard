@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,10 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Save } from "lucide-react";
+import { Check, X, Save, Upload, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentCredentialsForm from './student-credentials-form';
 import { StudentMessagesTab } from './student-messages-tab';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Student {
   id: string;
@@ -27,6 +29,7 @@ interface Student {
   student_id: string;
   grade?: string;
   phone?: string;
+  avatar_url?: string;
   created_at: string;
 }
 
@@ -61,6 +64,9 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentEnrollments, setStudentEnrollments] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(student.avatar_url || null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -111,10 +117,111 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
     }
   }
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size too large. Maximum size is 5MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setAvatarFile(file);
+      const imageUrl = URL.createObjectURL(file);
+      setAvatarUrl(imageUrl);
+    }
+  };
+
+  const removeAvatar = async () => {
+    if (confirm("Are you sure you want to remove the profile picture?")) {
+      try {
+        setIsUploading(true);
+        if (student.avatar_url) {
+          // Extract the path from the URL
+          const path = student.avatar_url.split('/').slice(-1)[0];
+          const { error } = await supabase.storage.from('student_avatars').remove([path]);
+          if (error) throw error;
+        }
+        
+        const { error: updateError } = await supabase
+          .from('students')
+          .update({ avatar_url: null })
+          .eq('id', student.id);
+          
+        if (updateError) throw updateError;
+        
+        setAvatarUrl(null);
+        setAvatarFile(null);
+        
+        toast({
+          title: "Success",
+          description: "Profile picture removed successfully",
+        });
+      } catch (error) {
+        console.error('Error removing avatar:', error);
+        toast({
+          title: "Error",
+          description: "Failed to remove profile picture",
+          variant: "destructive"
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
+  async function uploadAvatar() {
+    if (!avatarFile) return null;
+    
+    try {
+      setIsUploading(true);
+      
+      // Create a unique filename
+      const fileExt = avatarFile.name.split('.').pop();
+      const fileName = `${student.id}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      
+      // Upload the file
+      const { data, error } = await supabase.storage
+        .from('student_avatars')
+        .upload(fileName, avatarFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (error) throw error;
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('student_avatars')
+        .getPublicUrl(fileName);
+        
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload profile picture",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     
     try {
+      // Upload avatar if a new one is selected
+      let avatarPublicUrl = student.avatar_url;
+      if (avatarFile) {
+        avatarPublicUrl = await uploadAvatar();
+      }
+      
       const { error: updateError } = await supabase
         .from('students')
         .update({
@@ -123,6 +230,7 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
           student_id: values.student_id,
           phone: values.phone,
           grade: values.grade,
+          avatar_url: avatarPublicUrl,
           updated_at: new Date().toISOString(),
         })
         .eq('id', student.id);
@@ -185,6 +293,14 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase();
+  };
+
   return (
     <Tabs defaultValue="details" className="w-full">
       <TabsList className="mb-4 w-full md:w-auto">
@@ -196,6 +312,48 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
       <TabsContent value="details">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex flex-col items-center mb-6">
+              <div className="mb-4">
+                <Avatar className="w-24 h-24 border-4 border-background">
+                  <AvatarImage src={avatarUrl || undefined} alt={student.name} />
+                  <AvatarFallback className="text-xl bg-primary/20">
+                    {getInitials(student.name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 justify-center">
+                <label htmlFor="avatar-upload" className="cursor-pointer">
+                  <div className="flex items-center gap-1 bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-md text-sm">
+                    <Upload className="h-4 w-4" />
+                    Upload Photo
+                  </div>
+                  <input 
+                    id="avatar-upload" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={isUploading}
+                  />
+                </label>
+                
+                {avatarUrl && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={removeAvatar}
+                    disabled={isUploading}
+                    className="flex items-center gap-1"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -269,14 +427,9 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Elementary 1">Elementary 1</SelectItem>
-                        <SelectItem value="Elementary 2">Elementary 2</SelectItem>
-                        <SelectItem value="Elementary 3">Elementary 3</SelectItem>
-                        <SelectItem value="Middle School 1">Middle School 1</SelectItem>
-                        <SelectItem value="Middle School 2">Middle School 2</SelectItem>
-                        <SelectItem value="High School 1">High School 1</SelectItem>
-                        <SelectItem value="High School 2">High School 2</SelectItem>
-                        <SelectItem value="High School 3">High School 3</SelectItem>
+                        <SelectItem value="Intermediate Level">Intermediate Level</SelectItem>
+                        <SelectItem value="Progressive Level">Progressive Level</SelectItem>
+                        <SelectItem value="Advance Level">Advance Level</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -319,8 +472,12 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
             </div>
             
             <div className="flex justify-end space-x-2">
-              <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
-                {isSubmitting ? (
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || isUploading} 
+                className="flex items-center gap-2"
+              >
+                {isSubmitting || isUploading ? (
                   <>
                     <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     <span>Saving...</span>
