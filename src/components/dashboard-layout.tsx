@@ -18,14 +18,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [location.pathname]);
   
   return (
-    <div className="min-h-screen flex w-full flex-col bg-background relative">
+    <div className="min-h-screen flex flex-col bg-background relative">
       {/* Grid pattern background */}
       <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none z-0"></div>
       
       {/* Top Navigation */}
       <TopNavigation />
       
-      <div className="flex-1 flex flex-col relative overflow-hidden">
+      <div className="flex-1 flex flex-col relative overflow-hidden w-full">
         {/* Subtle gradient background shapes */}
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="animate-float absolute top-[5%] right-[10%] w-72 h-72 rounded-full bg-primary/5 blur-3xl"></div>
@@ -33,9 +33,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="animate-pulse animation-delay-1000 absolute top-[35%] left-[15%] w-64 h-64 rounded-full bg-accent/5 blur-3xl"></div>
         </div>
         
-        <ScrollArea className="flex-1 h-screen scrollbar-none">
+        <ScrollArea className="flex-1 h-[calc(100vh-3.5rem)] w-full">
           <main className="flex-1 p-4 md:p-6 relative z-10">
-            <div className="mx-auto max-w-7xl animate-in-subtle">
+            <div className="mx-auto max-w-7xl animate-in-subtle w-full">
               {children}
             </div>
           </main>
