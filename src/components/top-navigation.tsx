@@ -51,7 +51,7 @@ export function TopNavigation() {
 
   return (
     <div className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center px-4 max-w-full justify-between">
+      <div className="flex h-14 items-center px-4 w-full justify-between">
         <div className="flex items-center gap-2">
           <MobileMenu />
           <Link to={user?.role === 'admin' ? '/admin' : '/student'} className="inline-flex items-center gap-2">
@@ -63,7 +63,7 @@ export function TopNavigation() {
         
         <div className="flex items-center gap-2">
           <div className="hidden md:block mr-2">
-            <DownloadStudentPdf />
+            <DownloadStudentPdf className="mt-0" />
           </div>
           
           <Link to={user?.role === 'admin' ? '/admin/settings' : '/settings'} className="hidden md:inline-flex">

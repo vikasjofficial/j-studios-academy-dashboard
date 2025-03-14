@@ -42,7 +42,6 @@
   transition: all 0.2s ease-in-out;
   backdrop-filter: blur(10px);
   width: 100%;
-  max-width: 100%;
 }
 
 .card:hover {
@@ -85,4 +84,16 @@
 .bg-sidebar {
   background-color: hsl(var(--sidebar-background));
   color: hsl(var(--sidebar-foreground));
+}
+
+/* Fix for stretching layout */
+.layout-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Glass morphism utility class */
+.glass-morphism {
+  @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)];
+  max-width: 100%;
 }
