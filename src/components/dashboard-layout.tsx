@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 // Create a persistent sidebar toggle button component
 function PersistentSidebarToggle() {
-  const { toggleSidebar, state } = useSidebar();
+  const { toggleSidebar } = useSidebar();
   const isMobile = useIsMobile();
   
   return (
@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [location.pathname]);
   
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background relative">
         {/* Grid pattern background */}
         <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none z-0"></div>

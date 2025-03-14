@@ -27,6 +27,14 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const { state } = useSidebar();
 
+  // Force sidebar to be visible initially
+  useEffect(() => {
+    const sidebarElement = document.querySelector('[data-sidebar="sidebar"]');
+    if (sidebarElement) {
+      sidebarElement.setAttribute('data-state', 'expanded');
+    }
+  }, []);
+
   const adminMenuItems = [
     { href: '/admin', icon: Home, label: 'Dashboard' },
     { href: '/admin/students', icon: Users, label: 'Students' },
