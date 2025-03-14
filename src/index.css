@@ -99,7 +99,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    width: 1200px;
+    width: 100%;
     margin: 0 auto;
     overflow-x: hidden;
   }
