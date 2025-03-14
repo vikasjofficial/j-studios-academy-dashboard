@@ -66,6 +66,13 @@ export default function AdminMessages() {
     },
   });
 
+  const inlineForm = useForm<z.infer<typeof sendMessageSchema>>({
+    resolver: zodResolver(sendMessageSchema),
+    defaultValues: {
+      content: "",
+    },
+  });
+
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -158,6 +165,7 @@ export default function AdminMessages() {
       if (error) throw error;
       
       form.reset();
+      inlineForm.reset();
       toast.success('Message sent successfully');
       fetchMessages(selectedStudent.id);
       setReplyDialogOpen(false);
@@ -177,7 +185,6 @@ export default function AdminMessages() {
     setProcessingMessageId(messageId);
     
     try {
-      // First update the message status
       const { error: updateError } = await supabase
         .from('messages')
         .update({ status })
@@ -185,7 +192,6 @@ export default function AdminMessages() {
         
       if (updateError) throw updateError;
       
-      // Then send a response message
       const responseContent = `Your ${messageType} has been ${status}.`;
       
       const { error: responseError } = await supabase
@@ -345,7 +351,7 @@ export default function AdminMessages() {
                   {selectedStudent && (
                     <Button onClick={openReplyDialog}>
                       <Send className="mr-2 h-4 w-4" />
-                      Reply
+                      New Message
                     </Button>
                   )}
                 </div>
@@ -357,77 +363,115 @@ export default function AdminMessages() {
                   : "Select a student to view messages"}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col h-[550px]">
               {!selectedStudent ? (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground flex-1">
                   Please select a student to view messages
                 </div>
               ) : isLoadingMessages ? (
-                <div className="flex justify-center py-8">
+                <div className="flex justify-center py-8 flex-1">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : messages.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No messages found
-                </div>
               ) : (
-                <div className="space-y-4 max-h-[550px] overflow-y-auto pr-2 pb-4">
-                  {messages.map((message) => (
-                    <div 
-                      key={message.id} 
-                      className={`p-4 rounded-lg ${
-                        message.sender_role === 'admin' 
-                          ? 'bg-primary/10 ml-12' 
-                          : 'bg-secondary/10 mr-12'
-                      }`}
-                    >
-                      <div className="flex justify-between mb-2">
-                        <div className="font-medium flex items-center gap-2">
-                          {message.from_name}
-                          {message.message_type && getMessageTypeBadge(message.message_type)}
-                          {message.status && getStatusBadge(message.status)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
-                        </div>
+                <>
+                  <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 pb-4 flex-1">
+                    {messages.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No messages found
                       </div>
-                      <p className="text-sm">{message.content}</p>
-                      
-                      {isRequestMessage(message) && !message.status && (
-                        <div className="mt-3 flex gap-2 justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                            onClick={() => handleRequestAction(message.id, 'accepted', message.message_type)}
-                            disabled={processingMessageId === message.id}
-                          >
-                            {processingMessageId === message.id ? (
-                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                            ) : (
-                              <CheckCircle className="mr-1 h-3 w-3" />
-                            )}
-                            Accept
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                            onClick={() => handleRequestAction(message.id, 'denied', message.message_type)}
-                            disabled={processingMessageId === message.id}
-                          >
-                            {processingMessageId === message.id ? (
-                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                            ) : (
-                              <XCircle className="mr-1 h-3 w-3" />
-                            )}
-                            Deny
-                          </Button>
+                    ) : (
+                      messages.map((message) => (
+                        <div 
+                          key={message.id} 
+                          className={`p-4 rounded-lg ${
+                            message.sender_role === 'admin' 
+                              ? 'bg-primary/10 ml-12' 
+                              : 'bg-secondary/10 mr-12'
+                          }`}
+                        >
+                          <div className="flex justify-between mb-2">
+                            <div className="font-medium flex items-center gap-2">
+                              {message.from_name}
+                              {message.message_type && getMessageTypeBadge(message.message_type)}
+                              {message.status && getStatusBadge(message.status)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                            </div>
+                          </div>
+                          <p className="text-sm">{message.content}</p>
+                          
+                          {isRequestMessage(message) && !message.status && (
+                            <div className="mt-3 flex gap-2 justify-end">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                onClick={() => handleRequestAction(message.id, 'accepted', message.message_type)}
+                                disabled={processingMessageId === message.id}
+                              >
+                                {processingMessageId === message.id ? (
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                )}
+                                Accept
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                                onClick={() => handleRequestAction(message.id, 'denied', message.message_type)}
+                                disabled={processingMessageId === message.id}
+                              >
+                                {processingMessageId === message.id ? (
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                ) : (
+                                  <XCircle className="mr-1 h-3 w-3" />
+                                )}
+                                Deny
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                      ))
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t">
+                    <Form {...inlineForm}>
+                      <form onSubmit={inlineForm.handleSubmit(sendMessage)} className="flex items-end gap-2">
+                        <FormField
+                          control={inlineForm.control}
+                          name="content"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Type your message here..." 
+                                  className="resize-none min-h-[80px]" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button 
+                          type="submit" 
+                          className="mb-[2px]"
+                          disabled={inlineForm.formState.isSubmitting}
+                        >
+                          {inlineForm.formState.isSubmitting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </form>
+                    </Form>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
