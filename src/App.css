@@ -101,8 +101,8 @@
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  max-width: 100%;
+  width: 130%; /* Increased from 100% to 130% */
+  max-width: 130%; /* Increased from 100% to 130% */
 }
 
 /* Table adjustments for proper width */

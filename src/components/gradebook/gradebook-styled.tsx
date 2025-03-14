@@ -433,7 +433,7 @@ export function GradebookStyled({ selectedCourseId }: GradebookStyledProps) {
 
   return (
     <div className="space-y-6 w-full max-w-full">
-      <div className="space-y-4 glass-morphism rounded-lg border border-white/10 w-full px-4 sm:px-6 py-4 max-w-full">
+      <div className="space-y-4 glass-morphism rounded-lg border border-white/10 w-full px-3 sm:px-4 py-4 max-w-full">
         <div className="flex items-center gap-3 mb-2">
           <BookOpen className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-medium">Gradebook for {displayCourseName}</h2>
