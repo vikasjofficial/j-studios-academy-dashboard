@@ -12,7 +12,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, CheckCircle, XCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface StudentMessagesTabProps {
   studentId: string;
@@ -24,8 +25,18 @@ const messageSchema = z.object({
   message_type: z.string().min(1, { message: "Please select a message type" })
 });
 
+interface Message {
+  id: string;
+  content: string;
+  from_name: string;
+  sender_role: string;
+  message_type: string | null;
+  created_at: string;
+  status?: string;
+}
+
 export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTabProps) {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const form = useForm<z.infer<typeof messageSchema>>({
@@ -87,7 +98,9 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
     }
   };
 
-  const getMessageTypeLabel = (type: string) => {
+  const getMessageTypeLabel = (type: string | null) => {
+    if (!type) return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">General</span>;
+    
     switch (type) {
       case "Leave Request":
         return <span className="px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded-full">Leave Request</span>;
@@ -95,9 +108,37 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
         return <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Absent Request</span>;
       case "Submission Request":
         return <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Submission Request</span>;
+      case "Response":
+        return <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Response</span>;
       default:
         return <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">General</span>;
     }
+  };
+
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) return null;
+    
+    switch (status) {
+      case "accepted":
+        return <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center">
+          <CheckCircle className="h-3 w-3 mr-1" /> Accepted
+        </span>;
+      case "denied":
+        return <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full flex items-center">
+          <XCircle className="h-3 w-3 mr-1" /> Denied
+        </span>;
+      default:
+        return null;
+    }
+  };
+
+  const isRequestMessage = (message: Message) => {
+    return (
+      message.sender_role === 'student' && 
+      (message.message_type === 'Leave Request' || 
+       message.message_type === 'Absent Request' || 
+       message.message_type === 'Submission Request')
+    );
   };
 
   return (
@@ -213,12 +254,23 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
                     <div className="font-medium flex items-center gap-2">
                       {message.from_name} 
                       {message.message_type && getMessageTypeLabel(message.message_type)}
+                      {message.status && getStatusBadge(message.status)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
                     </div>
                   </div>
                   <p className="text-sm">{message.content}</p>
+                  
+                  {isRequestMessage(message) && !message.status && (
+                    <div className="mt-2">
+                      <Alert className="bg-amber-50 text-amber-800 border-amber-200">
+                        <AlertDescription className="text-xs">
+                          Waiting for admin response...
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

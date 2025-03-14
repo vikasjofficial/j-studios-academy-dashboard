@@ -1,3 +1,4 @@
+
 import DashboardLayout from '@/components/dashboard-layout';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,16 +20,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Send, Loader2, Mail, MessageSquare } from "lucide-react";
+import { Search, Send, Loader2, Mail, MessageSquare, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Student {
   id: string;
   name: string;
   email: string;
   student_id: string;
+}
+
+interface Message {
+  id: string;
+  student_id: string;
+  content: string;
+  sender_role: string;
+  from_name: string;
+  created_at: string;
+  message_type: string | null;
+  status?: string;
 }
 
 const sendMessageSchema = z.object({
@@ -40,10 +53,11 @@ export default function AdminMessages() {
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [messageTypeFilter, setMessageTypeFilter] = useState<string>("all");
+  const [processingMessageId, setProcessingMessageId] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof sendMessageSchema>>({
     resolver: zodResolver(sendMessageSchema),
@@ -156,6 +170,46 @@ export default function AdminMessages() {
     setSelectedStudent(student);
   };
 
+  const handleRequestAction = async (messageId: string, status: 'accepted' | 'denied', messageType: string | null) => {
+    if (!selectedStudent) return;
+    
+    setProcessingMessageId(messageId);
+    
+    try {
+      // First update the message status
+      const { error: updateError } = await supabase
+        .from('messages')
+        .update({ status })
+        .eq('id', messageId);
+        
+      if (updateError) throw updateError;
+      
+      // Then send a response message
+      const responseContent = `Your ${messageType} has been ${status}.`;
+      
+      const { error: responseError } = await supabase
+        .from('messages')
+        .insert({
+          student_id: selectedStudent.id,
+          content: responseContent,
+          from_name: 'Admin',
+          sender_role: 'admin',
+          message_type: 'Response',
+          status
+        });
+        
+      if (responseError) throw responseError;
+      
+      toast.success(`Request ${status} successfully`);
+      fetchMessages(selectedStudent.id);
+    } catch (error) {
+      console.error(`Failed to ${status} request:`, error);
+      toast.error(`Failed to ${status} request`);
+    } finally {
+      setProcessingMessageId(null);
+    }
+  };
+
   const getMessageTypeBadge = (type: string | null) => {
     if (!type) return null;
     
@@ -166,9 +220,33 @@ export default function AdminMessages() {
         return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-200 border-red-200">Absent Request</Badge>;
       case "Submission Request":
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">Submission Request</Badge>;
+      case "Response":
+        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">Response</Badge>;
       default:
         return <Badge variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200">General</Badge>;
     }
+  };
+
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) return null;
+    
+    switch (status) {
+      case "accepted":
+        return <Badge className="bg-green-100 text-green-800 ml-2">Accepted</Badge>;
+      case "denied":
+        return <Badge className="bg-red-100 text-red-800 ml-2">Denied</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const isRequestMessage = (message: Message) => {
+    return (
+      message.sender_role === 'student' && 
+      (message.message_type === 'Leave Request' || 
+       message.message_type === 'Absent Request' || 
+       message.message_type === 'Submission Request')
+    );
   };
 
   return (
@@ -253,6 +331,7 @@ export default function AdminMessages() {
                     <SelectItem value="Leave Request">Leave Request</SelectItem>
                     <SelectItem value="Absent Request">Absent Request</SelectItem>
                     <SelectItem value="Submission Request">Submission Request</SelectItem>
+                    <SelectItem value="Response">Responses</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -291,12 +370,46 @@ export default function AdminMessages() {
                         <div className="font-medium flex items-center gap-2">
                           {message.from_name}
                           {message.message_type && getMessageTypeBadge(message.message_type)}
+                          {message.status && getStatusBadge(message.status)}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
                         </div>
                       </div>
                       <p className="text-sm">{message.content}</p>
+                      
+                      {isRequestMessage(message) && !message.status && (
+                        <div className="mt-3 flex gap-2 justify-end">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                            onClick={() => handleRequestAction(message.id, 'accepted', message.message_type)}
+                            disabled={processingMessageId === message.id}
+                          >
+                            {processingMessageId === message.id ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : (
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                            )}
+                            Accept
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                            onClick={() => handleRequestAction(message.id, 'denied', message.message_type)}
+                            disabled={processingMessageId === message.id}
+                          >
+                            {processingMessageId === message.id ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : (
+                              <XCircle className="mr-1 h-3 w-3" />
+                            )}
+                            Deny
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
