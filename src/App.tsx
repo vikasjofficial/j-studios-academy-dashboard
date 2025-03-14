@@ -18,6 +18,7 @@ import StudentCourses from '@/pages/student/StudentCourses';
 import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentMessages from '@/pages/student/StudentMessages';
 import ProtectedRoute from '@/components/protected-route';
+import DashboardLayout from '@/components/dashboard-layout';
 import './App.css';
 
 // Create a new QueryClient instance
@@ -35,66 +36,90 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AdminDashboard />
+                <DashboardLayout>
+                  <AdminDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/students" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <StudentsManagement />
+                <DashboardLayout>
+                  <StudentsManagement />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/courses" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <CoursesManagement />
+                <DashboardLayout>
+                  <CoursesManagement />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/gradebook" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <GradebookManagement />
+                <DashboardLayout>
+                  <GradebookManagement />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/attendance" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AttendanceManagement />
+                <DashboardLayout>
+                  <AttendanceManagement />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/messages" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AdminMessages />
+                <DashboardLayout>
+                  <AdminMessages />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/settings" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <Settings />
+                <DashboardLayout>
+                  <Settings />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
 
-            {/* Student Routes */}
+            {/* Student Routes - Making sure ALL are wrapped in DashboardLayout */}
             <Route path="/student" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <StudentDashboard />
+                <DashboardLayout>
+                  <StudentDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/student/courses" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <StudentCourses />
+                <DashboardLayout>
+                  <StudentCourses />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/student/attendance" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <StudentAttendance />
+                <DashboardLayout>
+                  <StudentAttendance />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/student/messages" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <StudentMessages />
+                <DashboardLayout>
+                  <StudentMessages />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
             
             {/* Common Settings Route */}
             <Route path="/settings" element={
               <ProtectedRoute allowedRoles={['admin', 'student']}>
-                <Settings />
+                <DashboardLayout>
+                  <Settings />
+                </DashboardLayout>
               </ProtectedRoute>
             } />
 

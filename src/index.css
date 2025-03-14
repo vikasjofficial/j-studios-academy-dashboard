@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -182,5 +183,10 @@
   
   .container-centered {
     @apply w-full max-w-[1200px] mx-auto px-4;
+  }
+  
+  /* Center content in student pages */
+  .student-content-container {
+    @apply w-full max-w-full mx-auto;
   }
 }
