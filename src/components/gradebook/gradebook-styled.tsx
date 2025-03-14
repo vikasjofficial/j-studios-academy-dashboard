@@ -60,7 +60,11 @@ interface Comment {
   created_at?: string;
 }
 
-export function GradebookStyled() {
+interface GradebookStyledProps {
+  selectedCourseId?: string;
+}
+
+export function GradebookStyled({ selectedCourseId }: GradebookStyledProps) {
   const { user } = useAuth();
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedSemesterId, setSelectedSemesterId] = useState<string | null>(null);
@@ -71,6 +75,12 @@ export function GradebookStyled() {
   const [selectedStudentForComments, setSelectedStudentForComments] = useState<string | null>(null);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      setSelectedCourse(selectedCourseId);
+    }
+  }, [selectedCourseId]);
 
   const { data: courses } = useQuery({
     queryKey: ["all-courses"],
@@ -83,13 +93,14 @@ export function GradebookStyled() {
       if (error) throw error;
       return data as Course[];
     },
+    enabled: !selectedCourseId,
   });
 
   useEffect(() => {
-    if (courses && courses.length > 0 && !selectedCourse) {
+    if (!selectedCourseId && courses && courses.length > 0 && !selectedCourse) {
       setSelectedCourse(courses[0].id);
     }
-  }, [courses, selectedCourse]);
+  }, [courses, selectedCourse, selectedCourseId]);
 
   const { data: semesters } = useQuery({
     queryKey: ["course-semesters", selectedCourse],
@@ -333,7 +344,25 @@ export function GradebookStyled() {
     return avg.toString();
   };
 
-  const selectedCourseName = courses?.find(course => course.id === selectedCourse)?.name || "";
+  const currentCourse = courses?.find(course => course.id === selectedCourse);
+  const selectedCourseName = currentCourse?.name || "";
+
+  const { data: courseDetails } = useQuery({
+    queryKey: ["course-details", selectedCourse],
+    queryFn: async () => {
+      if (!selectedCourse) return null;
+      
+      const { data, error } = await supabase
+        .from("courses")
+        .select("name")
+        .eq("id", selectedCourse)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedCourse,
+  });
 
   const getTopicName = (topicId: string) => {
     const topic = topics?.find(t => t.id === topicId);
@@ -398,13 +427,15 @@ export function GradebookStyled() {
   };
 
   const selectedStudent = students?.find(s => s.id === selectedStudentForComments);
+  
+  const displayCourseName = courseDetails?.name || selectedCourseName || "Selected Course";
 
   return (
     <div className="space-y-6">
-      <div className="p-6 space-y-4 glass-morphism rounded-lg border border-white/10 w-[120%]">
+      <div className="space-y-4 glass-morphism rounded-lg border border-white/10 w-full px-6 py-4">
         <div className="flex items-center gap-3 mb-2">
           <BookOpen className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-medium">Gradebook for {selectedCourseName}</h2>
+          <h2 className="text-xl font-medium">Gradebook for {displayCourseName}</h2>
         </div>
         
         <p className="text-muted-foreground text-sm">
@@ -581,8 +612,7 @@ export function GradebookStyled() {
         </div>
       </div>
 
-      {/* Student Comments Card */}
-      <Card className="glass-morphism rounded-lg border border-white/10 w-[120%]">
+      <Card className="glass-morphism rounded-lg border border-white/10 w-full">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
