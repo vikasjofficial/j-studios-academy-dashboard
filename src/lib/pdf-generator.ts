@@ -90,6 +90,9 @@ export async function fetchStudentData(studentId: string): Promise<StudentData |
       const score = Number(grade.score);
       const semesterName = grade.topics?.semesters?.name || 'Unsorted';
       const semesterId = grade.topics?.semesters?.id || 'none';
+      
+      // Use a formatted key for proper display in the PDF
+      // Format: semesterId-properSemesterName
       const key = `${semesterId}-${semesterName}`;
       
       if (!topicsBySemester[key]) {
@@ -330,10 +333,17 @@ function createPDFTemplate(data: StudentData): string {
         <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Topics Performance by Semester</h3>
         
         ${Object.entries(data.topics?.bySemester || {}).map(([semesterKey, topics]) => {
-          const [, semesterName] = semesterKey.split('-');
+          // Extract semester name from the key, properly formatted
+          const [semesterId, semesterName] = semesterKey.split('-');
+          
+          // Format the semester name to show "Semester X" instead of showing IDs
+          const displayName = semesterName.toLowerCase().includes('semester') 
+            ? semesterName  // Already has "Semester" in the name
+            : `Semester ${semesterName}`; // Add "Semester" prefix
+          
           return `
             <div class="mb-6">
-              <h4 class="font-bold text-lg mb-3">${semesterName}</h4>
+              <h4 class="font-bold text-lg mb-3">${displayName}</h4>
               <div class="overflow-hidden rounded-lg border border-border">
                 <table class="w-full text-sm">
                   <thead class="bg-muted">
@@ -379,3 +389,4 @@ function createPDFTemplate(data: StudentData): string {
     </div>
   `;
 }
+
