@@ -6,6 +6,8 @@ import { Users, BookOpen, MessageSquare } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRef, useEffect } from 'react';
+import styles from '@/styles/moving-border.module.css';
 
 export default function AdminDashboard() {
   // Fetch all students for the total count
@@ -230,6 +232,14 @@ export default function AdminDashboard() {
       });
   };
 
+  // Create a ref for scrolling to the latest messages
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [grades]);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -250,54 +260,56 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Performance Overview Cards */}
+        {/* Performance Overview Cards with moving border animation */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-yellow-500" />
-                Top Performing Students (Score 8-10)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {gradesLoading ? (
-                <p className="text-muted-foreground">Loading student data...</p>
-              ) : highPerformingStudents().length > 0 ? (
-                <div className="space-y-4">
-                  {highPerformingStudents().map(entry => (
-                    <div key={entry.student.id} className="flex flex-col border-b pb-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{entry.student.name}</p>
-                          <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-green-600">
-                            {Math.max(...Object.values(entry.topicScores)).toFixed(1)}
-                          </span>
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">High</span>
-                        </div>
-                      </div>
-                      {entry.highScoreTopics.length > 0 && (
-                        <div className="mt-1">
-                          <p className="text-xs font-semibold text-green-700">Strong topics:</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {entry.highScoreTopics.map(topic => (
-                              <span key={topic} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
-                                {topic}
-                              </span>
-                            ))}
+          <div className={styles.movingBorderWrapper}>
+            <Card className={`${styles.movingBorderContent} border-none bg-transparent`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-yellow-500" />
+                  Top Performing Students (Score 8-10)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {gradesLoading ? (
+                  <p className="text-muted-foreground">Loading student data...</p>
+                ) : highPerformingStudents().length > 0 ? (
+                  <div className="space-y-4">
+                    {highPerformingStudents().map(entry => (
+                      <div key={entry.student.id} className="flex flex-col border-b pb-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{entry.student.name}</p>
+                            <p className="text-xs text-muted-foreground">{entry.student.student_id}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-green-600">
+                              {Math.max(...Object.values(entry.topicScores)).toFixed(1)}
+                            </span>
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">High</span>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No top performing students found.</p>
-              )}
-            </CardContent>
-          </Card>
+                        {entry.highScoreTopics.length > 0 && (
+                          <div className="mt-1">
+                            <p className="text-xs font-semibold text-green-700">Strong topics:</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {entry.highScoreTopics.map(topic => (
+                                <span key={topic} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                                  {topic}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No top performing students found.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader>
@@ -345,6 +357,7 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Semester Grade Cards */}

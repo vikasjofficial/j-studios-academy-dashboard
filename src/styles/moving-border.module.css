@@ -1,0 +1,57 @@
+
+.movingBorderWrapper {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  z-index: 0;
+  padding: 1px;
+}
+
+.movingBorderWrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    #9b87f5,
+    #7E69AB,
+    #6E59A5,
+    #8B5CF6,
+    #D946EF,
+    #F97316,
+    #0EA5E9,
+    #1EAEDB,
+    #33C3F0,
+    #9b87f5
+  );
+  z-index: -2;
+  background-size: 400%;
+  animation: borderAnimation 12s linear infinite;
+}
+
+.movingBorderWrapper::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  background: var(--background, hsl(220 20% 15%));
+  border-radius: 0.5rem;
+  z-index: -1;
+}
+
+.movingBorderContent {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+@keyframes borderAnimation {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
