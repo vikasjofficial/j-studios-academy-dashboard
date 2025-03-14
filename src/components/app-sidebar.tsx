@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
@@ -14,6 +15,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Home, Users, BookOpen, Calendar, CheckSquare, MessageSquare, Settings, ListChecks } from 'lucide-react';
+import { DownloadStudentPdf } from './download-student-pdf';
+import { Separator } from '@/components/ui/separator';
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
@@ -110,6 +113,12 @@ export function AppSidebar() {
               Settings
             </Button>
           </Link>
+          
+          {/* Download PDF Button */}
+          <DownloadStudentPdf />
+          
+          <Separator className="my-1" />
+          
           <Button variant="ghost" className="w-full justify-start" onClick={logout}>
             <LogOut className="mr-2 h-4 w-4" />
             Logout
