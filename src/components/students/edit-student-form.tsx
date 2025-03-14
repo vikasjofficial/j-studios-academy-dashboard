@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentCredentialsForm from './student-credentials-form';
 import { StudentMessagesTab } from './student-messages-tab';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Student {
   id: string;
@@ -55,7 +56,7 @@ const formSchema = z.object({
   student_id: z.string().min(1, { message: "Student ID is required." }),
   phone: z.string().optional(),
   grade: z.string().optional(),
-  selectedCourses: z.array(z.string()).optional(),
+  selectedCourses: z.array(z.string()).default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -214,6 +215,7 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
+    console.log("Form values on submit:", values);
     
     try {
       // Upload avatar if a new one is selected
@@ -237,22 +239,32 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
 
       if (updateError) throw updateError;
 
+      // Handle course enrollments
       const selectedCourses = values.selectedCourses || [];
+      console.log("Selected courses:", selectedCourses);
+      console.log("Existing enrollments:", studentEnrollments);
       
+      // Courses to remove (enrolled but not in selection)
       for (const existingCourseId of studentEnrollments) {
         if (!selectedCourses.includes(existingCourseId)) {
+          console.log("Removing enrollment for course:", existingCourseId);
           const { error: deleteError } = await supabase
             .from('enrollments')
             .delete()
             .eq('student_id', student.id)
             .eq('course_id', existingCourseId);
             
-          if (deleteError) throw deleteError;
+          if (deleteError) {
+            console.error("Error removing enrollment:", deleteError);
+            throw deleteError;
+          }
         }
       }
       
+      // Courses to add (in selection but not enrolled)
       for (const courseId of selectedCourses) {
         if (!studentEnrollments.includes(courseId)) {
+          console.log("Adding enrollment for course:", courseId);
           const { error: insertError } = await supabase
             .from('enrollments')
             .insert({
@@ -262,9 +274,15 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
               status: 'active'
             });
             
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error("Error adding enrollment:", insertError);
+            throw insertError;
+          }
         }
       }
+
+      // Refresh the enrollments list
+      fetchStudentEnrollments();
 
       onSuccess();
       toast({
@@ -284,13 +302,18 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
   }
 
   const toggleCourseSelection = (courseId: string) => {
-    const currentSelections = form.getValues('selectedCourses') || [];
+    const currentValues = form.getValues('selectedCourses') || [];
+    console.log("Current selected courses:", currentValues);
     
-    if (currentSelections.includes(courseId)) {
-      form.setValue('selectedCourses', currentSelections.filter(id => id !== courseId));
+    let updatedValues: string[];
+    if (currentValues.includes(courseId)) {
+      updatedValues = currentValues.filter(id => id !== courseId);
     } else {
-      form.setValue('selectedCourses', [...currentSelections, courseId]);
+      updatedValues = [...currentValues, courseId];
     }
+    
+    console.log("Updated selected courses:", updatedValues);
+    form.setValue('selectedCourses', updatedValues, { shouldDirty: true, shouldTouch: true });
   };
 
   const getInitials = (name: string) => {
@@ -446,25 +469,19 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
                   const isSelected = selectedCourses.includes(course.id);
                   
                   return (
-                    <div key={course.id} className="flex items-start space-x-2">
-                      <Button
-                        type="button"
-                        variant={isSelected ? "default" : "outline"}
-                        size="sm"
-                        className="h-8 px-2 gap-1"
-                        onClick={() => toggleCourseSelection(course.id)}
+                    <div key={course.id} className="flex items-center space-x-2 border p-3 rounded-md">
+                      <Checkbox 
+                        id={`course-${course.id}`}
+                        checked={isSelected}
+                        onCheckedChange={() => toggleCourseSelection(course.id)}
+                      />
+                      <label
+                        htmlFor={`course-${course.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                       >
-                        {isSelected ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <X className="h-4 w-4" />
-                        )}
-                        <span className="text-xs">{isSelected ? "Enrolled" : "Not Enrolled"}</span>
-                      </Button>
-                      <div className="text-sm">
                         <div className="font-medium">{course.name}</div>
                         <div className="text-xs text-muted-foreground">{course.code}</div>
-                      </div>
+                      </label>
                     </div>
                   );
                 })}
