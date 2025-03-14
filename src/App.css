@@ -134,3 +134,53 @@ main > .space-y-8 {
     padding: 1rem;
   }
 }
+
+/* Attendance calendar styles */
+.attendance-calendar {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.attendance-record-card {
+  transition: all 0.2s ease;
+}
+
+.attendance-record-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.attendance-summary-card {
+  border-left: 3px solid transparent;
+}
+
+.attendance-summary-card.good {
+  border-left-color: hsl(var(--success));
+}
+
+.attendance-summary-card.warning {
+  border-left-color: hsl(var(--warning));
+}
+
+.attendance-summary-card.poor {
+  border-left-color: hsl(var(--destructive));
+}
+
+/* Calendar pointer-events fix */
+.rdp {
+  margin: 0;
+}
+
+.rdp-month {
+  background-color: hsl(var(--background));
+  border-radius: var(--radius);
+}
+
+.rdp-day_selected:not([disabled]) {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rdp-day_selected:hover:not([disabled]) {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
