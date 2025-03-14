@@ -14,29 +14,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
 
   return (
-    <div className="flex h-screen w-full flex-col">
+    <div className="flex h-screen w-[1200px] mx-auto flex-col">
       <TopNavigation />
       
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="flex-1 overflow-hidden"
-      >
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={20} className="hidden md:block">
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-[240px] min-w-[240px]">
           <ScrollArea className="h-[calc(100vh-3.5rem)]">
             <AppSidebar />
           </ScrollArea>
-        </ResizablePanel>
+        </div>
         
-        <ResizableHandle withHandle className="hidden md:flex" />
-        
-        <ResizablePanel defaultSize={80} minSize={30}>
+        <div className="flex-1 overflow-x-hidden">
           <ScrollArea className="h-[calc(100vh-3.5rem)]">
-            <main className="flex-1 p-6 max-w-7xl mx-auto">
+            <main className="flex-1 p-6 w-[960px]">
               {children}
             </main>
           </ScrollArea>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+        </div>
+      </div>
     </div>
   );
 }

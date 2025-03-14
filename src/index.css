@@ -92,11 +92,16 @@
   
   html {
     @apply antialiased scroll-smooth;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    width: 1200px;
+    margin: 0 auto;
+    overflow-x: hidden;
   }
 }
 
@@ -104,6 +109,7 @@
   /* Glass card effect */
   .glass-card {
     @apply bg-card/60 backdrop-blur-md border border-white/10 shadow-glass;
+    max-width: 960px;
   }
   
   /* Text balancing for headings */
@@ -114,11 +120,13 @@
   /* Glass gradient effect */
   .glass-morphism {
     @apply bg-black/20 backdrop-blur-xl border border-white/10 shadow-glass;
+    max-width: 960px;
   }
   
   /* Card with neon glow */
   .neon-card {
     @apply glass-card shadow-neon;
+    max-width: 960px;
   }
   
   /* Transition utilities */
