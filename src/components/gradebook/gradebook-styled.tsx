@@ -459,8 +459,8 @@ export function GradebookStyled({ selectedCourseId }: GradebookStyledProps) {
           ))}
         </div>
         
-        <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm w-full">
-          <table className="w-full min-w-full table-auto">
+        <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20 backdrop-blur-sm w-130 gradebook-inner-card">
+          <table className="min-w-full table-auto">
             <thead>
               <tr className="text-left border-b border-white/10">
                 <th className="p-3 font-medium text-foreground">Student</th>
@@ -613,7 +613,7 @@ export function GradebookStyled({ selectedCourseId }: GradebookStyledProps) {
         </div>
       </div>
 
-      <Card className="glass-morphism rounded-lg border border-white/10 w-full">
+      <Card className="glass-morphism rounded-lg border border-white/10 w-full gradebook-inner-card">
         <CardHeader className="pb-2">
           <CardTitle className="text-xl flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
