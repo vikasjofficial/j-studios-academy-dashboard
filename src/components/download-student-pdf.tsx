@@ -59,7 +59,7 @@ export function DownloadStudentPdf() {
       
       toast({
         title: "PDF Generated",
-        description: "Your student profile report has been downloaded.",
+        description: "Your comprehensive student report has been downloaded.",
       });
     } catch (error) {
       console.error('Error downloading PDF:', error);

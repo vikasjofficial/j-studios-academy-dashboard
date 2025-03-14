@@ -13,6 +13,17 @@ export interface StudentData {
   grades?: any[];
   attendance?: any[];
   messages?: any[];
+  topics?: {
+    bySemester: Record<string, any[]>;
+    strong: any[];
+    needsWork: any[];
+  };
+  attendanceSummary?: {
+    present: number;
+    absent: number;
+    late: number;
+    total: number;
+  };
 }
 
 // Fetch all student data needed for the PDF
@@ -36,10 +47,19 @@ export async function fetchStudentData(studentId: string): Promise<StudentData |
       
     if (enrollmentsError) throw enrollmentsError;
     
-    // Fetch grades
+    // Fetch grades with more details including comments
     const { data: grades, error: gradesError } = await supabase
       .from('grades')
-      .select('*, course:courses(name)')
+      .select(`
+        id, 
+        score, 
+        comment,
+        graded_by,
+        graded_at,
+        topic_id,
+        topics:topic_id(id, name, semester_id, semesters:semester_id(id, name)),
+        course:course_id(id, name)
+      `)
       .eq('student_id', studentId);
       
     if (gradesError) throw gradesError;
@@ -61,6 +81,44 @@ export async function fetchStudentData(studentId: string): Promise<StudentData |
       
     if (messagesError) throw messagesError;
     
+    // Process topics by semester and performance level
+    const topicsBySemester: Record<string, any[]> = {};
+    const strongTopics: any[] = [];
+    const needsWorkTopics: any[] = [];
+    
+    grades?.forEach(grade => {
+      const score = Number(grade.score);
+      const semesterName = grade.topics?.semesters?.name || 'Unsorted';
+      const semesterId = grade.topics?.semesters?.id || 'none';
+      const key = `${semesterId}-${semesterName}`;
+      
+      if (!topicsBySemester[key]) {
+        topicsBySemester[key] = [];
+      }
+      
+      const topicWithGrade = {
+        ...grade,
+        score,
+      };
+      
+      topicsBySemester[key].push(topicWithGrade);
+      
+      // Categorize by performance
+      if (score >= 8) {
+        strongTopics.push(topicWithGrade);
+      } else if (score <= 7) {
+        needsWorkTopics.push(topicWithGrade);
+      }
+    });
+    
+    // Calculate attendance summary
+    const attendanceSummary = {
+      present: attendance?.filter(a => a.status === 'present').length || 0,
+      absent: attendance?.filter(a => a.status === 'absent').length || 0,
+      late: attendance?.filter(a => a.status === 'late').length || 0,
+      total: attendance?.length || 0
+    };
+    
     return {
       id: student.id,
       name: student.name,
@@ -70,7 +128,13 @@ export async function fetchStudentData(studentId: string): Promise<StudentData |
       courses: enrollments?.map(e => e.course) || [],
       grades: grades || [],
       attendance: attendance || [],
-      messages: messages || []
+      messages: messages || [],
+      topics: {
+        bySemester: topicsBySemester,
+        strong: strongTopics,
+        needsWork: needsWorkTopics
+      },
+      attendanceSummary
     };
   } catch (error) {
     console.error('Error fetching student data:', error);
@@ -165,6 +229,63 @@ function createPDFTemplate(data: StudentData): string {
         </div>
       </div>
 
+      <!-- Performance Overview Cards -->
+      <div class="grid grid-cols-2 gap-4 mb-8">
+        <!-- Strong Topics Card -->
+        <div class="p-4 bg-card rounded-lg border border-border">
+          <h3 class="text-lg font-bold mb-3 flex items-center">
+            <span class="inline-block w-5 h-5 mr-2 rounded-full bg-yellow-500"></span>
+            My Strong Topics (Score 8-10)
+          </h3>
+          <div class="space-y-3">
+            ${data.topics?.strong && data.topics.strong.length > 0 
+              ? data.topics.strong.map(topic => `
+                <div class="flex flex-col border-b pb-2">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-medium">${topic.topics?.name || 'Unnamed Topic'}</p>
+                      <p class="text-xs text-muted-foreground">${topic.course?.name || 'Unknown Course'}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg font-bold text-green-600">${topic.score.toFixed(1)}</span>
+                      <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Strong</span>
+                    </div>
+                  </div>
+                </div>
+              `).join('') 
+              : '<p class="text-muted-foreground">No strong topics found yet.</p>'
+            }
+          </div>
+        </div>
+
+        <!-- Needs Work Topics Card -->
+        <div class="p-4 bg-card rounded-lg border border-border">
+          <h3 class="text-lg font-bold mb-3 flex items-center">
+            <span class="inline-block w-5 h-5 mr-2 rounded-full bg-orange-500"></span>
+            Topics I Need to Work On (Score 1-7)
+          </h3>
+          <div class="space-y-3">
+            ${data.topics?.needsWork && data.topics.needsWork.length > 0 
+              ? data.topics.needsWork.map(topic => `
+                <div class="flex flex-col border-b pb-2">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="font-medium">${topic.topics?.name || 'Unnamed Topic'}</p>
+                      <p class="text-xs text-muted-foreground">${topic.course?.name || 'Unknown Course'}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-lg font-bold text-orange-600">${topic.score.toFixed(1)}</span>
+                      <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Work</span>
+                    </div>
+                  </div>
+                </div>
+              `).join('') 
+              : '<p class="text-muted-foreground">No struggling topics identified.</p>'
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- Courses Section -->
       <div class="mb-8">
         <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Enrolled Courses</h3>
@@ -180,81 +301,76 @@ function createPDFTemplate(data: StudentData): string {
         </div>
       </div>
 
-      <!-- Grades Section -->
+      <!-- Attendance Summary Section -->
       <div class="mb-8">
-        <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Academic Performance</h3>
-        <div class="overflow-hidden rounded-lg border border-border">
-          <table class="w-full text-sm">
-            <thead class="bg-muted">
-              <tr>
-                <th class="p-2 text-left">Course</th>
-                <th class="p-2 text-left">Score</th>
-                <th class="p-2 text-left">Graded By</th>
-                <th class="p-2 text-left">Graded At</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.grades?.map((grade, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-card' : 'bg-muted/30'}">
-                  <td class="p-2">${grade.course?.name || 'Unknown course'}</td>
-                  <td class="p-2 font-medium">${grade.score}</td>
-                  <td class="p-2">${grade.graded_by || 'N/A'}</td>
-                  <td class="p-2">${new Date(grade.graded_at).toLocaleDateString()}</td>
-                </tr>
-              `).join('') || '<tr><td colspan="4" class="p-2 text-center">No grades recorded</td></tr>'}
-            </tbody>
-          </table>
+        <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Attendance Summary</h3>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="p-4 bg-green-50 rounded-lg border border-green-200 text-center">
+            <h4 class="font-bold text-green-700">Present</h4>
+            <p class="text-3xl font-bold text-green-600">${data.attendanceSummary?.present || 0}</p>
+            <p class="text-sm text-green-600">out of ${data.attendanceSummary?.total || 0} classes</p>
+          </div>
+          
+          <div class="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
+            <h4 class="font-bold text-red-700">Absent</h4>
+            <p class="text-3xl font-bold text-red-600">${data.attendanceSummary?.absent || 0}</p>
+            <p class="text-sm text-red-600">out of ${data.attendanceSummary?.total || 0} classes</p>
+          </div>
+          
+          <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center">
+            <h4 class="font-bold text-yellow-700">Late</h4>
+            <p class="text-3xl font-bold text-yellow-600">${data.attendanceSummary?.late || 0}</p>
+            <p class="text-sm text-yellow-600">out of ${data.attendanceSummary?.total || 0} classes</p>
+          </div>
         </div>
       </div>
 
-      <!-- Attendance Section -->
+      <!-- Topic Scores by Semester Section -->
       <div class="mb-8">
-        <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Attendance Record</h3>
-        <div class="overflow-hidden rounded-lg border border-border">
-          <table class="w-full text-sm">
-            <thead class="bg-muted">
-              <tr>
-                <th class="p-2 text-left">Date</th>
-                <th class="p-2 text-left">Course</th>
-                <th class="p-2 text-left">Status</th>
-                <th class="p-2 text-left">Recorded By</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.attendance?.map((record, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-card' : 'bg-muted/30'}">
-                  <td class="p-2">${new Date(record.date).toLocaleDateString()}</td>
-                  <td class="p-2">${record.course?.name || 'Unknown course'}</td>
-                  <td class="p-2">
-                    <span class="px-2 py-1 rounded text-xs font-medium 
-                      ${record.status === 'present' ? 'bg-green-500/20 text-green-500' : 
-                        record.status === 'absent' ? 'bg-red-500/20 text-red-500' : 
-                        'bg-yellow-500/20 text-yellow-500'}">
-                      ${record.status}
-                    </span>
-                  </td>
-                  <td class="p-2">${record.recorded_by || 'N/A'}</td>
-                </tr>
-              `).join('') || '<tr><td colspan="4" class="p-2 text-center">No attendance records</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Messages Section -->
-      <div class="mb-8">
-        <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Recent Communications</h3>
-        <div class="space-y-3">
-          ${data.messages?.slice(0, 5).map(message => `
-            <div class="p-3 bg-card rounded-lg">
-              <div class="flex justify-between mb-1">
-                <span class="font-medium">${message.from_name} (${message.sender_role})</span>
-                <span class="text-xs text-muted-foreground">${new Date(message.created_at).toLocaleString()}</span>
+        <h3 class="text-xl font-bold border-b border-border pb-2 mb-4">Topics Performance by Semester</h3>
+        
+        ${Object.entries(data.topics?.bySemester || {}).map(([semesterKey, topics]) => {
+          const [, semesterName] = semesterKey.split('-');
+          return `
+            <div class="mb-6">
+              <h4 class="font-bold text-lg mb-3">${semesterName}</h4>
+              <div class="overflow-hidden rounded-lg border border-border">
+                <table class="w-full text-sm">
+                  <thead class="bg-muted">
+                    <tr>
+                      <th class="p-2 text-left">Topic</th>
+                      <th class="p-2 text-left">Course</th>
+                      <th class="p-2 text-left">Score</th>
+                      <th class="p-2 text-left">Comments</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${topics.map((topic, i) => `
+                      <tr class="${i % 2 === 0 ? 'bg-card' : 'bg-muted/30'}">
+                        <td class="p-2 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
+                        <td class="p-2">${topic.course?.name || 'Unknown Course'}</td>
+                        <td class="p-2">
+                          <span class="px-2 py-1 rounded text-xs font-medium 
+                            ${topic.score >= 8 ? 'bg-green-500/20 text-green-800' : 
+                              topic.score <= 4 ? 'bg-red-500/20 text-red-800' : 
+                              'bg-yellow-500/20 text-yellow-800'}">
+                            ${topic.score.toFixed(1)}
+                          </span>
+                        </td>
+                        <td class="p-2">
+                          ${topic.comment ? 
+                            `<p class="text-xs italic">"${topic.comment}"</p>
+                             <p class="text-xs text-muted-foreground mt-1">— ${topic.graded_by || 'Instructor'}</p>` 
+                            : 'No comments'}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
               </div>
-              <p class="text-sm">${message.content}</p>
             </div>
-          `).join('') || '<p class="text-center">No messages</p>'}
-        </div>
+          `;
+        }).join('') || '<p class="text-center">No topic scores available</p>'}
       </div>
 
       <div class="text-center mt-12 pt-6 border-t border-border">
