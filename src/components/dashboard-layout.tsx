@@ -1,10 +1,29 @@
 
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { AppSidebar } from './app-sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toaster } from '@/components/ui/sonner';
 import { ReactNode, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { PanelLeft } from 'lucide-react';
+
+// Create a persistent sidebar toggle button component
+function PersistentSidebarToggle() {
+  const { toggleSidebar, state } = useSidebar();
+  
+  return (
+    <Button 
+      variant="ghost" 
+      size="icon" 
+      onClick={toggleSidebar}
+      className="fixed top-4 right-4 z-50 bg-primary/10 backdrop-blur-sm border border-primary/20 shadow-md hover:bg-primary/20 transition-all md:right-6"
+      aria-label="Toggle Sidebar"
+    >
+      <PanelLeft className="h-5 w-5" />
+    </Button>
+  );
+}
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -27,6 +46,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         <AppSidebar />
         <div className="flex-1 flex flex-col relative overflow-hidden">
+          {/* Persistent sidebar toggle button */}
+          <PersistentSidebarToggle />
+          
           {/* Subtle gradient background shapes */}
           <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
             <div className="animate-float absolute top-[5%] right-[10%] w-72 h-72 rounded-full bg-primary/5 blur-3xl"></div>
