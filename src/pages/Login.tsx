@@ -12,8 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff, Laptop, User } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -76,19 +76,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#2D2B36] p-4">
-      <Card className="w-full max-w-md bg-[#222131] border-gray-800 shadow-xl">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-2xl font-bold text-white">
-            J-Studios Login
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#222131] to-[#383565] p-4">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-blue-400">
+          J-Studios
+        </h1>
+        <p className="text-gray-400 mt-2">Education Management System</p>
+      </div>
+      
+      <Card className="w-full max-w-md border-0 shadow-2xl bg-card/30 backdrop-blur-lg">
+        <CardContent className="pt-6">
           <Tabs defaultValue="admin" className="w-full" onValueChange={handleTabChange}>
-            <TabsList className="grid grid-cols-2 w-full mb-6 bg-gray-800/50">
-              <TabsTrigger value="admin" className="data-[state=active]:bg-[#6E59A5]">Admin</TabsTrigger>
-              <TabsTrigger value="student" className="data-[state=active]:bg-[#6E59A5]">Student</TabsTrigger>
+            <TabsList className="grid grid-cols-2 w-full mb-6">
+              <TabsTrigger value="admin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <Laptop className="mr-2 h-4 w-4" />
+                Admin
+              </TabsTrigger>
+              <TabsTrigger value="student" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <User className="mr-2 h-4 w-4" />
+                Student
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="admin">
@@ -105,7 +112,7 @@ export default function Login() {
                             type="email"
                             autoComplete="email"
                             disabled={isLoading}
-                            className="h-12 bg-gray-800/50 border-0 text-white placeholder:text-gray-500"
+                            className="h-12 bg-background/50 backdrop-blur-sm border-border/50"
                             {...field}
                           />
                         </FormControl>
@@ -124,12 +131,12 @@ export default function Login() {
                               placeholder="Enter your password"
                               type={showPassword ? "text" : "password"}
                               disabled={isLoading}
-                              className="h-12 bg-gray-800/50 border-0 text-white placeholder:text-gray-500 pr-10"
+                              className="h-12 bg-background/50 backdrop-blur-sm border-border/50 pr-10"
                               {...field}
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-3 text-gray-400"
+                              className="absolute right-3 top-3 text-muted-foreground"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
@@ -145,14 +152,14 @@ export default function Login() {
                     )}
                   />
                   <div className="flex items-center">
-                    <Checkbox id="remember" className="border-gray-500 data-[state=checked]:bg-[#6E59A5] data-[state=checked]:border-[#6E59A5]" />
-                    <label htmlFor="remember" className="ml-2 text-sm text-gray-400">
+                    <Checkbox id="remember" className="border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    <label htmlFor="remember" className="ml-2 text-sm text-muted-foreground">
                       Remember me for 30 days
                     </label>
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-[#6E59A5] hover:bg-[#5B4A8A] text-white"
+                    className="w-full h-12 bg-primary hover:bg-primary/90"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -182,7 +189,7 @@ export default function Login() {
                             type="email"
                             autoComplete="email"
                             disabled={isLoading}
-                            className="h-12 bg-gray-800/50 border-0 text-white placeholder:text-gray-500"
+                            className="h-12 bg-background/50 backdrop-blur-sm border-border/50"
                             {...field}
                           />
                         </FormControl>
@@ -201,12 +208,12 @@ export default function Login() {
                               placeholder="Enter your password"
                               type={showPassword ? "text" : "password"}
                               disabled={isLoading}
-                              className="h-12 bg-gray-800/50 border-0 text-white placeholder:text-gray-500 pr-10"
+                              className="h-12 bg-background/50 backdrop-blur-sm border-border/50 pr-10"
                               {...field}
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-3 text-gray-400"
+                              className="absolute right-3 top-3 text-muted-foreground"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
@@ -222,14 +229,14 @@ export default function Login() {
                     )}
                   />
                   <div className="flex items-center">
-                    <Checkbox id="remember" className="border-gray-500 data-[state=checked]:bg-[#6E59A5] data-[state=checked]:border-[#6E59A5]" />
-                    <label htmlFor="remember" className="ml-2 text-sm text-gray-400">
+                    <Checkbox id="remember-student" className="border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    <label htmlFor="remember-student" className="ml-2 text-sm text-muted-foreground">
                       Remember me for 30 days
                     </label>
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-[#6E59A5] hover:bg-[#5B4A8A] text-white"
+                    className="w-full h-12 bg-primary hover:bg-primary/90"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -247,8 +254,8 @@ export default function Login() {
           </Tabs>
           
           <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              Need help? Contact <a className="text-[#9b87f5] hover:underline" href="#">support@jstudios.com</a>
+            <p className="text-muted-foreground text-sm">
+              Need help? Contact <a className="text-primary hover:underline" href="#">support@jstudios.com</a>
             </p>
           </div>
         </CardContent>

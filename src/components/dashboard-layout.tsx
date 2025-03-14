@@ -12,24 +12,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   
   return (
-    <div className="flex h-screen w-[1200px] mx-auto flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       <TopNavigation />
       
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-[240px] min-w-[240px]">
-          <ScrollArea className="h-[calc(100vh-3.5rem)]">
+      <div className="flex mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="w-64 hidden md:block">
+          <div className="sticky top-16 pt-6">
             <AppSidebar />
-          </ScrollArea>
+          </div>
         </div>
         
-        <div className="flex-1 overflow-x-hidden">
-          <ScrollArea className="h-[calc(100vh-3.5rem)]">
-            <div className="px-6 pt-6 w-[960px]">
-              <main className="flex-1 w-[960px]">
-                {children}
-              </main>
-            </div>
-          </ScrollArea>
+        <div className="flex-1 min-w-0 py-6 pl-0 md:pl-8">
+          <main className="pb-12">
+            {children}
+          </main>
         </div>
       </div>
     </div>
