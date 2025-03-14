@@ -101,20 +101,20 @@
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-  width: 100%; /* Reset to 100% */
-  max-width: 100%; /* Reset to 100% */
+  width: 130%; /* Increased to match inner content */
+  max-width: 130%; /* Increased to match inner content */
 }
 
 /* Table adjustments for proper width */
 table {
-  width: 130%; /* Increased from 100% to 130% */
+  width: 100%; /* Reset to 100% since the container is now wider */
   table-layout: fixed;
 }
 
 /* Inner card components width adjustment */
 .gradebook-inner-card {
-  width: 130%;
-  max-width: 130%;
+  width: 100%; /* Reset to 100% since parent is now wider */
+  max-width: 100%;
 }
 
 /* Fix layout issues on student pages */

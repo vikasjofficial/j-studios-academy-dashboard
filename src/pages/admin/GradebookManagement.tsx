@@ -66,7 +66,7 @@ export default function GradebookManagement() {
         </div>
         
         {courses && courses.length > 0 ? (
-          <Card className="bg-card/50 backdrop-blur-sm border border-white/10 w-full mx-auto">
+          <Card className="bg-card/50 backdrop-blur-sm border border-white/10 w-full mx-auto glass-morphism">
             <CardContent className="pt-6 w-full mx-auto px-3">
               <div className="flex items-center gap-3 mb-6">
                 <label htmlFor="course-select" className="text-sm font-medium">
