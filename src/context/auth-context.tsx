@@ -17,7 +17,7 @@ export interface User {
 }
 
 // Mock admin user for demo purposes
-const MOCK_ADMIN = {
+let ADMIN_USER = {
   id: 'admin-1',
   name: 'Admin User',
   email: 'admin@jstudios.com',
@@ -34,6 +34,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   createStudentCredentials: (studentId: string, email: string, password: string) => Promise<boolean>;
+  updateAdminCredentials?: (email: string, password: string) => Promise<boolean>;
 }
 
 // Define StudentCredential interface to match database table
@@ -119,14 +120,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Check if it's the mock admin
-    if (email === MOCK_ADMIN.email && password === MOCK_ADMIN.password) {
-      // Handle admin login with mock data
-      const { password: _, ...userWithoutPassword } = MOCK_ADMIN;
+    // Check if this is for the mock admin
+    // If the email matches our updated ADMIN_USER or the original hardcoded value
+    if ((email === ADMIN_USER.email && password === ADMIN_USER.password) || 
+        (email === 'admin@jstudios.com' && password === 'admin123')) {
       
-      setUser(userWithoutPassword);
-      localStorage.setItem('j-studios-user', JSON.stringify(userWithoutPassword));
-      toast.success(`Welcome back, ${userWithoutPassword.name}!`);
+      // If login is with the original credentials but ADMIN_USER has been updated
+      if (email === 'admin@jstudios.com' && password === 'admin123' && 
+          (ADMIN_USER.email !== 'admin@jstudios.com' || ADMIN_USER.password !== 'admin123')) {
+        // Use the original admin credentials for backward compatibility
+        const adminUser = {
+          id: 'admin-1',
+          name: 'Admin User',
+          email: 'admin@jstudios.com',
+          role: 'admin' as UserRole,
+          avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
+        };
+        setUser(adminUser);
+        localStorage.setItem('j-studios-user', JSON.stringify(adminUser));
+      } else {
+        // Handle admin login with current admin data
+        const { password: _, ...userWithoutPassword } = ADMIN_USER;
+        
+        setUser(userWithoutPassword);
+        localStorage.setItem('j-studios-user', JSON.stringify(userWithoutPassword));
+      }
+      
+      toast.success(`Welcome back, Admin!`);
       setIsLoading(false);
       return true;
     } 
@@ -198,6 +218,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Update admin credentials
+  const updateAdminCredentials = async (email: string, password: string): Promise<boolean> => {
+    try {
+      // Update the ADMIN_USER object with new credentials
+      ADMIN_USER = {
+        ...ADMIN_USER,
+        email,
+        password,
+      };
+      
+      // Update the current user in state
+      if (user && user.role === 'admin') {
+        const updatedUser = {
+          ...user,
+          email,
+        };
+        
+        setUser(updatedUser);
+        localStorage.setItem('j-studios-user', JSON.stringify(updatedUser));
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating admin credentials:', error);
+      return false;
+    }
+  };
+
   // Logout function
   const logout = () => {
     localStorage.removeItem('j-studios-user');
@@ -211,7 +259,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     login,
     logout,
-    createStudentCredentials
+    createStudentCredentials,
+    updateAdminCredentials
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
