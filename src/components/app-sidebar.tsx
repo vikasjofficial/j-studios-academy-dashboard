@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
 import { 
@@ -8,17 +9,23 @@ import {
   SidebarHeader, 
   SidebarMenu, 
   SidebarMenuItem, 
-  SidebarMenuButton
+  SidebarMenuButton, 
+  SidebarTrigger,
+  SidebarRail,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Home, Users, BookOpen, Calendar, CheckSquare, MessageSquare, Settings, ListChecks } from 'lucide-react';
 import { DownloadStudentPdf } from './download-student-pdf';
 import { Separator } from '@/components/ui/separator';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const { state } = useSidebar();
 
   const adminMenuItems = [
     { href: '/admin', icon: Home, label: 'Dashboard' },
@@ -42,6 +49,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
+      {/* Add SidebarRail component to ensure the rail is always visible */}
+      <SidebarRail />
+      
       <SidebarHeader className="p-4 flex flex-col items-center gap-4">
         <Link to={user?.role === 'admin' ? '/admin' : '/student'} className="inline-flex items-center gap-2 py-2">
           <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
@@ -60,6 +70,18 @@ export function AppSidebar() {
             <span className="text-sm font-medium truncate">{user?.name}</span>
             <span className="text-xs text-muted-foreground truncate">{user?.role}</span>
           </div>
+          {!isMobile && (
+            <SidebarTrigger>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <span className="sr-only">Toggle Sidebar</span>
+                <div className="w-4 h-4 flex flex-col justify-between">
+                  <span className="w-full h-0.5 bg-foreground rounded-full" />
+                  <span className="w-3/4 h-0.5 bg-foreground rounded-full" />
+                  <span className="w-1/2 h-0.5 bg-foreground rounded-full" />
+                </div>
+              </Button>
+            </SidebarTrigger>
+          )}
         </div>
       </SidebarHeader>
 
