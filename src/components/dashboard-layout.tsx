@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           
           {/* Main Content */}
           <SidebarInset className="overflow-y-auto overflow-x-hidden flex-1">
-            <div className={`${styles.mainContent} p-3 sm:p-4 md:p-5 w-full`}>
+            <div className={`${styles.mainContent} p-3 pl-8 sm:p-6 md:p-8 w-full`}>
               <main className="pb-12 w-full mx-auto max-w-[1600px] overflow-x-hidden">
                 {children}
               </main>
