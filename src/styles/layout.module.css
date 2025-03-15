@@ -13,6 +13,16 @@
   overflow-x: hidden;
 }
 
+/* Content container - ensures content stays properly contained within sidebars */
+.contentContainer {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  margin: 0 auto;
+}
+
 /* Main content area - ensures content stays between sidebars */
 .mainContent {
   width: 100%;

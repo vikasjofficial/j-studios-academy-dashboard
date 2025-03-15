@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRef, useEffect } from 'react';
 import styles from '@/styles/moving-border.module.css';
+import layoutStyles from '@/styles/layout.module.css';
 
 export default function AdminDashboard() {
   // Fetch all students for the total count
@@ -249,7 +250,7 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className={`space-y-8 ${layoutStyles.contentContainer} max-w-full overflow-x-hidden px-1`}>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
