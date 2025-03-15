@@ -1,5 +1,7 @@
+
 import DashboardLayout from '@/components/dashboard-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
+import { StatsAccordion, StatsData } from '@/components/dashboard/stats-accordion';
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
 import { Users, BookOpen, MessageSquare } from 'lucide-react';
@@ -50,24 +52,30 @@ export default function AdminDashboard() {
   });
 
   // Create the stats data with actual counts
-  const statsData = [
+  const statsData: StatsData[] = [
     { 
+      id: 'students',
       title: 'Total Students', 
       value: studentsLoading ? '...' : students?.count || 0, 
       icon: <Users className="h-5 w-5" />, 
-      trend: { value: 12, isPositive: true } 
+      trend: { value: 12, isPositive: true },
+      description: 'Total number of enrolled students'
     },
     { 
+      id: 'courses',
       title: 'Active Courses', 
       value: coursesLoading ? '...' : courses?.count || 0, 
       icon: <BookOpen className="h-5 w-5" />, 
-      trend: { value: 0, isPositive: true } 
+      trend: { value: 0, isPositive: true },
+      description: 'Currently active courses in this semester'
     },
     { 
+      id: 'messages',
       title: 'Messages', 
       value: messagesLoading ? '...' : messages?.count || 0, 
       icon: <MessageSquare className="h-5 w-5" />, 
-      trend: { value: 7, isPositive: true } 
+      trend: { value: 7, isPositive: true },
+      description: 'Total messages in the system'
     },
   ];
 
@@ -248,16 +256,9 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {statsData.map((stat, index) => (
-            <StatsCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              trend={stat.trend}
-            />
-          ))}
+        {/* Stats Accordion */}
+        <div className="space-y-4">
+          <StatsAccordion items={statsData} defaultValue="students" />
         </div>
 
         {/* Performance Overview Cards with moving border animation */}
