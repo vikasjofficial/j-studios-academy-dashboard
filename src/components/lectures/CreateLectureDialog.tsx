@@ -74,11 +74,11 @@ export function CreateLectureDialog({ folder, onSuccess }: CreateLectureDialogPr
           New Lecture
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby="lecture-dialog-description">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Create New Lecture</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="lecture-dialog-description">
               Create a new lecture in folder: {folder.name}
             </DialogDescription>
           </DialogHeader>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,7 +50,6 @@ export default function StudentMessages() {
     if (user?.id) {
       fetchMessages();
       
-      // Set up real-time subscription
       const channel = supabase
         .channel('student-messages')
         .on('postgres_changes', {
@@ -237,14 +235,11 @@ export default function StudentMessages() {
         </CardContent>
       </Card>
 
-      {/* Redesigned Compose Message Dialog */}
       <Dialog open={composeDialogOpen} onOpenChange={setComposeDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" aria-describedby="compose-message-description">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              New Message
-            </DialogTitle>
-            <DialogDescription>
+            <DialogTitle>New Message</DialogTitle>
+            <DialogDescription id="compose-message-description">
               Send a message to your instructors and administrators
             </DialogDescription>
           </DialogHeader>

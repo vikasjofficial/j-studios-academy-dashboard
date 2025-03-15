@@ -70,11 +70,11 @@ export function CreateLectureFolderDialog({ onSuccess }: CreateLectureFolderDial
           New Folder
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent aria-describedby="folder-dialog-description">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="folder-dialog-description">
               Create a new folder to organize your lectures.
             </DialogDescription>
           </DialogHeader>

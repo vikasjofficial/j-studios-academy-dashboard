@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -92,7 +91,6 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
       });
       
       setComposeDialogOpen(false);
-      // Refresh messages
       fetchMessages();
     } catch (err) {
       console.error('Error sending message:', err);
@@ -217,14 +215,11 @@ export function StudentMessagesTab({ studentId, studentName }: StudentMessagesTa
         </CardContent>
       </Card>
 
-      {/* Redesigned Compose Message Dialog */}
       <Dialog open={composeDialogOpen} onOpenChange={setComposeDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" aria-describedby="student-compose-description">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              New Message
-            </DialogTitle>
-            <DialogDescription>
+            <DialogTitle>New Message</DialogTitle>
+            <DialogDescription id="student-compose-description">
               Send a message to your instructors and administrators
             </DialogDescription>
           </DialogHeader>
