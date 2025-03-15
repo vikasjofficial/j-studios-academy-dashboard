@@ -20,6 +20,7 @@ import { Check, X, Save, Upload, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentCredentialsForm from './student-credentials-form';
 import { StudentMessagesTab } from './student-messages-tab';
+import { StudentFeesTab } from './student-fees-tab';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -328,6 +329,7 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
     <Tabs defaultValue="details" className="w-full">
       <TabsList className="mb-4 w-full md:w-auto">
         <TabsTrigger value="details">Student Details</TabsTrigger>
+        <TabsTrigger value="fees">Fees & Payments</TabsTrigger>
         <TabsTrigger value="credentials">Login Credentials</TabsTrigger>
         <TabsTrigger value="messages">Messages</TabsTrigger>
       </TabsList>
@@ -509,6 +511,10 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
             </div>
           </form>
         </Form>
+      </TabsContent>
+      
+      <TabsContent value="fees">
+        <StudentFeesTab studentId={student.id} studentName={student.name} />
       </TabsContent>
       
       <TabsContent value="credentials">
