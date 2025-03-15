@@ -23,13 +23,14 @@
   margin: 0 auto;
 }
 
-/* Main content area - ensures content stays between sidebars */
+/* Main content area - ensures content stays next to sidebar without overlap */
 .mainContent {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  position: relative; /* Added for fixed toggle positioning */
+  position: relative; /* For fixed toggle positioning */
   transition: margin-left 0.2s ease;
+  margin-left: 0; /* Default margin when sidebar is collapsed */
 }
 
 /* Table adjustments for proper width */

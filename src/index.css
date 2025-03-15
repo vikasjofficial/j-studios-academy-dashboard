@@ -36,14 +36,14 @@
     --radius: 0.5rem;
 
     /* Sidebar specific variables */
-    --sidebar: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-muted: 210 40% 96.1%;
-    --sidebar-muted-foreground: 215.4 16.3% 46.9%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar: 220 20% 17%;
+    --sidebar-foreground: 210 10% 90%;
+    --sidebar-border: 215 20% 30% / 0.4;
+    --sidebar-accent: 220 20% 23%;
+    --sidebar-accent-foreground: 210 10% 90%;
+    --sidebar-muted: 220 20% 25%;
+    --sidebar-muted-foreground: 210 10% 70%;
+    --sidebar-ring: 210 100% 55%;
     --sidebar-background: var(--sidebar);
   }
  
