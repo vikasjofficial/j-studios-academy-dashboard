@@ -2,7 +2,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator } from "./ui/sidebar";
-import { Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle } from "lucide-react";
+import { Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function LeftSidebar() {
@@ -16,6 +16,7 @@ export function LeftSidebar() {
     { href: '/admin/courses', icon: BookOpen, label: 'Courses' },
     { href: '/admin/gradebook', icon: CheckSquare, label: 'Gradebook' },
     { href: '/admin/attendance', icon: Calendar, label: 'Attendance' },
+    { href: '/admin/lectures', icon: BookOpenText, label: 'Lectures' },
     { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
@@ -23,6 +24,7 @@ export function LeftSidebar() {
   const studentNavItems = [
     { href: '/student', icon: Home, label: 'Dashboard' },
     { href: '/student/courses', icon: BookOpen, label: 'My Courses' },
+    { href: '/student/lectures', icon: BookOpenText, label: 'My Lectures' },
     { href: '/student/attendance', icon: Calendar, label: 'My Attendance' },
     { href: '/student/messages', icon: MessageSquare, label: 'Messages' },
   ];

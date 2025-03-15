@@ -12,11 +12,13 @@ import CoursesManagement from '@/pages/admin/CoursesManagement';
 import GradebookManagement from '@/pages/admin/GradebookManagement';
 import AttendanceManagement from '@/pages/admin/AttendanceManagement';
 import AdminMessages from '@/pages/admin/AdminMessages';
+import LecturesManagement from '@/pages/admin/LecturesManagement';
 import Settings from '@/pages/admin/Settings';
 import StudentDashboard from '@/pages/student/StudentDashboard';
 import StudentCourses from '@/pages/student/StudentCourses';
 import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentMessages from '@/pages/student/StudentMessages';
+import StudentLectures from '@/pages/student/StudentLectures';
 import ProtectedRoute from '@/components/protected-route';
 import DashboardLayout from '@/components/dashboard-layout';
 import './App.css';
@@ -76,6 +78,13 @@ function App() {
                 </DashboardLayout>
               </ProtectedRoute>
             } />
+            <Route path="/admin/lectures" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DashboardLayout>
+                  <LecturesManagement />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/admin/settings" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
@@ -110,6 +119,13 @@ function App() {
               <ProtectedRoute allowedRoles={['student']}>
                 <DashboardLayout>
                   <StudentMessages />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/student/lectures" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <DashboardLayout>
+                  <StudentLectures />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
