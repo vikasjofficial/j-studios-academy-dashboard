@@ -1,3 +1,4 @@
+
 import DashboardLayout from '@/components/dashboard-layout';
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,9 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MessageItem } from "@/components/messages/MessageItem";
+import { AcceptedRequestsList } from "@/components/messages/AcceptedRequestsList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Student {
   id: string;
@@ -53,12 +57,15 @@ export default function AdminMessages() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingAllMessages, setIsLoadingAllMessages] = useState(false);
   const [messageTypeFilter, setMessageTypeFilter] = useState<string>("all");
   const [processingMessageId, setProcessingMessageId] = useState<string | null>(null);
   const [replyDialogOpen, setReplyDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState("chat");
 
   const form = useForm<z.infer<typeof sendMessageSchema>>({
     resolver: zodResolver(sendMessageSchema),
@@ -76,6 +83,7 @@ export default function AdminMessages() {
 
   useEffect(() => {
     fetchStudents();
+    fetchAllMessages();
   }, []);
 
   useEffect(() => {
@@ -127,6 +135,25 @@ export default function AdminMessages() {
     }
   };
 
+  const fetchAllMessages = async () => {
+    setIsLoadingAllMessages(true);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setAllMessages(data || []);
+    } catch (error) {
+      console.error('Failed to fetch all messages:', error);
+      toast.error('Failed to load messages');
+    } finally {
+      setIsLoadingAllMessages(false);
+    }
+  };
+
   const fetchMessages = async (studentId: string) => {
     setIsLoadingMessages(true);
     try {
@@ -173,6 +200,7 @@ export default function AdminMessages() {
       inlineForm.reset();
       toast.success('Message sent successfully');
       fetchMessages(selectedStudent.id);
+      fetchAllMessages();
       setReplyDialogOpen(false);
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -182,6 +210,7 @@ export default function AdminMessages() {
 
   const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);
+    setActiveTab("chat");
   };
 
   const handleRequestAction = async (messageId: string, status: 'accepted' | 'denied', messageType: string | null) => {
@@ -214,6 +243,7 @@ export default function AdminMessages() {
       
       toast.success(`Request ${status} successfully`);
       fetchMessages(selectedStudent.id);
+      fetchAllMessages();
     } catch (error) {
       console.error(`Failed to ${status} request:`, error);
       toast.error(`Failed to ${status} request`);
@@ -236,19 +266,6 @@ export default function AdminMessages() {
         return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200">Response</Badge>;
       default:
         return <Badge variant="outline" className="bg-gray-100 text-gray-800 hover:bg-gray-200 border-gray-200">General</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: string | undefined) => {
-    if (!status) return null;
-    
-    switch (status) {
-      case "accepted":
-        return <Badge className="bg-green-100 text-green-800 ml-2">Accepted</Badge>;
-      case "denied":
-        return <Badge className="bg-red-100 text-red-800 ml-2">Denied</Badge>;
-      default:
-        return null;
     }
   };
 
@@ -331,29 +348,31 @@ export default function AdminMessages() {
                 </CardTitle>
                 
                 <div className="flex gap-2">
-                  <Select 
-                    value={messageTypeFilter} 
-                    onValueChange={(value) => {
-                      setMessageTypeFilter(value);
-                      if (selectedStudent) {
-                        fetchMessages(selectedStudent.id);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="General">General</SelectItem>
-                      <SelectItem value="Leave Request">Leave Request</SelectItem>
-                      <SelectItem value="Absent Request">Absent Request</SelectItem>
-                      <SelectItem value="Submission Request">Submission Request</SelectItem>
-                      <SelectItem value="Response">Responses</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {activeTab === "chat" && (
+                    <Select 
+                      value={messageTypeFilter} 
+                      onValueChange={(value) => {
+                        setMessageTypeFilter(value);
+                        if (selectedStudent) {
+                          fetchMessages(selectedStudent.id);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="General">General</SelectItem>
+                        <SelectItem value="Leave Request">Leave Request</SelectItem>
+                        <SelectItem value="Absent Request">Absent Request</SelectItem>
+                        <SelectItem value="Submission Request">Submission Request</SelectItem>
+                        <SelectItem value="Response">Responses</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                   
-                  {selectedStudent && (
+                  {selectedStudent && activeTab === "chat" && (
                     <Button onClick={openReplyDialog}>
                       <Send className="mr-2 h-4 w-4" />
                       New Message
@@ -364,126 +383,120 @@ export default function AdminMessages() {
               
               <CardDescription>
                 {selectedStudent 
-                  ? `View your conversation with ${selectedStudent.name}` 
+                  ? `View and manage interactions with ${selectedStudent.name}` 
                   : "Select a student to view messages"}
               </CardDescription>
+              
+              {selectedStudent && (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+                  <TabsList>
+                    <TabsTrigger value="chat">Chat</TabsTrigger>
+                    <TabsTrigger value="accepted">Accepted Requests</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              )}
             </CardHeader>
             <CardContent className="flex flex-col h-[550px]">
               {!selectedStudent ? (
                 <div className="text-center py-8 text-muted-foreground flex-1">
                   Please select a student to view messages
                 </div>
-              ) : isLoadingMessages ? (
-                <div className="flex justify-center py-8 flex-1">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
               ) : (
-                <>
-                  <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 pb-4 flex-1 flex flex-col">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No messages found
-                      </div>
-                    ) : (
-                      <>
-                        {messages.map((message) => (
-                          <div 
-                            key={message.id} 
-                            className={`p-4 rounded-lg ${
-                              message.sender_role === 'admin' 
-                                ? 'bg-primary/10 ml-12' 
-                                : 'bg-secondary/10 mr-12'
-                            }`}
-                          >
-                            <div className="flex justify-between mb-2">
-                              <div className="font-medium flex items-center gap-2">
-                                {message.from_name}
-                                {message.message_type && getMessageTypeBadge(message.message_type)}
-                                {message.status && getStatusBadge(message.status)}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
-                              </div>
-                            </div>
-                            <p className="text-sm">{message.content}</p>
-                            
-                            {isRequestMessage(message) && !message.status && (
-                              <div className="mt-3 flex gap-2 justify-end">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-                                  onClick={() => handleRequestAction(message.id, 'accepted', message.message_type)}
-                                  disabled={processingMessageId === message.id}
-                                >
-                                  {processingMessageId === message.id ? (
-                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <CheckCircle className="mr-1 h-3 w-3" />
-                                  )}
-                                  Accept
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-                                  onClick={() => handleRequestAction(message.id, 'denied', message.message_type)}
-                                  disabled={processingMessageId === message.id}
-                                >
-                                  {processingMessageId === message.id ? (
-                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <XCircle className="mr-1 h-3 w-3" />
-                                  )}
-                                  Deny
-                                </Button>
-                              </div>
-                            )}
+                <TabsContent value="chat" className="flex-1 flex flex-col h-full mt-0">
+                  {isLoadingMessages ? (
+                    <div className="flex justify-center py-8 flex-1">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 pb-4 flex-1 flex flex-col">
+                        {messages.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground">
+                            No messages found
                           </div>
-                        ))}
-                        <div ref={messagesEndRef} />
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t">
-                    <Form {...inlineForm}>
-                      <form onSubmit={inlineForm.handleSubmit(sendMessage)} className="flex items-end gap-2">
-                        <FormField
-                          control={inlineForm.control}
-                          name="content"
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Type your message here..." 
-                                  className="resize-none min-h-[80px]" 
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button 
-                          type="submit" 
-                          className="mb-[2px]"
-                          disabled={inlineForm.formState.isSubmitting}
-                        >
-                          {inlineForm.formState.isSubmitting ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </form>
-                    </Form>
-                  </div>
-                </>
+                        ) : (
+                          <>
+                            {messages.map((message) => (
+                              <MessageItem
+                                key={message.id}
+                                message={message}
+                                showActions={isRequestMessage(message) && !message.status}
+                                onAccept={(id, type) => handleRequestAction(id, 'accepted', type)}
+                                onDeny={(id, type) => handleRequestAction(id, 'denied', type)}
+                                isProcessing={processingMessageId === message.id}
+                              />
+                            ))}
+                            <div ref={messagesEndRef} />
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="mt-4 pt-4 border-t">
+                        <Form {...inlineForm}>
+                          <form onSubmit={inlineForm.handleSubmit(sendMessage)} className="flex items-end gap-2">
+                            <FormField
+                              control={inlineForm.control}
+                              name="content"
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Type your message here..." 
+                                      className="resize-none min-h-[80px]" 
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button 
+                              type="submit" 
+                              className="mb-[2px]"
+                              disabled={inlineForm.formState.isSubmitting}
+                            >
+                              {inlineForm.formState.isSubmitting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </form>
+                        </Form>
+                      </div>
+                    </>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="accepted" className="flex-1 h-full mt-0">
+                  <AcceptedRequestsList
+                    requests={
+                      allMessages.filter(m => 
+                        m.student_id === selectedStudent.id &&
+                        m.sender_role === 'student' &&
+                        m.status === 'accepted'
+                      )
+                    }
+                    isLoading={isLoadingAllMessages}
+                  />
+                </TabsContent>
               )}
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>All Accepted Requests</CardTitle>
+            <CardDescription>View all student requests that have been accepted across the system</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AcceptedRequestsList
+              requests={allMessages.filter(m => m.status === 'accepted')}
+              isLoading={isLoadingAllMessages}
+            />
+          </CardContent>
+        </Card>
 
         <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
           <DialogContent className="sm:max-w-md">
