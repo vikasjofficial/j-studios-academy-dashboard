@@ -32,7 +32,7 @@ export function LectureTopicsList({
     queryKey: ["lectureTopics", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lecture_topics")
+        .from('lecture_topics')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("order_position");
@@ -56,12 +56,12 @@ export function LectureTopicsList({
       const nextPosition = topics ? topics.length : 0;
       
       const { error } = await supabase
-        .from("lecture_topics")
+        .from('lecture_topics')
         .insert({
           name: newTopicName,
           lecture_id: lecture.id,
           order_position: nextPosition
-        });
+        } as any);
       
       if (error) throw error;
       
@@ -79,7 +79,7 @@ export function LectureTopicsList({
   const handleDeleteTopic = async (topicId: string) => {
     try {
       const { error } = await supabase
-        .from("lecture_topics")
+        .from('lecture_topics')
         .delete()
         .eq("id", topicId);
       
@@ -106,11 +106,11 @@ export function LectureTopicsList({
     
     try {
       const { error } = await supabase
-        .from("lecture_topics")
+        .from('lecture_topics')
         .update({ 
           name: editedTopicName,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq("id", editingTopic.id);
       
       if (error) throw error;
@@ -148,8 +148,8 @@ export function LectureTopicsList({
     try {
       for (let i = 0; i < reorderedTopics.length; i++) {
         await supabase
-          .from("lecture_topics")
-          .update({ order_position: i })
+          .from('lecture_topics')
+          .update({ order_position: i } as any)
           .eq("id", reorderedTopics[i].id);
       }
       

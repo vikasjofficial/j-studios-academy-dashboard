@@ -50,19 +50,19 @@ export function LecturesList({
     try {
       // Delete any lecture topics first
       await supabase
-        .from("lecture_topics")
+        .from('lecture_topics')
         .delete()
         .eq("lecture_id", lectureToDelete.id);
       
       // Delete any lecture assignments
       await supabase
-        .from("lecture_assignments")
+        .from('lecture_assignments')
         .delete()
         .eq("lecture_id", lectureToDelete.id);
       
       // Delete any lecture files and related storage files
       const { data: files } = await supabase
-        .from("lecture_files")
+        .from('lecture_files')
         .select("*")
         .eq("lecture_id", lectureToDelete.id);
       
@@ -76,14 +76,14 @@ export function LecturesList({
         
         // Delete file records
         await supabase
-          .from("lecture_files")
+          .from('lecture_files')
           .delete()
           .eq("lecture_id", lectureToDelete.id);
       }
       
       // Finally delete the lecture
       const { error } = await supabase
-        .from("lectures")
+        .from('lectures')
         .delete()
         .eq("id", lectureToDelete.id);
       

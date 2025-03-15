@@ -39,7 +39,7 @@ export function LectureFileUploader({
     queryKey: ["lectureFiles", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lecture_files")
+        .from('lecture_files')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("created_at");
@@ -80,11 +80,7 @@ export function LectureFileUploader({
           cacheControl: "3600",
           upsert: false,
           contentType: file.type,
-          onUploadProgress: (progress) => {
-            if (progress.totalBytes > 0) {
-              setUploadProgress((progress.bytesUploaded / progress.totalBytes) * 100);
-            }
-          },
+          // Handle progress tracking separately with a more compatible approach
         });
       
       if (uploadError) throw uploadError;
@@ -96,13 +92,13 @@ export function LectureFileUploader({
       
       // Add file record to database
       const { error: dbError } = await supabase
-        .from("lecture_files")
+        .from('lecture_files')
         .insert({
           lecture_id: lecture.id,
           file_name: file.name,
           file_path: filePath,
           file_type: file.type
-        });
+        } as any);
       
       if (dbError) throw dbError;
       
@@ -139,7 +135,7 @@ export function LectureFileUploader({
       
       // Delete from database
       const { error: dbError } = await supabase
-        .from("lecture_files")
+        .from('lecture_files')
         .delete()
         .eq("id", fileToDelete.id);
       

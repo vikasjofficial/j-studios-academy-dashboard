@@ -20,7 +20,7 @@ export default function LecturesManagement() {
     queryKey: ["lectureFolders"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lecture_folders")
+        .from('lecture_folders')
         .select("*")
         .order("name");
       
@@ -39,7 +39,7 @@ export default function LecturesManagement() {
       if (!selectedFolder) return [];
       
       const { data, error } = await supabase
-        .from("lectures")
+        .from('lectures')
         .select("*")
         .eq("folder_id", selectedFolder.id)
         .order("title");

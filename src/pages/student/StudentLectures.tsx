@@ -22,28 +22,41 @@ export default function StudentLectures() {
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
-        .from("lecture_folders")
+      // Using a simpler approach to fetch folders that have assigned lectures
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('lecture_assignments')
         .select(`
-          *,
-          lectures!inner(
-            id,
-            lecture_assignments!inner(student_id)
+          lecture_id,
+          lectures:lecture_id (
+            folder_id
           )
         `)
-        .eq("lectures.lecture_assignments.student_id", user.id)
+        .eq("student_id", user.id);
+      
+      if (assignmentsError) throw assignmentsError;
+      
+      // Extract unique folder IDs
+      const folderIds = new Set<string>();
+      assignments.forEach((assignment) => {
+        // Use type assertion to access lectures property
+        const lectures = (assignment as any).lectures;
+        if (lectures && lectures.folder_id) {
+          folderIds.add(lectures.folder_id);
+        }
+      });
+      
+      // Fetch folder details for these IDs
+      if (folderIds.size === 0) return [];
+      
+      const { data: folderData, error: folderError } = await supabase
+        .from('lecture_folders')
+        .select("*")
+        .in("id", Array.from(folderIds))
         .order("name");
       
-      if (error) {
-        throw error;
-      }
+      if (folderError) throw folderError;
       
-      // Deduplicate folders since the join might return duplicates
-      const uniqueFolders = data.filter((folder, index, self) =>
-        index === self.findIndex((f) => f.id === folder.id)
-      );
-      
-      return uniqueFolders as LectureFolder[];
+      return folderData as LectureFolder[];
     },
     enabled: !!user,
   });
@@ -54,30 +67,28 @@ export default function StudentLectures() {
     queryFn: async () => {
       if (!user || !selectedFolder) return [];
       
+      // First get the lecture IDs assigned to the student
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('lecture_assignments')
+        .select("lecture_id")
+        .eq("student_id", user.id);
+      
+      if (assignmentsError) throw assignmentsError;
+      
+      const lectureIds = assignments.map(a => a.lecture_id);
+      if (lectureIds.length === 0) return [];
+      
+      // Then fetch the lectures in the selected folder
       const { data, error } = await supabase
-        .from("lecture_assignments")
-        .select(`
-          lecture_id,
-          lectures:lecture_id(
-            id,
-            title,
-            content,
-            folder_id,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq("student_id", user.id)
-        .eq("lectures.folder_id", selectedFolder.id);
+        .from('lectures')
+        .select("*")
+        .in("id", lectureIds)
+        .eq("folder_id", selectedFolder.id)
+        .order("title");
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      // Transform the data to get the lectures
-      const lecturesList = data.map(item => item.lectures);
-      
-      return lecturesList as Lecture[];
+      return data as Lecture[];
     },
     enabled: !!user && !!selectedFolder,
   });

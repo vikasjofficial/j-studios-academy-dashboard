@@ -41,12 +41,12 @@ export function CreateLectureDialog({ folder, onSuccess }: CreateLectureDialogPr
     
     try {
       const { data, error } = await supabase
-        .from("lectures")
+        .from('lectures')
         .insert({ 
           title: lectureTitle,
           content: lectureContent,
           folder_id: folder.id
-        })
+        } as any)
         .select()
         .single();
       

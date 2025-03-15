@@ -36,9 +36,10 @@ export function CreateLectureFolderDialog({ onSuccess }: CreateLectureFolderDial
     setIsSubmitting(true);
     
     try {
+      // Using raw query to insert into lecture_folders since it's not in the TypeScript definitions
       const { error } = await supabase
-        .from("lecture_folders")
-        .insert({ name: folderName });
+        .from('lecture_folders')
+        .insert({ name: folderName } as any);
       
       if (error) throw error;
       

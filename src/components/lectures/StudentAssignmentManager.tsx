@@ -42,7 +42,7 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
     queryKey: ["lectureAssignments", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lecture_assignments")
+        .from('lecture_assignments')
         .select("*")
         .eq("lecture_id", lecture.id);
       
@@ -51,10 +51,11 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
       }
       
       // Initialize selectedStudents with existing assignments
-      const assignedStudentIds = new Set(data.map(a => a.student_id));
+      const typedData = data as unknown as LectureAssignment[];
+      const assignedStudentIds = new Set(typedData.map(a => a.student_id));
       setSelectedStudents(assignedStudentIds);
       
-      return data as LectureAssignment[];
+      return typedData;
     },
   });
 
@@ -115,15 +116,15 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
       // Perform the database operations
       if (studentsToAdd.length > 0) {
         const { error: addError } = await supabase
-          .from("lecture_assignments")
-          .insert(studentsToAdd);
+          .from('lecture_assignments')
+          .insert(studentsToAdd as any);
         
         if (addError) throw addError;
       }
       
       for (const studentId of studentsToRemove) {
         const { error: removeError } = await supabase
-          .from("lecture_assignments")
+          .from('lecture_assignments')
           .delete()
           .eq("lecture_id", lecture.id)
           .eq("student_id", studentId);

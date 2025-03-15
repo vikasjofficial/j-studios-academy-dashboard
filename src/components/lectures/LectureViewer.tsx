@@ -23,7 +23,7 @@ export function LectureViewer({ lecture }: LectureViewerProps) {
     queryKey: ["lectureTopics", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lecture_topics")
+        .from('lecture_topics')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("order_position");
@@ -32,7 +32,7 @@ export function LectureViewer({ lecture }: LectureViewerProps) {
         throw error;
       }
       
-      return data;
+      return data as unknown as LectureFile[];
     },
   });
 
@@ -41,7 +41,7 @@ export function LectureViewer({ lecture }: LectureViewerProps) {
     queryKey: ["lectureFiles", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lecture_files")
+        .from('lecture_files')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("created_at");
@@ -51,11 +51,12 @@ export function LectureViewer({ lecture }: LectureViewerProps) {
       }
       
       // If files are found, automatically select the first one
-      if (data && data.length > 0 && !selectedFile) {
-        setSelectedFile(data[0]);
+      const typedData = data as unknown as LectureFile[];
+      if (typedData && typedData.length > 0 && !selectedFile) {
+        setSelectedFile(typedData[0]);
       }
       
-      return data;
+      return typedData;
     },
   });
 
