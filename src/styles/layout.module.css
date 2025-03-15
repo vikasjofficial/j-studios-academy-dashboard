@@ -23,13 +23,18 @@
   margin: 0 auto;
 }
 
+/* Add a class for the sidebar inset content to control its positioning */
+.sidebarInsetContent {
+  transition: padding-left 0.3s ease-in-out;
+}
+
 /* Main content area - ensures content stays next to sidebar without overlap */
 .mainContent {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
   position: relative; /* For fixed toggle positioning */
-  transition: margin-left 0.3s ease;
+  transition: padding-left 0.3s ease, margin-left 0.3s ease;
 }
 
 /* Add specific class for sidebar states to control content margin */
@@ -38,8 +43,16 @@
 }
 
 :global(.peer-data-[state=expanded]) .mainContent {
-  margin-left: 0;
-  padding-left: 1rem;
+  padding-left: 2rem; /* Add more padding when sidebar is expanded */
+}
+
+/* Adjust inset content based on sidebar state */
+:global(.peer-data-[state=expanded]) ~ .sidebarInsetContent {
+  padding-left: var(--sidebar-width);
+}
+
+:global(.peer-data-[state=collapsed]) ~ .sidebarInsetContent {
+  padding-left: 0;
 }
 
 /* Table adjustments for proper width */
