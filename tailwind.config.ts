@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'bebas': ['"Bebas Neue"', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(215 20% 30% / 0.4)', /* Lightened from 25% to 30% */
 				input: 'hsl(215 20% 30% / 0.4)', /* Lightened from 25% to 30% */

@@ -14,15 +14,15 @@ export function AppSidebar() {
     <Card className="bg-card/80 backdrop-blur-sm border border-border/40">
       <CardContent className="p-4">
         <div className="flex flex-col space-y-6">
-          <div className="flex flex-col items-center space-y-4 pb-4 border-b border-border/30">
-            <Avatar className="w-16 h-16 border-2 border-primary/30">
+          <div className="flex flex-col items-center space-y-5 pb-5 border-b border-border/30">
+            <Avatar className="w-24 h-24 border-2 border-primary/30">
               <AvatarImage src={user?.avatarUrl} alt={user?.name || 'User'} />
-              <AvatarFallback className="bg-primary/80 text-primary-foreground">
+              <AvatarFallback className="bg-primary/80 text-primary-foreground text-xl">
                 {user?.name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="text-center">
-              <h3 className="font-medium text-sm">{user?.name}</h3>
+              <h3 className="font-bebas text-2xl text-white tracking-wide">{user?.name}</h3>
               <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
             </div>
           </div>
