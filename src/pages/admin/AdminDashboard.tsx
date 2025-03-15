@@ -1,4 +1,3 @@
-
 import DashboardLayout from '@/components/dashboard-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { StatsAccordion, StatsData } from '@/components/dashboard/stats-accordion';
@@ -256,9 +255,35 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
         </div>
 
-        {/* Stats Accordion */}
-        <div className="space-y-4">
-          <StatsAccordion items={statsData} defaultValue="students" />
+        {/* Stats Cards - Side by Side */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatsCard
+            title="Total Students"
+            value={studentsLoading ? "..." : students?.count || 0}
+            description="Total number of enrolled students"
+            icon={<Users className="h-5 w-5" />}
+            trend={{ value: 12, isPositive: true }}
+            color="bg-indigo-500"
+            textColor="text-white"
+          />
+          <StatsCard
+            title="Active Courses"
+            value={coursesLoading ? "..." : courses?.count || 0}
+            description="Currently active courses in this semester"
+            icon={<BookOpen className="h-5 w-5" />}
+            trend={{ value: 0, isPositive: true }}
+            color="bg-amber-300"
+            textColor="text-black"
+          />
+          <StatsCard
+            title="Messages"
+            value={messagesLoading ? "..." : messages?.count || 0}
+            description="Total messages in the system"
+            icon={<MessageSquare className="h-5 w-5" />}
+            trend={{ value: 7, isPositive: true }}
+            color="bg-indigo-500" 
+            textColor="text-white"
+          />
         </div>
 
         {/* Performance Overview Cards with moving border animation */}
