@@ -36,7 +36,7 @@ export function LeftSidebar() {
           <img 
             src="https://i.ibb.co/ccDKFZgD/logo.png" 
             alt="J-Studios Logo" 
-            className="h-8.16 w-auto" // Increased by only 2% from h-8
+            className="h-2.5 w-auto" // Changed height to 2.5
           />
           <div className="flex flex-col items-center mt-2">
             <div className="font-semibold">J Studios Academy</div>
