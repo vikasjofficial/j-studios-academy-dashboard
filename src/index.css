@@ -45,6 +45,11 @@
     --sidebar-muted-foreground: 210 10% 70%;
     --sidebar-ring: 210 100% 55%;
     --sidebar-background: var(--sidebar);
+    
+    /* Scrollbar variables */
+    --scrollbar-track: rgba(0, 0, 0, 0.1);
+    --scrollbar-thumb: rgba(128, 128, 128, 0.5);
+    --scrollbar-thumb-hover: rgba(128, 128, 128, 0.7);
   }
  
   .dark {
@@ -75,6 +80,37 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    
+    /* Dark theme scrollbar variables */
+    --scrollbar-track: rgba(0, 0, 0, 0.2);
+    --scrollbar-thumb: rgba(100, 100, 100, 0.6);
+    --scrollbar-thumb-hover: rgba(100, 100, 100, 0.8);
+  }
+  
+  /* Global scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+  
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 }
  

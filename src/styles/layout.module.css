@@ -54,6 +54,39 @@ main > .space-y-8 {
   max-width: 100%;
 }
 
+/* Custom scrollbar styling */
+.customScrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.customScrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.customScrollbar::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.5);
+  border-radius: 10px;
+}
+
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.7);
+}
+
+/* Dark theme variant for scrollbars */
+.darkScrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.darkScrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.6);
+}
+
+.darkScrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.8);
+}
+
 /* Responsive adjustments for small screens */
 @media (max-width: 768px) {
   .card, .glassMorphism {

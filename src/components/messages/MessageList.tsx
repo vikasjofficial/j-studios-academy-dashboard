@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { format } from 'date-fns';
 import { MessageCircle } from 'lucide-react';
+import styles from '@/styles/layout.module.css';
 
 interface Message {
   id: string;
@@ -37,7 +38,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto pr-2 space-y-4 mb-4">
+    <div className={`flex-1 overflow-y-auto pr-2 space-y-4 mb-4 ${styles.customScrollbar}`}>
       {isLoading ? (
         <div className="flex justify-center items-center h-full">
           <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
