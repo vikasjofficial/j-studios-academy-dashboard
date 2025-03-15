@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lecture } from "./types";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,8 +61,8 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <div className="space-y-6 w-full max-w-full">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Lecture Details</CardTitle>
         </CardHeader>
@@ -102,25 +101,25 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
       </Card>
       
       {/* Navigation-style tabs that can be clicked anytime */}
-      <div className="bg-gray-800 rounded-md p-1.5 flex justify-center">
+      <div className="bg-gray-800 rounded-md p-1.5 flex justify-center w-full overflow-x-auto">
         <div className="inline-flex p-1 bg-gray-700/50 rounded-md">
           <Button 
             variant={activeTab === "topics" ? "default" : "ghost"} 
-            className={`rounded-md ${activeTab === "topics" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
+            className={`rounded-md whitespace-nowrap ${activeTab === "topics" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
             onClick={() => setActiveTab("topics")}
           >
             Lecture Topics
           </Button>
           <Button
             variant={activeTab === "files" ? "default" : "ghost"}
-            className={`rounded-md ${activeTab === "files" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
+            className={`rounded-md whitespace-nowrap ${activeTab === "files" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
             onClick={() => setActiveTab("files")}
           >
             Files
           </Button>
           <Button
             variant={activeTab === "assignments" ? "default" : "ghost"}
-            className={`rounded-md ${activeTab === "assignments" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
+            className={`rounded-md whitespace-nowrap ${activeTab === "assignments" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
             onClick={() => setActiveTab("assignments")}
           >
             Assignments
@@ -129,7 +128,7 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
       </div>
       
       {activeTab === "topics" && (
-        <div className="p-4 border rounded-md">
+        <div className="p-4 border rounded-md w-full overflow-x-auto">
           <LectureTopicsList
             lecture={lecture}
             onTopicsUpdated={handleTopicsUpdated}
@@ -138,13 +137,13 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
       )}
       
       {activeTab === "files" && (
-        <div className="p-4 border rounded-md">
+        <div className="p-4 border rounded-md w-full overflow-x-auto">
           <LectureFileUploader lecture={lecture} />
         </div>
       )}
       
       {activeTab === "assignments" && (
-        <div className="p-4 border rounded-md">
+        <div className="p-4 border rounded-md w-full overflow-x-auto">
           <StudentAssignmentManager lecture={lecture} />
         </div>
       )}

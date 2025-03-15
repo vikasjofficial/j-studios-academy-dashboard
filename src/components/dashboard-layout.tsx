@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex flex-col w-full bg-gradient-to-b from-background to-background/80">        
-        <div className="flex w-full flex-1">
+        <div className="flex w-full flex-1 overflow-hidden">
           {/* Left Sidebar */}
           <LeftSidebar />
           
@@ -42,7 +42,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <MobileMenuButton />
           
           {/* Main Content */}
-          <SidebarInset>
+          <SidebarInset className="overflow-y-auto">
             <div className="flex-1 p-3 sm:p-4 md:p-5 w-full">
               <main className="pb-12 w-full mx-auto max-w-[1600px]">
                 {children}
