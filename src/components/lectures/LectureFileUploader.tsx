@@ -34,12 +34,12 @@ export function LectureFileUploader({
   const [fileToDelete, setFileToDelete] = useState<LectureFile | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Fetch files for this lecture
+  // Fetch files for this lecture using classes_files table
   const { data: files, isLoading, refetch } = useQuery({
     queryKey: ["lectureFiles", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('lecture_files')
+        .from('classes_files')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("created_at");
@@ -90,15 +90,15 @@ export function LectureFileUploader({
         .from("lecture-files")
         .getPublicUrl(filePath);
       
-      // Add file record to database
+      // Add file record to database using classes_files table
       const { error: dbError } = await supabase
-        .from('lecture_files')
+        .from('classes_files')
         .insert({
           lecture_id: lecture.id,
           file_name: file.name,
           file_path: filePath,
           file_type: file.type
-        } as any);
+        });
       
       if (dbError) throw dbError;
       
@@ -133,9 +133,9 @@ export function LectureFileUploader({
       
       if (storageError) throw storageError;
       
-      // Delete from database
+      // Delete from database using classes_files table
       const { error: dbError } = await supabase
-        .from('lecture_files')
+        .from('classes_files')
         .delete()
         .eq("id", fileToDelete.id);
       

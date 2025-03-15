@@ -37,12 +37,12 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
     },
   });
 
-  // Fetch existing assignments for this lecture
+  // Fetch existing assignments for this lecture using classes_assignments table
   const { data: assignments, isLoading: assignmentsLoading, refetch } = useQuery({
     queryKey: ["lectureAssignments", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('lecture_assignments')
+        .from('classes_assignments')
         .select("*")
         .eq("lecture_id", lecture.id);
       
@@ -51,11 +51,10 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
       }
       
       // Initialize selectedStudents with existing assignments
-      const typedData = data as unknown as LectureAssignment[];
-      const assignedStudentIds = new Set(typedData.map(a => a.student_id));
+      const assignedStudentIds = new Set((data as LectureAssignment[]).map(a => a.student_id));
       setSelectedStudents(assignedStudentIds);
       
-      return typedData;
+      return data as LectureAssignment[];
     },
   });
 
@@ -99,7 +98,7 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
     try {
       // Get current assignments to determine what to add/remove
       const currentAssignments = assignments || [];
-      const currentAssignedStudentIds = new Set(currentAssignments.map(a => a.student_id));
+      const currentAssignedStudentIds = new Set((currentAssignments as LectureAssignment[]).map(a => a.student_id));
       
       // Students to add (in selected but not in current)
       const studentsToAdd = Array.from(selectedStudents)
@@ -113,18 +112,18 @@ export function StudentAssignmentManager({ lecture }: StudentAssignmentManagerPr
       const studentsToRemove = Array.from(currentAssignedStudentIds)
         .filter(id => !selectedStudents.has(id));
       
-      // Perform the database operations
+      // Perform the database operations with classes_assignments table
       if (studentsToAdd.length > 0) {
         const { error: addError } = await supabase
-          .from('lecture_assignments')
-          .insert(studentsToAdd as any);
+          .from('classes_assignments')
+          .insert(studentsToAdd);
         
         if (addError) throw addError;
       }
       
       for (const studentId of studentsToRemove) {
         const { error: removeError } = await supabase
-          .from('lecture_assignments')
+          .from('classes_assignments')
           .delete()
           .eq("lecture_id", lecture.id)
           .eq("student_id", studentId);

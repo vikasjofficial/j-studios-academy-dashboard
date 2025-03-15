@@ -15,40 +15,40 @@ export default function LecturesManagement() {
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
   const [activeTab, setActiveTab] = useState<string>("folders");
 
-  // Fetch all lecture folders with type assertion
+  // Fetch all lecture folders from classes_folders table
   const { data: folders, isLoading: foldersLoading, refetch: refetchFolders } = useQuery({
     queryKey: ["lectureFolders"],
     queryFn: async () => {
-      const { data, error } = await (supabase
-        .from('lecture_folders')
+      const { data, error } = await supabase
+        .from('classes_folders')
         .select("*")
-        .order("name") as unknown as { data: LectureFolder[], error: any });
+        .order("name");
       
       if (error) {
         throw error;
       }
       
-      return data;
+      return data as LectureFolder[];
     },
   });
 
-  // Fetch lectures based on selected folder with type assertion
+  // Fetch lectures based on selected folder from classes table
   const { data: lectures, isLoading: lecturesLoading, refetch: refetchLectures } = useQuery({
     queryKey: ["lectures", selectedFolder?.id],
     queryFn: async () => {
       if (!selectedFolder) return [];
       
-      const { data, error } = await (supabase
-        .from('lectures')
+      const { data, error } = await supabase
+        .from('classes')
         .select("*")
         .eq("folder_id", selectedFolder.id)
-        .order("title") as unknown as { data: Lecture[], error: any });
+        .order("title");
       
       if (error) {
         throw error;
       }
       
-      return data;
+      return data as Lecture[];
     },
     enabled: !!selectedFolder,
   });

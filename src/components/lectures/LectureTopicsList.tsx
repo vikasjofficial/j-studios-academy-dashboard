@@ -27,12 +27,12 @@ export function LectureTopicsList({
   const [editingTopic, setEditingTopic] = useState<LectureTopic | null>(null);
   const [editedTopicName, setEditedTopicName] = useState("");
 
-  // Fetch topics for this lecture
+  // Fetch topics for this lecture using classes_topics table
   const { data: topics, isLoading, refetch } = useQuery({
     queryKey: ["lectureTopics", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('lecture_topics')
+        .from('classes_topics')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("order_position");
@@ -56,12 +56,12 @@ export function LectureTopicsList({
       const nextPosition = topics ? topics.length : 0;
       
       const { error } = await supabase
-        .from('lecture_topics')
+        .from('classes_topics')
         .insert({
           name: newTopicName,
           lecture_id: lecture.id,
           order_position: nextPosition
-        } as any);
+        });
       
       if (error) throw error;
       
@@ -79,7 +79,7 @@ export function LectureTopicsList({
   const handleDeleteTopic = async (topicId: string) => {
     try {
       const { error } = await supabase
-        .from('lecture_topics')
+        .from('classes_topics')
         .delete()
         .eq("id", topicId);
       
@@ -106,11 +106,11 @@ export function LectureTopicsList({
     
     try {
       const { error } = await supabase
-        .from('lecture_topics')
+        .from('classes_topics')
         .update({ 
           name: editedTopicName,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq("id", editingTopic.id);
       
       if (error) throw error;
@@ -148,8 +148,8 @@ export function LectureTopicsList({
     try {
       for (let i = 0; i < reorderedTopics.length; i++) {
         await supabase
-          .from('lecture_topics')
-          .update({ order_position: i } as any)
+          .from('classes_topics')
+          .update({ order_position: i })
           .eq("id", reorderedTopics[i].id);
       }
       

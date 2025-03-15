@@ -54,13 +54,13 @@ export function LecturesFoldersList({
     setIsDeleteDialogOpen(true);
   };
 
-  // Save folder edit
+  // Save folder edit using classes_folders table
   const saveEditedFolder = async () => {
     if (!folderToEdit || !newFolderName.trim()) return;
 
     try {
       const { error } = await supabase
-        .from("lecture_folders")
+        .from("classes_folders")
         .update({ name: newFolderName, updated_at: new Date().toISOString() })
         .eq("id", folderToEdit.id);
       
@@ -76,14 +76,14 @@ export function LecturesFoldersList({
     }
   };
 
-  // Delete folder
+  // Delete folder using classes_folders table
   const deleteFolder = async () => {
     if (!folderToEdit) return;
 
     try {
       // Check if there are any lectures in this folder
       const { data: lecturesInFolder, error: checkError } = await supabase
-        .from("lectures")
+        .from("classes")
         .select("id")
         .eq("folder_id", folderToEdit.id);
       
@@ -96,7 +96,7 @@ export function LecturesFoldersList({
       }
       
       const { error } = await supabase
-        .from("lecture_folders")
+        .from("classes_folders")
         .delete()
         .eq("id", folderToEdit.id);
       

@@ -16,7 +16,7 @@ export default function StudentLectures() {
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
   const [activeTab, setActiveTab] = useState<string>("folders");
 
-  // Fetch assigned lecture folders for the student
+  // Fetch assigned lecture folders for the student using classes_assignments and classes_folders
   const { data: folders, isLoading: foldersLoading } = useQuery({
     queryKey: ["studentLectureFolders", user?.id],
     queryFn: async () => {
@@ -24,10 +24,10 @@ export default function StudentLectures() {
       
       // Using a simpler approach to fetch folders that have assigned lectures
       const { data: assignments, error: assignmentsError } = await supabase
-        .from('lecture_assignments')
+        .from('classes_assignments')
         .select(`
           lecture_id,
-          lectures:lecture_id (
+          classes:lecture_id (
             folder_id
           )
         `)
@@ -39,9 +39,9 @@ export default function StudentLectures() {
       const folderIds = new Set<string>();
       assignments.forEach((assignment) => {
         // Use type assertion to access lectures property
-        const lectures = (assignment as any).lectures;
-        if (lectures && lectures.folder_id) {
-          folderIds.add(lectures.folder_id);
+        const classes = (assignment as any).classes;
+        if (classes && classes.folder_id) {
+          folderIds.add(classes.folder_id);
         }
       });
       
@@ -49,7 +49,7 @@ export default function StudentLectures() {
       if (folderIds.size === 0) return [];
       
       const { data: folderData, error: folderError } = await supabase
-        .from('lecture_folders')
+        .from('classes_folders')
         .select("*")
         .in("id", Array.from(folderIds))
         .order("name");
@@ -61,7 +61,7 @@ export default function StudentLectures() {
     enabled: !!user,
   });
 
-  // Fetch assigned lectures based on selected folder
+  // Fetch assigned lectures based on selected folder using classes_assignments and classes tables
   const { data: lectures, isLoading: lecturesLoading } = useQuery({
     queryKey: ["studentLectures", user?.id, selectedFolder?.id],
     queryFn: async () => {
@@ -69,7 +69,7 @@ export default function StudentLectures() {
       
       // First get the lecture IDs assigned to the student
       const { data: assignments, error: assignmentsError } = await supabase
-        .from('lecture_assignments')
+        .from('classes_assignments')
         .select("lecture_id")
         .eq("student_id", user.id);
       
@@ -80,7 +80,7 @@ export default function StudentLectures() {
       
       // Then fetch the lectures in the selected folder
       const { data, error } = await supabase
-        .from('lectures')
+        .from('classes')
         .select("*")
         .in("id", lectureIds)
         .eq("folder_id", selectedFolder.id)

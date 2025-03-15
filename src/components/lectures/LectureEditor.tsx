@@ -23,7 +23,7 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
   const [content, setContent] = useState(lecture.content || "");
   const [isLoading, setIsLoading] = useState(false);
   
-  // Save lecture content with type assertion to bypass TypeScript errors
+  // Save lecture content
   const saveLecture = async () => {
     if (!title.trim()) {
       toast.error("Lecture title cannot be empty");
@@ -33,14 +33,14 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
     setIsLoading(true);
     
     try {
-      const { error } = await (supabase
-        .from("lectures")
+      const { error } = await supabase
+        .from("classes")
         .update({
           title,
           content,
           updated_at: new Date().toISOString()
         })
-        .eq("id", lecture.id) as unknown as { error: any });
+        .eq("id", lecture.id);
       
       if (error) throw error;
       

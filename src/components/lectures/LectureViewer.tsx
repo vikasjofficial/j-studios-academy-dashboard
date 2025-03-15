@@ -18,12 +18,12 @@ export function LectureViewer({ lecture }: LectureViewerProps) {
   const [selectedFile, setSelectedFile] = useState<LectureFile | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  // Fetch topics for this lecture
+  // Fetch topics for this lecture using classes_topics table
   const { data: topics } = useQuery({
     queryKey: ["lectureTopics", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('lecture_topics')
+        .from('classes_topics')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("order_position");
@@ -36,12 +36,12 @@ export function LectureViewer({ lecture }: LectureViewerProps) {
     },
   });
 
-  // Fetch files for this lecture
+  // Fetch files for this lecture using classes_files table
   const { data: files } = useQuery({
     queryKey: ["lectureFiles", lecture.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('lecture_files')
+        .from('classes_files')
         .select("*")
         .eq("lecture_id", lecture.id)
         .order("created_at");
