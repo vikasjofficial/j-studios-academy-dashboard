@@ -2,12 +2,16 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator } from "./ui/sidebar";
-import { Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText } from "lucide-react";
+import { Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText, LogOut, Download, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
+import { format } from "date-fns";
+import { DownloadStudentPdf } from "./download-student-pdf";
 
 export function LeftSidebar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const today = new Date();
 
   // Navigation items based on user role
   const adminNavItems = [
@@ -38,7 +42,7 @@ export function LeftSidebar() {
           <img 
             src="https://i.ibb.co/ccDKFZgD/logo.png" 
             alt="J-Studios Logo" 
-            className="h-4 w-auto" // Changed height to 4
+            className="h-4 w-auto" 
           />
           <div className="flex flex-col items-center mt-2">
             <div className="font-semibold">J Studios Academy</div>
@@ -48,6 +52,22 @@ export function LeftSidebar() {
       </SidebarHeader>
       
       <SidebarContent>
+        {/* Today's Date and Time */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="flex items-center gap-2">
+            <Clock className="h-3 w-3" />
+            Today
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="text-xs p-2 rounded-md bg-muted/50">
+              <div className="font-medium">{format(today, "EEEE, MMMM d, yyyy")}</div>
+              <div className="text-muted-foreground text-[10px]">Current Time: {format(today, "h:mm a")}</div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+        
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -83,6 +103,27 @@ export function LeftSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+        
+        {/* Download Report Button */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="p-2">
+              <DownloadStudentPdf className="w-full mb-2" />
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start hover:text-destructive" 
+                onClick={logout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

@@ -2,11 +2,9 @@
 import { useAuth } from "@/context/auth-context";
 import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { LeftSidebar } from "./left-sidebar";
-import { RightSidebar } from "./right-sidebar";
 import { Button } from "./ui/button";
-import { ChevronLeft, ChevronRight, PanelLeft, PanelRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
 import styles from "@/styles/layout.module.css";
 
 interface DashboardLayoutProps {
@@ -15,7 +13,6 @@ interface DashboardLayoutProps {
 
 function SidebarToggle() {
   const { toggleSidebar, state } = useSidebar();
-  const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   
   return (
     <div className="fixed top-20 right-4 z-50 flex gap-2">
@@ -29,18 +26,6 @@ function SidebarToggle() {
       >
         {state === "expanded" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
       </Button>
-      
-      {/* Right sidebar toggle */}
-      <Button 
-        variant="outline" 
-        size="icon" 
-        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur border-border/50 shadow-md md:flex hidden" 
-        onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
-        aria-label="Toggle Right Sidebar"
-        data-right-sidebar-toggle="true"
-      >
-        {rightSidebarVisible ? <PanelRight className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
-      </Button>
     </div>
   );
 }
@@ -48,7 +33,6 @@ function SidebarToggle() {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   
   return (
     <SidebarProvider>
@@ -65,12 +49,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </main>
             </div>
             
-            {/* Sidebar Toggle Buttons */}
+            {/* Sidebar Toggle Button */}
             <SidebarToggle />
           </SidebarInset>
-          
-          {/* Right Sidebar - Don't show on mobile */}
-          {!isMobile && rightSidebarVisible && <RightSidebar />}
         </div>
       </div>
     </SidebarProvider>
