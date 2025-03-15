@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/context/auth-context";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader } from "./ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
@@ -7,19 +6,32 @@ import { BellRing, Calendar, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 export function RightSidebar() {
   const { user } = useAuth();
   const today = new Date();
+  const [visible, setVisible] = useState(true);
   
-  // Fake notifications for demo purposes
+  useEffect(() => {
+    const handleToggle = () => {
+      setVisible(prev => !prev);
+    };
+    
+    const toggleBtn = document.querySelector('[data-right-sidebar-toggle="true"]');
+    toggleBtn?.addEventListener('click', handleToggle);
+    
+    return () => {
+      toggleBtn?.removeEventListener('click', handleToggle);
+    };
+  }, []);
+  
   const notifications = [
     { id: 1, title: "New grade posted", time: "10 minutes ago", read: false },
     { id: 2, title: "Attendance updated", time: "1 hour ago", read: false },
     { id: 3, title: "New course available", time: "2 hours ago", read: true },
   ];
   
-  // Fake upcoming events for demo purposes
   const upcomingEvents = [
     { id: 1, title: "Math Exam", date: "Tomorrow, 10:00 AM" },
     { id: 2, title: "Science Project Due", date: "Friday, 11:59 PM" },
@@ -36,7 +48,6 @@ export function RightSidebar() {
       </SidebarHeader>
       
       <SidebarContent>
-        {/* User Profile Card */}
         <AppSidebar />
         
         <SidebarGroup>
@@ -117,4 +128,3 @@ export function RightSidebar() {
     </Sidebar>
   );
 }
-

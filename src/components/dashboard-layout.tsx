@@ -4,33 +4,51 @@ import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { LeftSidebar } from "./left-sidebar";
 import { RightSidebar } from "./right-sidebar";
 import { Button } from "./ui/button";
-import { Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight, PanelLeft, PanelRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 import styles from "@/styles/layout.module.css";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-function MobileMenuButton() {
-  const { toggleSidebar, openMobile } = useSidebar();
+function SidebarToggle() {
+  const { toggleSidebar, state } = useSidebar();
+  const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   
   return (
-    <Button 
-      variant="outline" 
-      size="icon" 
-      className="fixed top-4 right-4 z-50 md:hidden" 
-      onClick={toggleSidebar}
-      aria-label="Toggle Menu"
-    >
-      <Menu className="h-5 w-5" />
-    </Button>
+    <div className="fixed top-20 right-4 z-50 flex gap-2">
+      {/* Left sidebar toggle */}
+      <Button 
+        variant="outline" 
+        size="icon" 
+        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur border-border/50 shadow-md" 
+        onClick={toggleSidebar}
+        aria-label="Toggle Left Sidebar"
+      >
+        {state === "expanded" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </Button>
+      
+      {/* Right sidebar toggle */}
+      <Button 
+        variant="outline" 
+        size="icon" 
+        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur border-border/50 shadow-md md:flex hidden" 
+        onClick={() => setRightSidebarVisible(!rightSidebarVisible)}
+        aria-label="Toggle Right Sidebar"
+        data-right-sidebar-toggle="true"
+      >
+        {rightSidebarVisible ? <PanelRight className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
+      </Button>
+    </div>
   );
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [rightSidebarVisible, setRightSidebarVisible] = useState(true);
   
   return (
     <SidebarProvider>
@@ -39,9 +57,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Left Sidebar */}
           <LeftSidebar />
           
-          {/* Mobile Menu Toggle Button */}
-          <MobileMenuButton />
-          
           {/* Main Content */}
           <SidebarInset className="overflow-y-auto overflow-x-hidden flex-1">
             <div className={`${styles.mainContent} p-3 sm:p-4 md:p-5 w-full`}>
@@ -49,10 +64,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {children}
               </main>
             </div>
+            
+            {/* Sidebar Toggle Buttons */}
+            <SidebarToggle />
           </SidebarInset>
           
           {/* Right Sidebar - Don't show on mobile */}
-          {!isMobile && <RightSidebar />}
+          {!isMobile && rightSidebarVisible && <RightSidebar />}
         </div>
       </div>
     </SidebarProvider>
