@@ -39,11 +39,7 @@ export function useStudentMessages(userId: string | undefined) {
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load messages",
-        variant: "destructive"
-      });
+      toast.error("Failed to load messages");
     } finally {
       setIsLoading(false);
     }
@@ -69,11 +65,7 @@ export function useStudentMessages(userId: string | undefined) {
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive"
-      });
+      toast.error("Failed to send message");
       return false;
     } finally {
       setIsSending(false);
