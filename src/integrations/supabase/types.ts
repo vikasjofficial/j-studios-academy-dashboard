@@ -644,7 +644,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_lecture: {
+        Args: {
+          title_input: string
+          content_input: string
+          folder_id_input: string
+        }
+        Returns: string
+      }
+      create_lecture_folder: {
+        Args: {
+          folder_name: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

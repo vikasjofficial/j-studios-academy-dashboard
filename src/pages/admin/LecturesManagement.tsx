@@ -28,7 +28,7 @@ export default function LecturesManagement() {
         throw error;
       }
       
-      return data as LectureFolder[];
+      return data as unknown as LectureFolder[];
     },
   });
 
@@ -48,7 +48,7 @@ export default function LecturesManagement() {
         throw error;
       }
       
-      return data as Lecture[];
+      return data as unknown as Lecture[];
     },
     enabled: !!selectedFolder,
   });
