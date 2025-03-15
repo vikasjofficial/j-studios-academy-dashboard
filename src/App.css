@@ -1,3 +1,25 @@
 
 /* Import our modular CSS files */
 @import './styles/index.css';
+
+/* Add global reset for overflow specifically for sidebar/main layout issues */
+html, body, #root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Ensure sidebar and main content relationship is properly handled */
+.flex {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+/* Ensure the main content area respects boundaries */
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}

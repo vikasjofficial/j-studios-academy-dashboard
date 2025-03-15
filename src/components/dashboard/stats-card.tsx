@@ -28,11 +28,11 @@ export function StatsCard({
   textColor = "text-card-foreground"
 }: StatsCardProps) {
   return (
-    <Card className={cn("h-full", color, className)}>
+    <Card className={cn("h-full w-full", color, className)}>
       <CardContent className={cn("pt-6", textColor)}>
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className={cn("text-sm font-medium", textColor)}>{title}</h3>
+            <h3 className={cn("text-sm font-medium truncate", textColor)}>{title}</h3>
             {icon && <div className={cn("flex items-center justify-center w-10 h-10 rounded-full", textColor === "text-white" ? "bg-white/20 text-white" : "bg-primary/20 text-primary")}>
               {icon}
             </div>}

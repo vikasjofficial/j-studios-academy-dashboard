@@ -6,6 +6,7 @@ import { RightSidebar } from "./right-sidebar";
 import { Button } from "./ui/button";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import styles from "@/styles/layout.module.css";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -42,9 +43,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <MobileMenuButton />
           
           {/* Main Content */}
-          <SidebarInset className="overflow-y-auto">
-            <div className="flex-1 p-3 sm:p-4 md:p-5 w-full">
-              <main className="pb-12 w-full mx-auto max-w-[1600px]">
+          <SidebarInset className="overflow-y-auto overflow-x-hidden flex-1">
+            <div className={`${styles.mainContent} p-3 sm:p-4 md:p-5 w-full`}>
+              <main className="pb-12 w-full mx-auto max-w-[1600px] overflow-x-hidden">
                 {children}
               </main>
             </div>

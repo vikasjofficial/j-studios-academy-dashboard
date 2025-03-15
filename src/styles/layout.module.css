@@ -5,11 +5,18 @@
   color: hsl(var(--sidebar-foreground));
 }
 
-/* Fix for stretching layout */
+/* Fix for stretching layout - ensuring content stays between sidebars */
 .layoutContainer {
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* Main content area - ensures content stays between sidebars */
+.mainContent {
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
 }
 

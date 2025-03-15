@@ -19,7 +19,7 @@ interface ProgressChartCardProps {
 export function ProgressChartCard({ title, data, className }: ProgressChartCardProps) {
   return (
     <div className={cn(
-      "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
+      "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all w-full",
       "bg-white/5 border border-white/10 hover:bg-white/10",
       cardStyles.glassMorphism,
       className
