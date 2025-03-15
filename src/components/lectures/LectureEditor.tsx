@@ -22,6 +22,7 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
   const [title, setTitle] = useState(lecture.title);
   const [content, setContent] = useState(lecture.content || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("topics");
   
   // Save lecture content
   const saveLecture = async () => {
@@ -100,25 +101,53 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
         </CardContent>
       </Card>
       
-      <Tabs defaultValue="topics" className="w-full">
-        <TabsList className="grid grid-cols-2 mb-4">
-          <TabsTrigger value="topics">Topics</TabsTrigger>
-          <TabsTrigger value="files">Files</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="topics" className="p-4 border rounded-md">
+      {/* Navigation-style tabs that can be clicked anytime */}
+      <div className="bg-gray-800 rounded-md p-1.5 flex justify-center">
+        <div className="inline-flex p-1 bg-gray-700/50 rounded-md">
+          <Button 
+            variant={activeTab === "topics" ? "default" : "ghost"} 
+            className={`rounded-md ${activeTab === "topics" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
+            onClick={() => setActiveTab("topics")}
+          >
+            Lecture Topics
+          </Button>
+          <Button
+            variant={activeTab === "files" ? "default" : "ghost"}
+            className={`rounded-md ${activeTab === "files" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
+            onClick={() => setActiveTab("files")}
+          >
+            Files
+          </Button>
+          <Button
+            variant={activeTab === "assignments" ? "default" : "ghost"}
+            className={`rounded-md ${activeTab === "assignments" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
+            onClick={() => setActiveTab("assignments")}
+          >
+            Assignments
+          </Button>
+        </div>
+      </div>
+      
+      {activeTab === "topics" && (
+        <div className="p-4 border rounded-md">
           <LectureTopicsList
             lecture={lecture}
             onTopicsUpdated={handleTopicsUpdated}
           />
-        </TabsContent>
-        
-        <TabsContent value="files" className="p-4 border rounded-md">
-          <LectureFileUploader lecture={lecture} />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
       
-      <StudentAssignmentManager lecture={lecture} />
+      {activeTab === "files" && (
+        <div className="p-4 border rounded-md">
+          <LectureFileUploader lecture={lecture} />
+        </div>
+      )}
+      
+      {activeTab === "assignments" && (
+        <div className="p-4 border rounded-md">
+          <StudentAssignmentManager lecture={lecture} />
+        </div>
+      )}
     </div>
   );
 }
