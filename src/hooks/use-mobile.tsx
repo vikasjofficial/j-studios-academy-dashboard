@@ -6,7 +6,7 @@ export function useIsMobile() {
 
   React.useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      setIsMobile(window.innerWidth < 768) // Standard md breakpoint
     }
     
     // Check initially

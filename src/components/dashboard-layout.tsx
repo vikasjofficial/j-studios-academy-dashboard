@@ -18,7 +18,7 @@ function SidebarToggle() {
     <Button 
       variant="outline" 
       size="icon" 
-      className="fixed top-20 left-0 z-50 h-8 w-8 rounded-r-full bg-background/80 backdrop-blur border-border/50 shadow-md"
+      className="fixed top-20 left-0 z-50 h-8 w-8 rounded-r-full bg-background/80 backdrop-blur border-border/50 shadow-md md:hidden"
       onClick={toggleSidebar}
       aria-label="Toggle Left Sidebar"
     >
@@ -46,7 +46,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </main>
             </div>
             
-            {/* Sidebar Toggle Button */}
+            {/* Sidebar Toggle Button - Only visible on mobile */}
             <SidebarToggle />
           </SidebarInset>
         </div>
