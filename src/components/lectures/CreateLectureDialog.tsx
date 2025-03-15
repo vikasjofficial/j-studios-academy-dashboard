@@ -40,17 +40,18 @@ export function CreateLectureDialog({ folder, onSuccess }: CreateLectureDialogPr
     setIsSubmitting(true);
     
     try {
+      // Use rpc to insert into lectures since it has different structure than TypeScript definitions
       const { data, error } = await supabase
-        .from('lectures')
-        .insert({ 
-          title: lectureTitle,
-          content: lectureContent,
-          folder_id: folder.id
-        } as any)
-        .select()
-        .single();
+        .rpc('create_lecture', {
+          title_input: lectureTitle,
+          content_input: lectureContent,
+          folder_id_input: folder.id
+        });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating lecture:", error);
+        throw error;
+      }
       
       toast.success("Lecture created successfully");
       setLectureTitle("");
