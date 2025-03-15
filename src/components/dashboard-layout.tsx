@@ -173,7 +173,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className={`flex-1 ${styles.contentContainer}`}>
           <SidebarInset className={styles.customScrollbar}>
             <div className={styles.mainContent}>
-              <main className="p-4 md:p-6 lg:p-8 w-full">
+              <main className="p-4 pl-8 md:p-6 md:pl-10 lg:p-8 lg:pl-12 w-full">
                 {children}
               </main>
             </div>
