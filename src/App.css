@@ -42,6 +42,11 @@ main {
   width: calc(var(--sidebar-width) / 2);
 }
 
+/* Support for quarter-width spacing div */
+.w-\[calc\(var\(--sidebar-width\)\/4\)\] {
+  width: calc(var(--sidebar-width) / 4);
+}
+
 /* Fix for mobile sidebar */
 @media (max-width: 768px) {
   [data-sidebar="sidebar"] {
