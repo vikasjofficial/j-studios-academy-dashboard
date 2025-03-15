@@ -1,0 +1,50 @@
+
+/* Attendance calendar styles */
+.attendanceCalendar {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.attendanceRecordCard {
+  transition: all 0.2s ease;
+}
+
+.attendanceRecordCard:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.attendanceSummaryCard {
+  border-left: 3px solid transparent;
+}
+
+.attendanceSummaryCard.good {
+  border-left-color: hsl(var(--success));
+}
+
+.attendanceSummaryCard.warning {
+  border-left-color: hsl(var(--warning));
+}
+
+.attendanceSummaryCard.poor {
+  border-left-color: hsl(var(--destructive));
+}
+
+/* Calendar pointer-events fix */
+.rdp {
+  margin: 0;
+}
+
+.rdpMonth {
+  background-color: hsl(var(--background));
+  border-radius: var(--radius);
+}
+
+.rdpDaySelected:not([disabled]) {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.rdpDaySelected:hover:not([disabled]) {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}

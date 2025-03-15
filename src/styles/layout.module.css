@@ -1,0 +1,44 @@
+
+/* Add utility classes for the sidebar */
+.bgSidebar {
+  background-color: hsl(var(--sidebar-background));
+  color: hsl(var(--sidebar-foreground));
+}
+
+/* Fix for stretching layout */
+.layoutContainer {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* Table adjustments for proper width */
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Inner card components width adjustment */
+.gradebookInnerCard {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Fix layout issues on student pages */
+main > .space-y-6,
+main > .space-y-8 {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 768px) {
+  .card, .glassMorphism {
+    max-width: 100%;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+}

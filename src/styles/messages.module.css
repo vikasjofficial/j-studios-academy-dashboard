@@ -1,0 +1,29 @@
+
+/* Message status indicators */
+.requestStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.requestStatusBadge.accepted {
+  background-color: rgba(22, 163, 74, 0.1);
+  color: rgb(22, 163, 74);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+}
+
+.requestStatusBadge.denied {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: rgb(220, 38, 38);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.requestStatusBadge.pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: rgb(245, 158, 11);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
