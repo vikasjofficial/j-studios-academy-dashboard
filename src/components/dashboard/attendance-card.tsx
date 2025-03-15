@@ -3,6 +3,9 @@ import { CheckSquare } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import attendanceStyles from '@/styles/attendance.module.css';
+import cardStyles from '@/styles/card.module.css';
+import animationStyles from '@/styles/animations.module.css';
 
 interface AttendanceCardProps {
   title: string;
@@ -24,6 +27,7 @@ export function AttendanceCard({ title, percentage, present, total, className }:
         "hover:before:from-primary/40 hover:before:to-primary/10 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
         "after:absolute after:inset-0 after:rounded-xl after:bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJncmlkIiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0gMjAgMCBMIDAgMCAwIDIwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')]",
         "after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500",
+        cardStyles.glassMorphism,
         className
       )}
       onMouseEnter={() => setHovered(true)}
@@ -52,7 +56,7 @@ export function AttendanceCard({ title, percentage, present, total, className }:
         </div>
         
         <div className="flex items-center justify-between mb-3">
-          <span className="text-2xl font-bold group-hover:text-white transition-colors duration-300">{percentage}%</span>
+          <span className={cn("text-2xl font-bold group-hover:text-white transition-colors duration-300", animationStyles.animateFloat)}>{percentage}%</span>
           <span className="text-xs text-muted-foreground group-hover:text-white/80 transition-colors duration-300">
             {present} of {total} days
           </span>
@@ -65,11 +69,11 @@ export function AttendanceCard({ title, percentage, present, total, className }:
         />
         
         <div className="grid grid-cols-3 gap-2 mt-4">
-          <div className="flex flex-col items-center p-2 rounded-lg bg-black/20 border border-white/10 group-hover:border-white/30 transition-colors duration-300">
+          <div className={cn("flex flex-col items-center p-2 rounded-lg bg-black/20 border border-white/10 group-hover:border-white/30 transition-colors duration-300", attendanceStyles.attendanceSummaryCard, "good")}>
             <span className="text-xs text-muted-foreground mb-0.5 group-hover:text-white/70 transition-colors duration-300">Present</span>
             <span className="text-sm font-medium group-hover:text-white transition-colors duration-300">{present}</span>
           </div>
-          <div className="flex flex-col items-center p-2 rounded-lg bg-black/20 border border-white/10 group-hover:border-white/30 transition-colors duration-300">
+          <div className={cn("flex flex-col items-center p-2 rounded-lg bg-black/20 border border-white/10 group-hover:border-white/30 transition-colors duration-300", attendanceStyles.attendanceSummaryCard, percentage < 75 ? "poor" : "warning")}>
             <span className="text-xs text-muted-foreground mb-0.5 group-hover:text-white/70 transition-colors duration-300">Absent</span>
             <span className="text-sm font-medium group-hover:text-white transition-colors duration-300">{total - present}</span>
           </div>

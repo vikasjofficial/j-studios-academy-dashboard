@@ -6,7 +6,9 @@ import { SemesterAccordion } from "./SemesterAccordion";
 import { UncategorizedTopics } from "./UncategorizedTopics";
 import { Course, Semester, Topic, Grade } from "../types";
 import { motion } from "framer-motion";
-import styles from "@/styles/moving-border.module.css";
+import movingBorderStyles from "@/styles/moving-border.module.css";
+import cardStyles from "@/styles/card.module.css";
+import layoutStyles from "@/styles/layout.module.css";
 
 interface GradesOverviewProps {
   courses: Course[];
@@ -38,8 +40,9 @@ export function GradesOverview({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
+      className={layoutStyles.gradebookInnerCard}
     >
-      <Card className="overflow-hidden backdrop-blur-md bg-card/80">
+      <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
         <CardHeader className="pb-3 bg-muted/10">
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-primary" />
@@ -72,7 +75,7 @@ export function GradesOverview({
                 getScoreColor={getScoreColor} 
               />
               
-              <div className={`${styles.movingBorderWrapper} rounded-md`}>
+              <div className={`${movingBorderStyles.movingBorderWrapper} rounded-md`}>
                 <div className="p-3 bg-muted/10 rounded-md">
                   <div className="flex justify-between items-center">
                     <span className="font-bold">Overall Average</span>
@@ -94,3 +97,6 @@ export function GradesOverview({
     </motion.div>
   );
 }
+
+// Add the missing import for cn
+import { cn } from '@/lib/utils';

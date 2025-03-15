@@ -2,6 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import cardStyles from '@/styles/card.module.css';
 
 interface ProgressData {
   name: string;
@@ -20,6 +21,7 @@ export function ProgressChartCard({ title, data, className }: ProgressChartCardP
     <div className={cn(
       "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
       "bg-white/5 border border-white/10 hover:bg-white/10",
+      cardStyles.glassMorphism,
       className
     )}>
       <div className="flex items-center justify-between mb-6">

@@ -2,6 +2,7 @@
 import { ListTodo, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import cardStyles from '@/styles/card.module.css';
 
 interface Task {
   id: string;
@@ -62,6 +63,7 @@ export function TasksCard({ title, tasks, className }: TasksCardProps) {
     <div className={cn(
       "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
       "bg-white/5 border border-white/10 hover:bg-white/10",
+      cardStyles.glassMorphism,
       className
     )}>
       <div className="flex items-center justify-between mb-6">

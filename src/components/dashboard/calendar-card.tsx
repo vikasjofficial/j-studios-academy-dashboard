@@ -2,6 +2,7 @@
 import { Calendar, CalendarIcon, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import cardStyles from '@/styles/card.module.css';
 
 interface Event {
   id: string;
@@ -56,6 +57,7 @@ export function CalendarCard({ title, events, className }: CalendarCardProps) {
     <div className={cn(
       "relative p-6 rounded-xl overflow-hidden backdrop-blur-md transition-all",
       "bg-white/5 border border-white/10 hover:bg-white/10",
+      cardStyles.glassMorphism,
       className
     )}>
       <div className="flex items-center justify-between mb-4">

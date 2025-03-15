@@ -1,6 +1,7 @@
 
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from "@/components/ui/card";
+import cardStyles from '@/styles/card.module.css';
 
 interface StatsCardProps {
   title: string;
