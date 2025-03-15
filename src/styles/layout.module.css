@@ -29,16 +29,7 @@
   max-width: 100%;
   overflow-x: hidden;
   position: relative; /* Added for fixed toggle positioning */
-}
-
-/* Sidebar toggle buttons container */
-.sidebarToggles {
-  position: fixed;
-  top: 5rem;
-  right: 1rem;
-  z-index: 50;
-  display: flex;
-  gap: 0.5rem;
+  transition: margin-left 0.2s ease;
 }
 
 /* Table adjustments for proper width */

@@ -3,7 +3,7 @@ import { useAuth } from "@/context/auth-context";
 import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { LeftSidebar } from "./left-sidebar";
 import { Button } from "./ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import styles from "@/styles/layout.module.css";
 
@@ -15,18 +15,15 @@ function SidebarToggle() {
   const { toggleSidebar, state } = useSidebar();
   
   return (
-    <div className="fixed top-20 right-4 z-50 flex gap-2">
-      {/* Left sidebar toggle */}
-      <Button 
-        variant="outline" 
-        size="icon" 
-        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur border-border/50 shadow-md" 
-        onClick={toggleSidebar}
-        aria-label="Toggle Left Sidebar"
-      >
-        {state === "expanded" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-      </Button>
-    </div>
+    <Button 
+      variant="outline" 
+      size="icon" 
+      className="fixed top-20 left-0 z-50 h-8 w-8 rounded-r-full bg-background/80 backdrop-blur border-border/50 shadow-md"
+      onClick={toggleSidebar}
+      aria-label="Toggle Left Sidebar"
+    >
+      {state === "expanded" ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+    </Button>
   );
 }
 
@@ -36,7 +33,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex flex-col w-full bg-gradient-to-b from-background to-background/80">        
+      <div className="min-h-screen flex w-full bg-gradient-to-b from-background to-background/80">        
         <div className="flex w-full flex-1 overflow-hidden">
           {/* Left Sidebar */}
           <LeftSidebar />
