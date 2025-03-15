@@ -36,17 +36,20 @@ export function CreateLectureFolderDialog({ onSuccess }: CreateLectureFolderDial
     setIsSubmitting(true);
     
     try {
-      // Use rpc to insert into lecture_folders since it's not in the TypeScript definitions
+      console.log("Creating folder with name:", folderName);
+      
       const { data, error } = await supabase
-        .rpc('create_lecture_folder', {
-          folder_name: folderName
-        });
+        .from('lecture_folders')
+        .insert({ name: folderName })
+        .select()
+        .single();
       
       if (error) {
         console.error("Error creating folder:", error);
         throw error;
       }
       
+      console.log("Folder created successfully:", data);
       toast.success("Folder created successfully");
       setFolderName("");
       setIsOpen(false);
