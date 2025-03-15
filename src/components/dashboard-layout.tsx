@@ -5,6 +5,7 @@ import { LeftSidebar } from "./left-sidebar";
 import { RightSidebar } from "./right-sidebar";
 import { Button } from "./ui/button";
 import { Menu } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ function MobileMenuButton() {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   return (
     <SidebarProvider>
@@ -48,8 +50,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </SidebarInset>
           
-          {/* Right Sidebar */}
-          <RightSidebar />
+          {/* Right Sidebar - Don't show on mobile */}
+          {!isMobile && <RightSidebar />}
         </div>
       </div>
     </SidebarProvider>
