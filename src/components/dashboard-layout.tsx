@@ -1,11 +1,29 @@
 
 import { useAuth } from "@/context/auth-context";
-import { SidebarProvider, SidebarInset } from "./ui/sidebar";
+import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { LeftSidebar } from "./left-sidebar";
 import { RightSidebar } from "./right-sidebar";
+import { Button } from "./ui/button";
+import { Menu } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+}
+
+function MobileMenuButton() {
+  const { toggleSidebar, openMobile } = useSidebar();
+  
+  return (
+    <Button 
+      variant="outline" 
+      size="icon" 
+      className="fixed top-4 right-4 z-50 md:hidden" 
+      onClick={toggleSidebar}
+      aria-label="Toggle Menu"
+    >
+      <Menu className="h-5 w-5" />
+    </Button>
+  );
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -17,6 +35,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex w-full flex-1">
           {/* Left Sidebar */}
           <LeftSidebar />
+          
+          {/* Mobile Menu Toggle Button */}
+          <MobileMenuButton />
           
           {/* Main Content */}
           <SidebarInset>
