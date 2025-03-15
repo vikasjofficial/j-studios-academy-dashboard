@@ -26,8 +26,19 @@ main {
 
 /* Ensure that the sidebar is properly sized and positioned */
 [data-sidebar="sidebar"] {
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  height: 100vh;
+  z-index: 30;
+  width: var(--sidebar-width) !important;
+}
+
+/* Fix for mobile sidebar */
+@media (max-width: 768px) {
+  [data-sidebar="sidebar"] {
+    position: fixed;
+    left: 0;
+    top: 0;
+  }
 }
 
 /* Fix for sidebar content to ensure it doesn't overlap with main content */

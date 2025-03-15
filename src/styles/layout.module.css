@@ -11,6 +11,8 @@
   width: 100%;
   margin: 0 auto;
   overflow-x: hidden;
+  display: flex;
+  position: relative;
 }
 
 /* Content container - ensures content stays properly contained within sidebar */
@@ -19,6 +21,8 @@
   max-width: 100%;
   overflow-x: hidden;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 /* Add a class for the sidebar inset content to control its positioning */
@@ -32,8 +36,9 @@
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  position: relative; /* For fixed toggle positioning */
+  position: relative;
   transition: padding-left 0.3s ease, margin-left 0.3s ease;
+  min-height: 100vh;
 }
 
 /* Table adjustments for proper width */
