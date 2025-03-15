@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useAuth } from "@/context/auth-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Topic {
   id: string;
@@ -292,123 +295,134 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {semesters && semesters.map(semester => (
-                  <div key={semester.id} className="border rounded-md overflow-hidden h-full">
-                    <div className="bg-muted/50 p-3 border-b">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{semester.name}</h3>
+              <Accordion 
+                type="multiple" 
+                defaultValue={semesters?.map((_, i) => `semester-${i}`) || []}
+                className="w-full"
+              >
+                {semesters && semesters.map((semester, index) => (
+                  <AccordionItem key={semester.id} value={`semester-${index}`} className="border-b">
+                    <AccordionTrigger className="py-3">
+                      <div className="flex justify-between w-full pr-4">
+                        <span className="font-semibold">{semester.name}</span>
                         <span className="text-sm font-medium">
                           Average: {calculateSemesterAverage(semester.id)}
                         </span>
                       </div>
-                    </div>
-                    
-                    {semester.topics.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Topic</TableHead>
-                            <TableHead className="text-center">Score</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {semester.topics.map(topic => {
-                            const grade = getGrade(topic.id);
-                            return (
-                              <TableRow key={topic.id}>
-                                <TableCell>{topic.name}</TableCell>
-                                <TableCell className="text-center">
-                                  {grade ? (
-                                    <HoverCard>
-                                      <HoverCardTrigger>
-                                        <span 
-                                          className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
-                                        >
-                                          {grade.score}
-                                        </span>
-                                      </HoverCardTrigger>
-                                      {grade.comment && (
-                                        <HoverCardContent className="w-64 p-3">
-                                          <div className="flex flex-col space-y-1">
-                                            <div className="flex items-center">
-                                              <Info className="h-3 w-3 mr-1 text-muted-foreground" />
-                                              <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {semester.topics.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Topic</TableHead>
+                              <TableHead className="text-center">Score</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {semester.topics.map(topic => {
+                              const grade = getGrade(topic.id);
+                              return (
+                                <TableRow key={topic.id}>
+                                  <TableCell>{topic.name}</TableCell>
+                                  <TableCell className="text-center">
+                                    {grade ? (
+                                      <HoverCard>
+                                        <HoverCardTrigger>
+                                          <span 
+                                            className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
+                                          >
+                                            {grade.score}
+                                          </span>
+                                        </HoverCardTrigger>
+                                        {grade.comment && (
+                                          <HoverCardContent className="w-64 p-3">
+                                            <div className="flex flex-col space-y-1">
+                                              <div className="flex items-center">
+                                                <Info className="h-3 w-3 mr-1 text-muted-foreground" />
+                                                <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                                              </div>
+                                              <p className="text-sm text-muted-foreground">{grade.comment}</p>
                                             </div>
-                                            <p className="text-sm text-muted-foreground">{grade.comment}</p>
-                                          </div>
-                                        </HoverCardContent>
-                                      )}
-                                    </HoverCard>
-                                  ) : (
-                                    <span className="text-muted-foreground">-</span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="p-4 text-center text-muted-foreground">
-                        No topics found for this semester
-                      </div>
-                    )}
-                  </div>
+                                          </HoverCardContent>
+                                        )}
+                                      </HoverCard>
+                                    ) : (
+                                      <span className="text-muted-foreground">-</span>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="p-4 text-center text-muted-foreground">
+                          No topics found for this semester
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </div>
+              </Accordion>
               
               {topicsWithoutSemester && topicsWithoutSemester.length > 0 && (
-                <div className="border rounded-md overflow-hidden">
-                  <div className="bg-muted/50 p-3 border-b">
+                <Collapsible className="w-full border rounded-md overflow-hidden">
+                  <div className="bg-muted/50 p-3 border-b flex justify-between items-center">
                     <h3 className="font-semibold">Uncategorized Topics</h3>
+                    <CollapsibleTrigger className="hover:bg-muted p-1 rounded">
+                      <span className="sr-only">Toggle</span>
+                      {/* Add icon here if needed */}
+                    </CollapsibleTrigger>
                   </div>
                   
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Topic</TableHead>
-                        <TableHead className="text-center">Score</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {topicsWithoutSemester.map(topic => {
-                        const grade = getGrade(topic.id);
-                        return (
-                          <TableRow key={topic.id}>
-                            <TableCell>{topic.name}</TableCell>
-                            <TableCell className="text-center">
-                              {grade ? (
-                                <HoverCard>
-                                  <HoverCardTrigger>
-                                    <span 
-                                      className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
-                                    >
-                                      {grade.score}
-                                    </span>
-                                  </HoverCardTrigger>
-                                  {grade.comment && (
-                                    <HoverCardContent className="w-64 p-3">
-                                      <div className="flex flex-col space-y-1">
-                                        <div className="flex items-center">
-                                          <Info className="h-3 w-3 mr-1 text-muted-foreground" />
-                                          <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                  <CollapsibleContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Topic</TableHead>
+                          <TableHead className="text-center">Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topicsWithoutSemester.map(topic => {
+                          const grade = getGrade(topic.id);
+                          return (
+                            <TableRow key={topic.id}>
+                              <TableCell>{topic.name}</TableCell>
+                              <TableCell className="text-center">
+                                {grade ? (
+                                  <HoverCard>
+                                    <HoverCardTrigger>
+                                      <span 
+                                        className={`inline-block py-1 px-3 rounded ${getScoreColor(grade.score)}`}
+                                      >
+                                        {grade.score}
+                                      </span>
+                                    </HoverCardTrigger>
+                                    {grade.comment && (
+                                      <HoverCardContent className="w-64 p-3">
+                                        <div className="flex flex-col space-y-1">
+                                          <div className="flex items-center">
+                                            <Info className="h-3 w-3 mr-1 text-muted-foreground" />
+                                            <h4 className="text-sm font-medium">Teacher's Note:</h4>
+                                          </div>
+                                          <p className="text-sm text-muted-foreground">{grade.comment}</p>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{grade.comment}</p>
-                                      </div>
-                                    </HoverCardContent>
-                                  )}
-                                </HoverCard>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                                      </HoverCardContent>
+                                    )}
+                                  </HoverCard>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </CollapsibleContent>
+                </Collapsible>
               )}
               
               <div className="border rounded-md p-3 bg-muted/20">

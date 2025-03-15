@@ -2,6 +2,12 @@
 import { UserCheck } from "lucide-react";
 import StudentAttendanceDashboard from "@/components/dashboard/student-attendance-dashboard";
 import { StudentGradebookView } from "@/components/gradebook/student-gradebook-view";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "@/components/ui/accordion";
 
 export default function StudentAttendance() {
   return (
@@ -23,7 +29,14 @@ export default function StudentAttendance() {
       </div>
       
       <div className="mt-8 w-full">
-        <StudentGradebookView />
+        <Accordion type="multiple" defaultValue={["item-0"]} className="w-full">
+          <AccordionItem value="item-0" className="border-b">
+            <AccordionTrigger className="text-xl font-semibold">Semester Performance</AccordionTrigger>
+            <AccordionContent>
+              <StudentGradebookView />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
