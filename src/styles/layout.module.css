@@ -18,8 +18,6 @@
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  padding-right: 1rem;
-  padding-left: 1rem;
   margin: 0 auto;
 }
 
@@ -35,24 +33,6 @@
   overflow-x: hidden;
   position: relative; /* For fixed toggle positioning */
   transition: padding-left 0.3s ease, margin-left 0.3s ease;
-}
-
-/* Add specific class for sidebar states to control content margin */
-:global(.peer-data-[state=collapsed]) .mainContent {
-  margin-left: 0;
-}
-
-:global(.peer-data-[state=expanded]) .mainContent {
-  padding-left: 2rem; /* Add more padding when sidebar is expanded */
-}
-
-/* Adjust inset content based on sidebar state */
-:global(.peer-data-[state=expanded]) ~ .sidebarInsetContent {
-  padding-left: var(--sidebar-width);
-}
-
-:global(.peer-data-[state=collapsed]) ~ .sidebarInsetContent {
-  padding-left: 0;
 }
 
 /* Table adjustments for proper width */
