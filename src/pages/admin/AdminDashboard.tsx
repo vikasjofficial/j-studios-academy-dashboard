@@ -1,10 +1,9 @@
 import DashboardLayout from '@/components/dashboard-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
-import { CollapsibleStatsCard } from '@/components/dashboard/collapsible-stats-card';
 import { StatsAccordion, StatsData } from '@/components/dashboard/stats-accordion';
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
-import { Users, BookOpen, MessageSquare, DownloadIcon, BarChart2 } from 'lucide-react';
+import { Users, BookOpen, MessageSquare } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -256,9 +255,9 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground">Overview of J-Studios Academy.</p>
         </div>
 
-        {/* Stats Cards as Collapsibles */}
-        <div className="space-y-4">
-          <CollapsibleStatsCard
+        {/* Stats Cards - Side by Side */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatsCard
             title="Total Students"
             value={studentsLoading ? "..." : students?.count || 0}
             description="Total number of enrolled students"
@@ -266,25 +265,8 @@ export default function AdminDashboard() {
             trend={{ value: 12, isPositive: true }}
             color="bg-indigo-500"
             textColor="text-white"
-            detailContent={
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Active students:</span>
-                  <span>{studentsLoading ? "..." : Math.floor((students?.count || 0) * 0.85)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>New this month:</span>
-                  <span>{studentsLoading ? "..." : Math.floor((students?.count || 0) * 0.12)}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <DownloadIcon className="h-4 w-4" />
-                  <span>Download student list</span>
-                </div>
-              </div>
-            }
           />
-          
-          <CollapsibleStatsCard
+          <StatsCard
             title="Active Courses"
             value={coursesLoading ? "..." : courses?.count || 0}
             description="Currently active courses in this semester"
@@ -292,48 +274,15 @@ export default function AdminDashboard() {
             trend={{ value: 0, isPositive: true }}
             color="bg-amber-300"
             textColor="text-black"
-            detailContent={
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Upcoming courses:</span>
-                  <span>{coursesLoading ? "..." : Math.floor((courses?.count || 0) * 0.3)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Completed courses:</span>
-                  <span>{coursesLoading ? "..." : Math.floor((courses?.count || 0) * 0.2)}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <BarChart2 className="h-4 w-4" />
-                  <span>View enrollment statistics</span>
-                </div>
-              </div>
-            }
           />
-          
-          <CollapsibleStatsCard
+          <StatsCard
             title="Messages"
             value={messagesLoading ? "..." : messages?.count || 0}
             description="Total messages in the system"
             icon={<MessageSquare className="h-5 w-5" />}
             trend={{ value: 7, isPositive: true }}
-            color="bg-indigo-500"
+            color="bg-indigo-500" 
             textColor="text-white"
-            detailContent={
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Unread messages:</span>
-                  <span>{messagesLoading ? "..." : Math.floor((messages?.count || 0) * 0.15)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Today's messages:</span>
-                  <span>{messagesLoading ? "..." : Math.floor((messages?.count || 0) * 0.05)}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>Go to message center</span>
-                </div>
-              </div>
-            }
           />
         </div>
 
