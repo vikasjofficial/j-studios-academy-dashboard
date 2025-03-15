@@ -13,7 +13,7 @@
   overflow-x: hidden;
 }
 
-/* Content container - ensures content stays properly contained within sidebars */
+/* Content container - ensures content stays properly contained within sidebar */
 .contentContainer {
   width: 100%;
   max-width: 100%;

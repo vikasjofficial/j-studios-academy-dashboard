@@ -6,16 +6,12 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    navigate('/login');
+    // Redirect to login page immediately without rendering anything else
+    navigate('/login', { replace: true });
   }, [navigate]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse">
-        <p className="text-xl text-muted-foreground">Redirecting...</p>
-      </div>
-    </div>
-  );
+  // Return minimal content until redirect happens
+  return null;
 };
 
 export default Index;
