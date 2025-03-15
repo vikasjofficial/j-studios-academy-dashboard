@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Table,
   TableBody,
@@ -12,10 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from 'date-fns';
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Save, Trash2, CalendarIcon } from "lucide-react";
+import { Plus, Save, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Fee {
@@ -32,8 +30,8 @@ interface Fee {
 interface FeeFormData {
   amount: string;
   description: string;
-  due_date: Date | null;
-  payment_date: Date | null;
+  due_date: string;
+  payment_date: string;
   payment_status: string;
 }
 
@@ -49,8 +47,8 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
   const [formData, setFormData] = useState<FeeFormData>({
     amount: '',
     description: '',
-    due_date: null,
-    payment_date: null,
+    due_date: '',
+    payment_date: '',
     payment_status: 'Unpaid'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,10 +93,6 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleDateChange = (date: Date | null, field: 'due_date' | 'payment_date') => {
-    setFormData(prev => ({ ...prev, [field]: date }));
-  };
-
   const handleAddFee = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -118,8 +112,8 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
         student_id: studentId,
         amount: parseFloat(formData.amount),
         description: formData.description,
-        due_date: formData.due_date ? format(formData.due_date, 'yyyy-MM-dd') : null,
-        payment_date: formData.payment_date ? format(formData.payment_date, 'yyyy-MM-dd') : null,
+        due_date: formData.due_date || null,
+        payment_date: formData.payment_date || null,
         payment_status: formData.payment_status
       };
       
@@ -138,8 +132,8 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
       setFormData({
         amount: '',
         description: '',
-        due_date: null,
-        payment_date: null,
+        due_date: '',
+        payment_date: '',
         payment_status: 'Unpaid'
       });
       
@@ -224,9 +218,10 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR',
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
@@ -281,14 +276,14 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="amount" className="text-sm font-medium">
-                  Amount*
+                  Amount (₹)*
                 </label>
                 <Input
                   id="amount"
                   name="amount"
                   type="number"
-                  step="0.01"
-                  placeholder="0.00"
+                  step="1"
+                  placeholder="0"
                   value={formData.amount}
                   onChange={handleInputChange}
                   required
@@ -311,29 +306,13 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
               
               <div className="space-y-2">
                 <label className="text-sm font-medium">Due Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.due_date ? (
-                        format(formData.due_date, 'PPP')
-                      ) : (
-                        <span>Select date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.due_date || undefined}
-                      onSelect={(date) => handleDateChange(date, 'due_date')}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="date"
+                  name="due_date"
+                  value={formData.due_date}
+                  onChange={handleInputChange}
+                  className="w-full"
+                />
               </div>
               
               <div className="space-y-2">
@@ -354,29 +333,13 @@ export function StudentFeesTab({ studentId, studentName }: StudentFeesTabProps) 
               {formData.payment_status === 'Paid' && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Payment Date</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formData.payment_date ? (
-                          format(formData.payment_date, 'PPP')
-                        ) : (
-                          <span>Select date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={formData.payment_date || undefined}
-                        onSelect={(date) => handleDateChange(date, 'payment_date')}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Input
+                    type="date"
+                    name="payment_date"
+                    value={formData.payment_date}
+                    onChange={handleInputChange}
+                    className="w-full"
+                  />
                 </div>
               )}
             </div>
