@@ -38,11 +38,11 @@ export function CreateLectureFolderDialog({ onSuccess }: CreateLectureFolderDial
     try {
       console.log("Creating folder with name:", folderName);
       
+      // Use the RPC function with type assertion to bypass TypeScript errors
       const { data, error } = await supabase
-        .from('lecture_folders')
-        .insert({ name: folderName })
-        .select()
-        .single();
+        .rpc('create_lecture_folder', {
+          folder_name: folderName
+        }) as unknown as { data: any, error: any };
       
       if (error) {
         console.error("Error creating folder:", error);

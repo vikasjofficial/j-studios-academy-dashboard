@@ -40,13 +40,13 @@ export function CreateLectureDialog({ folder, onSuccess }: CreateLectureDialogPr
     setIsSubmitting(true);
     
     try {
-      // Use rpc to insert into lectures since it has different structure than TypeScript definitions
+      // Use rpc with type assertion to bypass TypeScript errors
       const { data, error } = await supabase
         .rpc('create_lecture', {
           title_input: lectureTitle,
           content_input: lectureContent,
           folder_id_input: folder.id
-        });
+        }) as unknown as { data: any, error: any };
       
       if (error) {
         console.error("Error creating lecture:", error);

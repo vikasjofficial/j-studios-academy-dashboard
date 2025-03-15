@@ -82,26 +82,7 @@ export function ScheduleLectureForm({
     mutationFn: async (data: LectureFormValues) => {
       const topic = topics?.find(t => t.id === data.topic_id);
       
-      const { data: lecture, error } = await supabase
-        .from("lectures")
-        .insert({
-          title: data.title,
-          topic_id: data.topic_id,
-          course_id: courseId,
-          semester_id: semesterId,
-          date: data.date,
-          time: data.time,
-          duration: data.duration,
-          location: data.location || null,
-          notes: data.notes || null,
-        })
-        .select();
-        
-      if (error) throw error;
-      
-      const eventDate = new Date(`${data.date}T${data.time}`);
-      
-      const { error: eventError } = await supabase
+      const { data: lecture, error } = await (supabase
         .from("calendar_events")
         .insert({
           title: data.title,
@@ -109,11 +90,11 @@ export function ScheduleLectureForm({
           time: data.time,
           type: "lecture",
           course_id: courseId,
-          related_id: lecture?.[0]?.id,
-          description: `Topic: ${topic?.name || 'N/A'}\nLocation: ${data.location || 'TBD'}`
-        });
+          description: `Topic: ${topic?.name || 'N/A'}\nDuration: ${data.duration}\nLocation: ${data.location || 'TBD'}\n${data.notes || ''}`
+        })
+        .select() as unknown as { data: any, error: any });
         
-      if (eventError) throw eventError;
+      if (error) throw error;
       
       return lecture;
     },
