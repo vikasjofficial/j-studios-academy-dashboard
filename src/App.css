@@ -23,3 +23,15 @@ main {
   max-width: 100%;
   overflow-x: hidden;
 }
+
+/* Ensure that the sidebar is properly sized and positioned */
+[data-sidebar="sidebar"] {
+  position: relative;
+  z-index: 10;
+}
+
+/* Fix for sidebar content to ensure it doesn't overlap with main content */
+.min-h-screen > div > div:last-child {
+  flex: 1;
+  width: 100%;
+}

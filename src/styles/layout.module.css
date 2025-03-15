@@ -24,6 +24,7 @@
 /* Add a class for the sidebar inset content to control its positioning */
 .sidebarInsetContent {
   transition: padding-left 0.3s ease;
+  width: 100%;
 }
 
 /* Main content area - ensures content stays next to sidebar without overlap */

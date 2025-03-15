@@ -163,22 +163,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   return (
     <SidebarProvider defaultOpen={!isMobile}>
-      <div className="min-h-screen flex w-full bg-gradient-to-b from-background to-background/80">        
-        <div className="flex w-full flex-1 overflow-hidden">
-          {/* Single sidebar implementation - directly inside dashboard layout */}
-          <LeftSidebar />
-          
-          {/* Main Content */}
-          <SidebarInset className={`overflow-y-auto overflow-x-hidden flex-1 ${styles.sidebarInsetContent} ${styles.customScrollbar}`}>
-            <div className={`${styles.mainContent} p-3 pl-8 sm:p-6 md:p-8 w-full`}>
-              <main className="pb-12 w-full mx-auto max-w-[1600px] overflow-x-hidden">
-                {children}
-              </main>
-            </div>
-            
-            {/* Sidebar Toggle Button - Only visible on mobile */}
-            <SidebarToggle />
+      <div className="min-h-screen flex w-full">        
+        {/* Left Sidebar */}
+        <LeftSidebar />
+        
+        {/* Main Content - Properly positioned next to the sidebar */}
+        <div className="flex-1 relative">
+          <SidebarInset className={cn(
+            "w-full min-h-screen overflow-y-auto overflow-x-hidden",
+            styles.customScrollbar
+          )}>
+            <main className="p-3 sm:p-6 md:p-8 w-full max-w-[1600px] mx-auto">
+              {children}
+            </main>
           </SidebarInset>
+          
+          {/* Mobile Sidebar Toggle Button - Only visible on mobile */}
+          <SidebarToggle />
         </div>
       </div>
     </SidebarProvider>
