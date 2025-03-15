@@ -34,9 +34,11 @@ export function LeftSidebar() {
       <SidebarHeader>
         <div className="flex items-center px-2 py-3">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-              JS
-            </div>
+            <img 
+              src="https://i.ibb.co/ccDKFZgD/logo.png" 
+              alt="J-Studios Logo" 
+              className="h-8 w-auto"
+            />
             <div className="font-semibold">J-Studios Academy</div>
           </div>
         </div>
