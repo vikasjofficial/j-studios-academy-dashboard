@@ -1,5 +1,4 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserCheck } from "lucide-react";
 import StudentAttendanceDashboard from "@/components/dashboard/student-attendance-dashboard";
 import { StudentGradebookView } from "@/components/gradebook/student-gradebook-view";
@@ -18,7 +17,9 @@ export default function StudentAttendance() {
           <h2 className="text-xl font-semibold">Attendance by Course</h2>
         </div>
         
-        <StudentAttendanceDashboard />
+        <div className="w-full">
+          <StudentAttendanceDashboard />
+        </div>
       </div>
       
       <div className="mt-8 w-full">

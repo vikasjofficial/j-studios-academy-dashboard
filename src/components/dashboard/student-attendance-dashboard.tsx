@@ -118,15 +118,16 @@ export default function StudentAttendanceDashboard() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
       {attendanceStats.map((stat) => (
-        <AttendanceCard
-          key={stat.courseId}
-          title={`${stat.courseName} (${stat.courseCode})`}
-          percentage={stat.percentage}
-          present={stat.present}
-          total={stat.total}
-        />
+        <div key={stat.courseId} className="w-full">
+          <AttendanceCard
+            title={`${stat.courseName} (${stat.courseCode})`}
+            percentage={stat.percentage}
+            present={stat.present}
+            total={stat.total}
+          />
+        </div>
       ))}
     </div>
   );

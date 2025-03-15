@@ -18,7 +18,7 @@ export function AttendanceCard({ title, percentage, present, total, className }:
   return (
     <div 
       className={cn(
-        "relative p-4 rounded-xl overflow-hidden glass-morphism transition-all duration-300",
+        "relative p-4 rounded-xl overflow-hidden glass-morphism transition-all duration-300 w-full",
         "hover:bg-black/30 hover:border-white/20 group",
         "before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-r before:from-transparent before:to-transparent",
         "hover:before:from-primary/40 hover:before:to-primary/10 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500",
@@ -45,8 +45,8 @@ export function AttendanceCard({ title, percentage, present, total, className }:
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-md font-semibold group-hover:text-white transition-colors duration-300">{title}</h3>
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary group-hover:bg-primary/50 group-hover:text-white transition-all duration-300">
+          <h3 className="text-md font-semibold group-hover:text-white transition-colors duration-300 truncate pr-2">{title}</h3>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary group-hover:bg-primary/50 group-hover:text-white transition-all duration-300 flex-shrink-0">
             <CheckSquare className="h-4 w-4" />
           </div>
         </div>
