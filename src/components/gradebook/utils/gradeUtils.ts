@@ -1,9 +1,10 @@
 
 export const getScoreColor = (score: number) => {
-  if (score >= 9) return "bg-[#4ade80] text-black font-medium";
-  if (score >= 6) return "bg-[#86efac] text-black font-medium";
-  if (score >= 3) return "bg-[#fdba74] text-black font-medium";
-  return "bg-[#f87171] text-black font-medium";
+  if (score >= 9) return "bg-gradient-to-r from-green-400 to-green-500 text-black font-medium";
+  if (score >= 7) return "bg-gradient-to-r from-green-300 to-green-400 text-black font-medium";
+  if (score >= 5) return "bg-gradient-to-r from-yellow-300 to-yellow-400 text-black font-medium";
+  if (score >= 3) return "bg-gradient-to-r from-orange-300 to-orange-400 text-black font-medium";
+  return "bg-gradient-to-r from-red-400 to-red-500 text-white font-medium";
 };
 
 export const calculateSemesterAverage = (
