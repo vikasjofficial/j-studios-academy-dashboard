@@ -60,7 +60,7 @@ function LeftSidebar() {
           <img 
             src="https://i.ibb.co/ccDKFZgD/logo.png" 
             alt="J-Studios Logo" 
-            className="h-4 w-auto" 
+            className="h-6 w-auto" 
           />
           <div className="flex flex-col items-center mt-2">
             <div className="font-semibold">J Studios Academy</div>
