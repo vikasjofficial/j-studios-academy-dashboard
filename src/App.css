@@ -32,6 +32,11 @@ main {
   width: var(--sidebar-width) !important;
 }
 
+/* Ensure empty spacing div matches sidebar width */
+.w-\[var\(--sidebar-width\)\] {
+  width: var(--sidebar-width);
+}
+
 /* Fix for mobile sidebar */
 @media (max-width: 768px) {
   [data-sidebar="sidebar"] {

@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/context/auth-context";
 import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { Button } from "./ui/button";
@@ -32,7 +31,6 @@ function LeftSidebar() {
   const location = useLocation();
   const today = new Date();
 
-  // Navigation items based on user role
   const adminNavItems = [
     { href: '/admin', icon: Home, label: 'Dashboard' },
     { href: '/admin/students', icon: Users, label: 'Students' },
@@ -71,7 +69,6 @@ function LeftSidebar() {
       </SidebarHeader>
       
       <SidebarContent>
-        {/* Today's Date and Time */}
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2">
             <Clock className="h-3 w-3" />
@@ -127,7 +124,6 @@ function LeftSidebar() {
 
         <SidebarSeparator />
         
-        {/* Download Report Button */}
         <SidebarGroup>
           <SidebarGroupLabel>Actions</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -164,12 +160,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider defaultOpen={!isMobile}>
       <div className={`min-h-screen flex flex-row ${styles.layoutContainer}`}>
-        {/* Left Sidebar */}
         <div className="h-screen">
           <LeftSidebar />
         </div>
         
-        {/* Main Content Area */}
+        <div className="hidden md:block w-[var(--sidebar-width)] flex-shrink-0"></div>
+        
         <div className={`flex-1 ${styles.contentContainer}`}>
           <SidebarInset className={styles.customScrollbar}>
             <div className={styles.mainContent}>
@@ -179,7 +175,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </SidebarInset>
           
-          {/* Mobile Sidebar Toggle */}
           <SidebarToggle />
         </div>
       </div>
