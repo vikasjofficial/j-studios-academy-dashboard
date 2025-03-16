@@ -68,8 +68,8 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex">
-      {/* Sidebar spacing - matches half the sidebar width */}
-      <div className="hidden md:block w-[calc(var(--sidebar-width)*0.5)] flex-shrink-0"></div>
+      {/* Sidebar spacing - matches quarter of the sidebar width */}
+      <div className="hidden md:block w-[calc(var(--sidebar-width)*0.25)] flex-shrink-0"></div>
       
       {/* Additional spacing divs */}
       <div className="hidden md:block w-[calc(var(--sidebar-width)*0.9)] flex-shrink-0"></div>
