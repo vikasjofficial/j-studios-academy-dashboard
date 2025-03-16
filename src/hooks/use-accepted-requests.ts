@@ -4,17 +4,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { TransformedMessage } from '@/hooks/use-admin-messages';
 
-// Define a simpler Message type to avoid deep type instantiation
+// Define a simplified Message type with explicit properties to avoid deep type instantiation
 export interface Message {
   id: string;
   content: string;
   sender_id: string;
-  recipient_id: string;
+  recipient_id: string | null;
   status: string;
   type: string;
   created_at: string;
   sender_name?: string;
   recipient_name?: string;
+  message_type?: string;
+  student_id?: string;
+  from_name?: string;
+  sender_role?: string;
 }
 
 export function useAcceptedRequests() {
