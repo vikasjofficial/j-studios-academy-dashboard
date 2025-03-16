@@ -1,87 +1,44 @@
 
-import { useRef } from 'react';
-import { format } from 'date-fns';
-import { MessageCircle } from 'lucide-react';
-import styles from '@/styles/layout.module.css';
-
-interface Message {
-  id: string;
-  content: string;
-  sender_role: string;
-  created_at: string;
-  from_name: string;
-  student_id: string;
-  message_type?: string;
-}
+import React from 'react';
+import { MessageItem } from './MessageItem';
+import { TransformedMessage } from '@/hooks/use-admin-messages';
 
 interface MessageListProps {
-  messages: Message[];
-  isLoading: boolean;
+  messages: TransformedMessage[];
+  onUpdateStatus: (id: string, status: 'read' | 'pending' | 'approved' | 'rejected') => void;
+  emptyMessage?: string;
+  isSentFolder?: boolean;
+  showApprovalButtons?: boolean;
 }
 
-export function MessageList({ messages, isLoading }: MessageListProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const getMessageTypeColor = (type?: string) => {
-    switch (type) {
-      case 'Leave Request':
-        return 'bg-orange-100 text-orange-800';
-      case 'Absent Request':
-        return 'bg-red-100 text-red-800';
-      case 'Submission Request':
-        return 'bg-blue-100 text-blue-800';
-      case 'Admin Response':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+export function MessageList({ 
+  messages, 
+  onUpdateStatus, 
+  emptyMessage = "No messages", 
+  isSentFolder = false,
+  showApprovalButtons = false 
+}: MessageListProps) {
+  if (messages.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        {emptyMessage}
+      </div>
+    );
+  }
 
   return (
-    <div className={`flex-1 overflow-y-auto pr-2 space-y-4 mb-4 ${styles.customScrollbar}`}>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-full">
-          <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
-        </div>
-      ) : messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-          <MessageCircle className="h-12 w-12 mb-2 opacity-20" />
-          <p>No messages yet</p>
-          <p className="text-sm">Start a conversation with your instructors</p>
-        </div>
-      ) : (
-        messages.map((message) => (
-          <div 
-            key={message.id}
-            className={`flex flex-col ${
-              message.sender_role === 'student' ? 'items-end' : 'items-start'
-            }`}
-          >
-            {message.message_type && message.sender_role === 'student' && (
-              <div className="mb-1">
-                <span className={`text-xs px-2 py-1 rounded-full ${getMessageTypeColor(message.message_type)}`}>
-                  {message.message_type}
-                </span>
-              </div>
-            )}
-            <div 
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.sender_role === 'student' 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-muted'
-              }`}
-            >
-              <p className="break-words">{message.content}</p>
-            </div>
-            <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <span>{message.from_name}</span>
-              <span>•</span>
-              <span>{format(new Date(message.created_at), 'MMMM d, h:mm a')}</span>
-            </div>
-          </div>
-        ))
-      )}
-      <div ref={messagesEndRef} />
+    <div className="space-y-3">
+      {messages.map((message) => (
+        <MessageItem 
+          key={message.id}
+          message={message}
+          showActions={showApprovalButtons && message.status === 'pending'}
+          onAccept={showApprovalButtons ? 
+            () => onUpdateStatus(message.id, 'approved') : undefined}
+          onDeny={showApprovalButtons ? 
+            () => onUpdateStatus(message.id, 'rejected') : undefined}
+        />
+      ))}
     </div>
   );
 }
