@@ -68,6 +68,7 @@ export default function StudentDashboard() {
 
   return (
     <>
+      <div className="hidden md:block w-[var(--sidebar-width)] flex-shrink-0"></div>
       <div className="hidden md:block w-[calc(var(--sidebar-width)*0.9)] flex-shrink-0"></div>
       <div className="hidden md:block w-[calc(var(--sidebar-width)*0.5)] flex-shrink-0"></div>
       
