@@ -69,6 +69,7 @@ export default function StudentDashboard() {
   return (
     <>
       <div className="hidden md:block w-[calc(var(--sidebar-width)*0.75)] flex-shrink-0"></div>
+      <div className="hidden md:block w-[calc(var(--sidebar-width)/3)] flex-shrink-0"></div>
       
       <div className={`space-y-8 ${styles.contentContainer} max-w-full overflow-x-hidden px-1`}>
         <div>
