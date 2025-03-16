@@ -8,6 +8,7 @@ import { Award, TrendingDown, GraduationCap } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { StudentProfileCard } from '@/components/dashboard/student-profile-card';
+import styles from "@/styles/layout.module.css";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -66,10 +67,12 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Add empty div for spacing */}
-      <div className="h-4"></div>
-      
+    <div className={`space-y-8 ${styles.contentContainer} max-w-full overflow-x-hidden px-1`}>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
+        <p className="text-muted-foreground">Welcome to J-Studios Academy.</p>
+      </div>
+
       {/* Student Profile Card */}
       <StudentProfileCard />
 
