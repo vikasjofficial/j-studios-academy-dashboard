@@ -54,6 +54,16 @@ export default function StudentMessages() {
     );
   }
   
+  const transformedMessages = messages.map(msg => ({
+    id: msg.id,
+    content: msg.content,
+    from_name: msg.from_name || '',
+    sender_role: msg.sender_role || 'student',
+    message_type: msg.message_type || 'general',
+    created_at: msg.created_at,
+    status: msg.status
+  }));
+  
   return (
     <div className="space-y-6">
       <div>
@@ -76,7 +86,12 @@ export default function StudentMessages() {
         </CardHeader>
         
         <CardContent className="flex-1 flex flex-col">
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList 
+            messages={transformedMessages} 
+            onUpdateStatus={() => {}} 
+            emptyMessage="No messages yet" 
+            isLoading={isLoading} 
+          />
         </CardContent>
       </Card>
 

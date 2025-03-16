@@ -20,11 +20,11 @@ export function useAcceptedRequests() {
 
       if (error) throw error;
 
-      const formattedMessages: Message[] = data.map((msg: any) => ({
+      const formattedMessages: Message[] = data?.map((msg: any) => ({
         ...msg,
         sender_name: msg.sender ? msg.sender.name : '',
         recipient_name: msg.recipient ? msg.recipient.name : ''
-      }));
+      })) || [];
 
       setAcceptedRequests(formattedMessages);
     } catch (error) {
@@ -46,9 +46,9 @@ export function useAcceptedRequests() {
       content: request.content,
       from_name: request.sender_name || '',
       sender_role: 'student',
-      message_type: request.type,
+      message_type: request.type || 'request',
       created_at: request.created_at,
-      status: request.status
+      status: request.status || 'approved'
     }));
   };
 

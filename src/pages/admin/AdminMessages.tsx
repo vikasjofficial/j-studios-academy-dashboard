@@ -52,7 +52,7 @@ export default function AdminMessages() {
     content: msg.content,
     from_name: msg.sender_name || '',
     sender_role: 'student',
-    message_type: msg.type,
+    message_type: msg.type || '',
     created_at: msg.created_at,
     status: msg.status
   }));
@@ -62,7 +62,7 @@ export default function AdminMessages() {
     content: msg.content,
     from_name: msg.recipient_name || '',
     sender_role: 'admin',
-    message_type: msg.type,
+    message_type: msg.type || '',
     created_at: msg.created_at,
     status: msg.status
   }));
@@ -72,7 +72,7 @@ export default function AdminMessages() {
     content: msg.content,
     from_name: msg.sender_name || '',
     sender_role: 'student',
-    message_type: msg.type,
+    message_type: msg.type || '',
     created_at: msg.created_at,
     status: msg.status
   }));
@@ -110,6 +110,10 @@ export default function AdminMessages() {
                 hasFilters={!!(searchQuery || statusFilter || typeFilter)}
                 clearFilters={clearFilters}
               />
+              <Button onClick={() => setIsComposeOpen(true)}>
+                <Mail className="mr-2 h-4 w-4" />
+                New Message
+              </Button>
               <ComposeMessageDialog
                 onOpenChange={setIsComposeOpen}
                 onMessageSent={handleMessageSent}

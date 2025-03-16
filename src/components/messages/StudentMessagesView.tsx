@@ -17,13 +17,13 @@ export function StudentMessagesView({
   userId,
   onUpdateStatus 
 }: StudentMessagesViewProps) {
-  const { studentMessages, loading, fetchStudentMessages } = useStudentMessages(userId);
+  const { messages, isLoading, fetchMessages } = useStudentMessages(userId);
 
   useEffect(() => {
     if (selectedStudent) {
-      fetchStudentMessages(selectedStudent);
+      fetchMessages(selectedStudent);
     }
-  }, [selectedStudent]);
+  }, [selectedStudent, fetchMessages]);
 
   if (!selectedStudent) {
     return (
@@ -46,13 +46,13 @@ export function StudentMessagesView({
 
       <TabsContent value="all">
         <div className="bg-muted/30 rounded-lg p-4 max-h-[500px] overflow-y-auto">
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading messages...
             </div>
-          ) : studentMessages.length > 0 ? (
+          ) : messages.length > 0 ? (
             <div className="space-y-3">
-              {studentMessages.map(message => (
+              {messages.map(message => (
                 <MessageItem 
                   key={message.id}
                   message={{
@@ -82,13 +82,13 @@ export function StudentMessagesView({
 
       <TabsContent value="requests">
         <div className="bg-muted/30 rounded-lg p-4 max-h-[500px] overflow-y-auto">
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading requests...
             </div>
-          ) : studentMessages.filter(m => m.type === 'request').length > 0 ? (
+          ) : messages.filter(m => m.type === 'request').length > 0 ? (
             <div className="space-y-3">
-              {studentMessages
+              {messages
                 .filter(m => m.type === 'request')
                 .map(message => (
                   <MessageItem 
@@ -120,13 +120,13 @@ export function StudentMessagesView({
 
       <TabsContent value="accepted">
         <div className="bg-muted/30 rounded-lg p-4 max-h-[500px] overflow-y-auto">
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Loading accepted requests...
             </div>
-          ) : studentMessages.filter(m => m.type === 'request' && m.status === 'approved').length > 0 ? (
+          ) : messages.filter(m => m.type === 'request' && m.status === 'approved').length > 0 ? (
             <div className="space-y-3">
-              {studentMessages
+              {messages
                 .filter(m => m.type === 'request' && m.status === 'approved')
                 .map(message => (
                   <MessageItem 

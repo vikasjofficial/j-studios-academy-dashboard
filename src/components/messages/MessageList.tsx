@@ -2,6 +2,7 @@
 import React from 'react';
 import { MessageItem } from './MessageItem';
 import { TransformedMessage } from '@/hooks/use-admin-messages';
+import { Loader2 } from 'lucide-react';
 
 interface MessageListProps {
   messages: TransformedMessage[];
@@ -9,6 +10,7 @@ interface MessageListProps {
   emptyMessage?: string;
   isSentFolder?: boolean;
   showApprovalButtons?: boolean;
+  isLoading?: boolean;
 }
 
 export function MessageList({ 
@@ -16,8 +18,17 @@ export function MessageList({
   onUpdateStatus, 
   emptyMessage = "No messages", 
   isSentFolder = false,
-  showApprovalButtons = false 
+  showApprovalButtons = false,
+  isLoading = false
 }: MessageListProps) {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (messages.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">

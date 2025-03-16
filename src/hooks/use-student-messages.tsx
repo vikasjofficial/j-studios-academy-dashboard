@@ -5,14 +5,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Message } from './use-admin-messages';
 
 export function useStudentMessages(userId?: string) {
-  const [studentMessages, setStudentMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
 
-  const fetchStudentMessages = async (studentId: string) => {
+  const fetchMessages = async (studentId: string) => {
     if (!studentId) return;
     
-    setLoading(true);
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('messages')
@@ -29,7 +30,7 @@ export function useStudentMessages(userId?: string) {
         sent_to: msg.recipient_id === userId ? 'You' : (msg.recipient ? msg.recipient.name : ''),
       }));
 
-      setStudentMessages(formattedMessages);
+      setMessages(formattedMessages);
     } catch (error) {
       console.error('Error fetching student messages:', error);
       toast({
@@ -38,13 +39,47 @@ export function useStudentMessages(userId?: string) {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async (data: { content?: string; message_type?: string }, userName: string) => {
+    if (!userId) return false;
+    
+    setIsSending(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          student_id: userId,
+          content: data.content || '',
+          sender_role: 'student',
+          from_name: userName,
+          message_type: data.message_type
+        });
+        
+      if (error) throw error;
+      
+      fetchMessages(userId);
+      return true;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setIsSending(false);
     }
   };
 
   return {
-    studentMessages,
-    loading,
-    fetchStudentMessages
+    messages,
+    isLoading,
+    isSending,
+    fetchMessages,
+    sendMessage
   };
 }
