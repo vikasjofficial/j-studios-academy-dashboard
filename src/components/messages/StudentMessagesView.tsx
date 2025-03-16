@@ -21,7 +21,7 @@ export function StudentMessagesView({
 
   useEffect(() => {
     if (selectedStudent) {
-      fetchMessages(selectedStudent);
+      fetchMessages();
     }
   }, [selectedStudent, fetchMessages]);
 
@@ -58,17 +58,17 @@ export function StudentMessagesView({
                   message={{
                     id: message.id,
                     content: message.content,
-                    from_name: message.sender_name || '',
-                    sender_role: message.sender_id === userId ? 'admin' : 'student',
-                    message_type: message.type,
+                    from_name: message.from_name || '',
+                    sender_role: message.sender_role || 'student',
+                    message_type: message.message_type || 'general',
                     created_at: message.created_at,
-                    status: message.status
+                    status: message.status || 'pending'
                   }}
-                  onAccept={message.type === 'request' && message.status === 'pending' ? 
+                  onAccept={message.message_type === 'request' && message.status === 'pending' ? 
                     () => onUpdateStatus(message.id, 'approved') : undefined}
-                  onDeny={message.type === 'request' && message.status === 'pending' ? 
+                  onDeny={message.message_type === 'request' && message.status === 'pending' ? 
                     () => onUpdateStatus(message.id, 'rejected') : undefined}
-                  showActions={message.type === 'request' && message.status === 'pending'}
+                  showActions={message.message_type === 'request' && message.status === 'pending'}
                 />
               ))}
             </div>
@@ -86,21 +86,21 @@ export function StudentMessagesView({
             <div className="text-center py-8 text-muted-foreground">
               Loading requests...
             </div>
-          ) : messages.filter(m => m.type === 'request').length > 0 ? (
+          ) : messages.filter(m => m.message_type === 'request').length > 0 ? (
             <div className="space-y-3">
               {messages
-                .filter(m => m.type === 'request')
+                .filter(m => m.message_type === 'request')
                 .map(message => (
                   <MessageItem 
                     key={message.id}
                     message={{
                       id: message.id,
                       content: message.content,
-                      from_name: message.sender_name || '',
-                      sender_role: message.sender_id === userId ? 'admin' : 'student',
-                      message_type: message.type,
+                      from_name: message.from_name || '',
+                      sender_role: message.sender_role || 'student',
+                      message_type: message.message_type || 'request',
                       created_at: message.created_at,
-                      status: message.status
+                      status: message.status || 'pending'
                     }}
                     onAccept={message.status === 'pending' ? 
                       () => onUpdateStatus(message.id, 'approved') : undefined}
@@ -124,21 +124,21 @@ export function StudentMessagesView({
             <div className="text-center py-8 text-muted-foreground">
               Loading accepted requests...
             </div>
-          ) : messages.filter(m => m.type === 'request' && m.status === 'approved').length > 0 ? (
+          ) : messages.filter(m => m.message_type === 'request' && m.status === 'approved').length > 0 ? (
             <div className="space-y-3">
               {messages
-                .filter(m => m.type === 'request' && m.status === 'approved')
+                .filter(m => m.message_type === 'request' && m.status === 'approved')
                 .map(message => (
                   <MessageItem 
                     key={message.id}
                     message={{
                       id: message.id,
                       content: message.content,
-                      from_name: message.sender_name || '',
-                      sender_role: message.sender_id === userId ? 'admin' : 'student',
-                      message_type: message.type,
+                      from_name: message.from_name || '',
+                      sender_role: message.sender_role || 'student',
+                      message_type: message.message_type || 'request',
                       created_at: message.created_at,
-                      status: message.status
+                      status: message.status || 'approved'
                     }}
                   />
                 ))}

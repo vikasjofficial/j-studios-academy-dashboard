@@ -1,8 +1,8 @@
 
-import { DialogContent, DialogHeader, DialogTitle, DialogDescription, Dialog } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ComposeMessageForm } from "./ComposeMessageForm";
 import * as z from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const messageSchema = z.object({
   content: z.string().min(1, { message: "Message cannot be empty" }),
@@ -24,14 +24,13 @@ export function ComposeMessageDialog({
   onOpenChange,
   onMessageSent
 }: ComposeMessageDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+  useEffect(() => {
     if (onOpenChange) {
-      onOpenChange(open);
+      onOpenChange(isOpen);
     }
-  };
+  }, [isOpen, onOpenChange]);
 
   const handleSubmit = async (data: z.infer<typeof messageSchema>) => {
     if (onSubmit) {
@@ -40,34 +39,32 @@ export function ComposeMessageDialog({
     if (onMessageSent) {
       await onMessageSent();
     }
-    handleOpenChange(false);
+    setIsOpen(false);
   };
 
   const handleClose = () => {
     if (onClose) {
       onClose();
     }
-    handleOpenChange(false);
+    setIsOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md" aria-describedby="compose-message-description">
-        <DialogHeader>
-          <DialogTitle>New Message</DialogTitle>
-          <DialogDescription id="compose-message-description">
-            Send a message to your instructors and administrators
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <ComposeMessageForm 
-            onSubmit={handleSubmit} 
-            isSending={isSending} 
-            onCancel={handleClose}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <DialogContent className="sm:max-w-md" aria-describedby="compose-message-description">
+      <DialogHeader>
+        <DialogTitle>New Message</DialogTitle>
+        <DialogDescription id="compose-message-description">
+          Send a message to your instructors and administrators
+        </DialogDescription>
+      </DialogHeader>
+      
+      <div className="grid gap-4 py-4">
+        <ComposeMessageForm 
+          onSubmit={handleSubmit} 
+          isSending={isSending} 
+          onCancel={handleClose}
+        />
+      </div>
+    </DialogContent>
   );
 }

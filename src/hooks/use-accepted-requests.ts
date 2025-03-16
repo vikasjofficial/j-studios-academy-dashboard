@@ -2,7 +2,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Message, TransformedMessage } from './use-admin-messages';
+import { TransformedMessage } from '@/hooks/use-admin-messages';
+
+// Define a simpler Message type to avoid deep type instantiation
+export interface Message {
+  id: string;
+  content: string;
+  sender_id: string;
+  recipient_id: string;
+  status: string;
+  type: string;
+  created_at: string;
+  sender_name?: string;
+  recipient_name?: string;
+}
 
 export function useAcceptedRequests() {
   const [acceptedRequests, setAcceptedRequests] = useState<Message[]>([]);
