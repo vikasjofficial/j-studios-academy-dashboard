@@ -1,3 +1,4 @@
+
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { useAuth } from '@/context/auth-context';
 import StudentAttendanceDashboard from '@/components/dashboard/student-attendance-dashboard';
@@ -67,7 +68,7 @@ export default function StudentDashboard() {
 
   return (
     <>
-      <div className="hidden md:block w-[calc(var(--sidebar-width)/3)] flex-shrink-0"></div>
+      <div className="hidden md:block w-[calc(var(--sidebar-width)/2)] flex-shrink-0"></div>
       
       <div className={`space-y-8 ${styles.contentContainer} max-w-full overflow-x-hidden px-1`}>
         <div>
