@@ -67,6 +67,9 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Add empty div for spacing */}
+      <div className="h-4"></div>
+      
       {/* Student Profile Card */}
       <StudentProfileCard />
 
