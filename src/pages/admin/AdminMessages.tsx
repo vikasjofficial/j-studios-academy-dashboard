@@ -402,84 +402,86 @@ export default function AdminMessages() {
                   Please select a student to view messages
                 </div>
               ) : (
-                <TabsContent value="chat" className="flex-1 flex flex-col h-full mt-0">
-                  {isLoadingMessages ? (
-                    <div className="flex justify-center py-8 flex-1">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 pb-4 flex-1 flex flex-col">
-                        {messages.length === 0 ? (
-                          <div className="text-center py-8 text-muted-foreground">
-                            No messages found
-                          </div>
-                        ) : (
-                          <>
-                            {messages.map((message) => (
-                              <MessageItem
-                                key={message.id}
-                                message={message}
-                                showActions={isRequestMessage(message) && !message.status}
-                                onAccept={(id, type) => handleRequestAction(id, 'accepted', type)}
-                                onDeny={(id, type) => handleRequestAction(id, 'denied', type)}
-                                isProcessing={processingMessageId === message.id}
+                <>
+                  <TabsContent value="chat" className="flex-1 flex flex-col h-full mt-0">
+                    {isLoadingMessages ? (
+                      <div className="flex justify-center py-8 flex-1">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2 pb-4 flex-1 flex flex-col">
+                          {messages.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                              No messages found
+                            </div>
+                          ) : (
+                            <>
+                              {messages.map((message) => (
+                                <MessageItem
+                                  key={message.id}
+                                  message={message}
+                                  showActions={isRequestMessage(message) && !message.status}
+                                  onAccept={(id, type) => handleRequestAction(id, 'accepted', type)}
+                                  onDeny={(id, type) => handleRequestAction(id, 'denied', type)}
+                                  isProcessing={processingMessageId === message.id}
+                                />
+                              ))}
+                              <div ref={messagesEndRef} />
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t">
+                          <Form {...inlineForm}>
+                            <form onSubmit={inlineForm.handleSubmit(sendMessage)} className="flex items-end gap-2">
+                              <FormField
+                                control={inlineForm.control}
+                                name="content"
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormControl>
+                                      <Textarea 
+                                        placeholder="Type your message here..." 
+                                        className="resize-none min-h-[80px]" 
+                                        {...field} 
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                            ))}
-                            <div ref={messagesEndRef} />
-                          </>
-                        )}
-                      </div>
-                      
-                      <div className="mt-4 pt-4 border-t">
-                        <Form {...inlineForm}>
-                          <form onSubmit={inlineForm.handleSubmit(sendMessage)} className="flex items-end gap-2">
-                            <FormField
-                              control={inlineForm.control}
-                              name="content"
-                              render={({ field }) => (
-                                <FormItem className="flex-1">
-                                  <FormControl>
-                                    <Textarea 
-                                      placeholder="Type your message here..." 
-                                      className="resize-none min-h-[80px]" 
-                                      {...field} 
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <Button 
-                              type="submit" 
-                              className="mb-[2px]"
-                              disabled={inlineForm.formState.isSubmitting}
-                            >
-                              {inlineForm.formState.isSubmitting ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Send className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </form>
-                        </Form>
-                      </div>
-                    </>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="accepted" className="flex-1 h-full mt-0">
-                  <AcceptedRequestsList
-                    requests={
-                      allMessages.filter(m => 
-                        m.student_id === selectedStudent.id &&
-                        m.sender_role === 'student' &&
-                        m.status === 'accepted'
-                      )
-                    }
-                    isLoading={isLoadingAllMessages}
-                  />
-                </TabsContent>
+                              <Button 
+                                type="submit" 
+                                className="mb-[2px]"
+                                disabled={inlineForm.formState.isSubmitting}
+                              >
+                                {inlineForm.formState.isSubmitting ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Send className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </form>
+                          </Form>
+                        </div>
+                      </>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="accepted" className="flex-1 h-full mt-0">
+                    <AcceptedRequestsList
+                      requests={
+                        allMessages.filter(m => 
+                          m.student_id === selectedStudent.id &&
+                          m.sender_role === 'student' &&
+                          m.status === 'accepted'
+                        )
+                      }
+                      isLoading={isLoadingAllMessages}
+                    />
+                  </TabsContent>
+                </>
               )}
             </CardContent>
           </Card>
