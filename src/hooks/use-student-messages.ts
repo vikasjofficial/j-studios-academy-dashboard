@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import * as z from "zod";
 
-export interface Message {
+interface Message {
   id: string;
   content: string;
   sender_role: string;
@@ -12,7 +12,6 @@ export interface Message {
   from_name: string;
   student_id: string;
   message_type?: string;
-  status?: string;
 }
 
 const messageSchema = z.object({
@@ -24,7 +23,6 @@ export function useStudentMessages(userId: string | undefined) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const { toast } = useToast();
 
   const fetchMessages = async () => {
     if (!userId) return;
@@ -41,18 +39,14 @@ export function useStudentMessages(userId: string | undefined) {
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load messages',
-        variant: 'destructive',
-      });
+      toast.error("Failed to load messages");
     } finally {
       setIsLoading(false);
     }
   };
 
   const sendMessage = async (data: z.infer<typeof messageSchema>, userName: string) => {
-    if (!userId) return false;
+    if (!userId) return;
     
     setIsSending(true);
     try {
@@ -68,15 +62,10 @@ export function useStudentMessages(userId: string | undefined) {
         
       if (error) throw error;
       
-      fetchMessages();
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to send message',
-        variant: 'destructive',
-      });
+      toast.error("Failed to send message");
       return false;
     } finally {
       setIsSending(false);

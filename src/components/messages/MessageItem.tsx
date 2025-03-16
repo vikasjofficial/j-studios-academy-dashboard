@@ -17,27 +17,15 @@ interface Message {
 
 interface MessageItemProps {
   message: Message;
-  showActions?: boolean;
-  onAccept?: (messageId: string, messageType: string | null) => void;
-  onDeny?: (messageId: string, messageType: string | null) => void;
-  isProcessing?: boolean;
 }
 
-export function MessageItem({ 
-  message, 
-  showActions = false, 
-  onAccept, 
-  onDeny, 
-  isProcessing = false 
-}: MessageItemProps) {
+export function MessageItem({ message }: MessageItemProps) {
   const isRequestMessage = (
     message.sender_role === 'student' && 
     (message.message_type === 'Leave Request' || 
      message.message_type === 'Absent Request' || 
      message.message_type === 'Submission Request')
   );
-
-  const isPendingRequest = isRequestMessage && !message.status;
 
   return (
     <div 
@@ -59,7 +47,7 @@ export function MessageItem({
       </div>
       <p className="text-sm">{message.content}</p>
       
-      {isPendingRequest && !showActions && (
+      {isRequestMessage && !message.status && (
         <div className="mt-2">
           <Alert className="bg-amber-50 text-amber-800 border-amber-200">
             <AlertDescription className="text-xs">
@@ -68,42 +56,6 @@ export function MessageItem({
           </Alert>
         </div>
       )}
-      
-      {isPendingRequest && showActions && onAccept && onDeny && (
-        <div className="mt-3 flex gap-2 justify-end">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
-            onClick={() => onAccept(message.id, message.message_type)}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-            ) : (
-              <CheckCircle className="mr-1 h-3 w-3" />
-            )}
-            Accept
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
-            onClick={() => onDeny(message.id, message.message_type)}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-            ) : (
-              <XCircle className="mr-1 h-3 w-3" />
-            )}
-            Deny
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
-
-import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";

@@ -2,7 +2,6 @@
 import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ComposeMessageForm } from "./ComposeMessageForm";
 import * as z from "zod";
-import { useState, useEffect } from "react";
 
 const messageSchema = z.object({
   content: z.string().min(1, { message: "Message cannot be empty" }),
@@ -10,45 +9,12 @@ const messageSchema = z.object({
 });
 
 interface ComposeMessageDialogProps {
-  onSubmit?: (data: z.infer<typeof messageSchema>) => Promise<void>;
-  onClose?: () => void;
-  isSending?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onMessageSent?: () => Promise<void>;
+  onSubmit: (data: z.infer<typeof messageSchema>) => Promise<void>;
+  onClose: () => void;
+  isSending: boolean;
 }
 
-export function ComposeMessageDialog({ 
-  onSubmit, 
-  onClose, 
-  isSending = false, 
-  onOpenChange,
-  onMessageSent
-}: ComposeMessageDialogProps) {
-  const [isOpen, setIsOpen] = useState(true);
-
-  useEffect(() => {
-    if (onOpenChange) {
-      onOpenChange(isOpen);
-    }
-  }, [isOpen, onOpenChange]);
-
-  const handleSubmit = async (data: z.infer<typeof messageSchema>) => {
-    if (onSubmit) {
-      await onSubmit(data);
-    }
-    if (onMessageSent) {
-      await onMessageSent();
-    }
-    setIsOpen(false);
-  };
-
-  const handleClose = () => {
-    if (onClose) {
-      onClose();
-    }
-    setIsOpen(false);
-  };
-
+export function ComposeMessageDialog({ onSubmit, onClose, isSending }: ComposeMessageDialogProps) {
   return (
     <DialogContent className="sm:max-w-md" aria-describedby="compose-message-description">
       <DialogHeader>
@@ -60,9 +26,9 @@ export function ComposeMessageDialog({
       
       <div className="grid gap-4 py-4">
         <ComposeMessageForm 
-          onSubmit={handleSubmit} 
+          onSubmit={onSubmit} 
           isSending={isSending} 
-          onCancel={handleClose}
+          onCancel={onClose}
         />
       </div>
     </DialogContent>

@@ -9,7 +9,6 @@ import { Dialog } from "@/components/ui/dialog";
 import { MessageList } from '@/components/messages/MessageList';
 import { ComposeMessageDialog } from '@/components/messages/ComposeMessageDialog';
 import { useStudentMessages } from '@/hooks/use-student-messages';
-import { TransformedMessage } from '@/hooks/use-admin-messages';
 import * as z from "zod";
 
 const messageSchema = z.object({
@@ -55,16 +54,6 @@ export default function StudentMessages() {
     );
   }
   
-  const transformedMessages: TransformedMessage[] = messages.map(msg => ({
-    id: msg.id,
-    content: msg.content,
-    from_name: msg.from_name || '',
-    sender_role: msg.sender_role || 'student',
-    message_type: msg.message_type || 'general',
-    created_at: msg.created_at,
-    status: msg.status || 'pending'
-  }));
-  
   return (
     <div className="space-y-6">
       <div>
@@ -87,12 +76,7 @@ export default function StudentMessages() {
         </CardHeader>
         
         <CardContent className="flex-1 flex flex-col">
-          <MessageList 
-            messages={transformedMessages} 
-            onUpdateStatus={() => {}} 
-            emptyMessage="No messages yet" 
-            isLoading={isLoading} 
-          />
+          <MessageList messages={messages} isLoading={isLoading} />
         </CardContent>
       </Card>
 
@@ -101,7 +85,6 @@ export default function StudentMessages() {
           onSubmit={handleSendMessage}
           onClose={() => setComposeDialogOpen(false)}
           isSending={isSending}
-          onOpenChange={setComposeDialogOpen}
         />
       </Dialog>
     </div>
