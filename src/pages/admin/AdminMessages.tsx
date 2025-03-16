@@ -33,14 +33,6 @@ type AdminMessage = {
   sent_to?: string;
 };
 
-type AdminMessageWithUser = AdminMessage & {
-  profiles: {
-    first_name: string;
-    last_name: string;
-    role: string;
-  };
-};
-
 type Student = {
   id: string;
   first_name: string;
@@ -49,6 +41,17 @@ type Student = {
   profile_image?: string;
 };
 
+// Transformed message type for components
+interface TransformedMessage {
+  id: string;
+  content: string;
+  from_name: string;
+  sender_role: string;
+  message_type: string | null;
+  created_at: string;
+  status?: string;
+}
+
 // Define MessageList component to clean up the code
 const MessageList = ({ 
   messages, 
@@ -56,6 +59,12 @@ const MessageList = ({
   emptyMessage = "No messages", 
   isSentFolder = false,
   showApprovalButtons = false 
+}: {
+  messages: AdminMessage[];
+  onUpdateStatus: (id: string, status: 'read' | 'pending' | 'approved' | 'rejected') => void;
+  emptyMessage?: string;
+  isSentFolder?: boolean;
+  showApprovalButtons?: boolean;
 }) => {
   if (messages.length === 0) {
     return (
@@ -118,6 +127,7 @@ export default function AdminMessages() {
 
   const fetchStudents = async () => {
     try {
+      // Simplified query to reduce type complexity
       const { data, error } = await supabase
         .from('students')
         .select('id, name, email, avatar_url');
@@ -125,7 +135,7 @@ export default function AdminMessages() {
       if (error) throw error;
       
       // Transform the data to match the Student type
-      const transformedData = data?.map(student => ({
+      const transformedData: Student[] = data?.map(student => ({
         id: student.id,
         first_name: student.name.split(' ')[0] || '',
         last_name: student.name.split(' ').slice(1).join(' ') || '',
@@ -145,27 +155,23 @@ export default function AdminMessages() {
   };
 
   const fetchMessages = async () => {
+    if (!user?.id) return;
+    
     try {
-      let query = supabase
+      // Simplified query to reduce type complexity
+      const { data, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:profiles!sender_id(first_name, last_name),
-          recipient:profiles!recipient_id(first_name, last_name)
-        `)
-        .or(`recipient_id.eq.${user?.id},sender_id.eq.${user?.id}`)
-        .order('created_at', { ascending: false });
-
-      const { data, error } = await query;
+        .select('*, sender:sender_id(first_name, last_name), recipient:recipient_id(first_name, last_name)')
+        .or(`recipient_id.eq.${user.id},sender_id.eq.${user.id}`);
 
       if (error) throw error;
 
-      const formattedMessages = data.map((msg: any) => ({
+      const formattedMessages: AdminMessage[] = data.map((msg: any) => ({
         ...msg,
-        sender_name: `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`,
-        recipient_name: `${msg.recipient?.first_name || ''} ${msg.recipient?.last_name || ''}`,
-        sent_from: msg.sender_id === user?.id ? 'You' : `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`,
-        sent_to: msg.recipient_id === user?.id ? 'You' : `${msg.recipient?.first_name || ''} ${msg.recipient?.last_name || ''}`,
+        sender_name: msg.sender ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}` : '',
+        recipient_name: msg.recipient ? `${msg.recipient.first_name || ''} ${msg.recipient.last_name || ''}` : '',
+        sent_from: msg.sender_id === user.id ? 'You' : (msg.sender ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}` : ''),
+        sent_to: msg.recipient_id === user.id ? 'You' : (msg.recipient ? `${msg.recipient.first_name || ''} ${msg.recipient.last_name || ''}` : ''),
       }));
 
       setMessages(formattedMessages);
@@ -180,25 +186,23 @@ export default function AdminMessages() {
   };
 
   const fetchStudentMessages = async (studentId: string) => {
+    if (!studentId) return;
+    
     try {
+      // Simplified query to reduce type complexity
       const { data, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:profiles!sender_id(first_name, last_name),
-          recipient:profiles!recipient_id(first_name, last_name)
-        `)
-        .or(`recipient_id.eq.${studentId},sender_id.eq.${studentId}`)
-        .order('created_at', { ascending: false });
+        .select('*, sender:sender_id(first_name, last_name), recipient:recipient_id(first_name, last_name)')
+        .or(`recipient_id.eq.${studentId},sender_id.eq.${studentId}`);
 
       if (error) throw error;
 
-      const formattedMessages = data.map((msg: any) => ({
+      const formattedMessages: AdminMessage[] = data.map((msg: any) => ({
         ...msg,
-        sender_name: `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`,
-        recipient_name: `${msg.recipient?.first_name || ''} ${msg.recipient?.last_name || ''}`,
-        sent_from: msg.sender_id === user?.id ? 'You' : `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`,
-        sent_to: msg.recipient_id === user?.id ? 'You' : `${msg.recipient?.first_name || ''} ${msg.recipient?.last_name || ''}`,
+        sender_name: msg.sender ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}` : '',
+        recipient_name: msg.recipient ? `${msg.recipient.first_name || ''} ${msg.recipient.last_name || ''}` : '',
+        sent_from: msg.sender_id === user?.id ? 'You' : (msg.sender ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}` : ''),
+        sent_to: msg.recipient_id === user?.id ? 'You' : (msg.recipient ? `${msg.recipient.first_name || ''} ${msg.recipient.last_name || ''}` : ''),
       }));
 
       setStudentMessages(formattedMessages);
@@ -214,25 +218,21 @@ export default function AdminMessages() {
 
   const fetchAcceptedRequests = async () => {
     try {
+      // Simplified query to reduce type complexity
       const { data, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:profiles!sender_id(first_name, last_name),
-          recipient:profiles!recipient_id(first_name, last_name)
-        `)
+        .select('*, sender:sender_id(first_name, last_name), recipient:recipient_id(first_name, last_name)')
         .eq('status', 'approved')
-        .eq('type', 'request')
-        .order('created_at', { ascending: false });
+        .eq('type', 'request');
 
       if (error) throw error;
 
-      const formattedMessages = data.map((msg: any) => ({
+      const formattedMessages: AdminMessage[] = data.map((msg: any) => ({
         ...msg,
-        sender_name: `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`,
-        recipient_name: `${msg.recipient?.first_name || ''} ${msg.recipient?.last_name || ''}`,
-        sent_from: msg.sender_id === user?.id ? 'You' : `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`,
-        sent_to: msg.recipient_id === user?.id ? 'You' : `${msg.recipient?.first_name || ''} ${msg.recipient?.last_name || ''}`,
+        sender_name: msg.sender ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}` : '',
+        recipient_name: msg.recipient ? `${msg.recipient.first_name || ''} ${msg.recipient.last_name || ''}` : '',
+        sent_from: msg.sender_id === user?.id ? 'You' : (msg.sender ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}` : ''),
+        sent_to: msg.recipient_id === user?.id ? 'You' : (msg.recipient ? `${msg.recipient.first_name || ''} ${msg.recipient.last_name || ''}` : ''),
       }));
 
       setAcceptedRequests(formattedMessages);
@@ -323,7 +323,10 @@ export default function AdminMessages() {
   };
 
   // Simplified ComposeMessageDialog component for this example
-  const ComposeMessageDialog = ({ onOpenChange, onMessageSent }) => {
+  const ComposeMessageDialog = ({ onOpenChange, onMessageSent }: { 
+    onOpenChange: (open: boolean) => void, 
+    onMessageSent: () => void 
+  }) => {
     return (
       <Button onClick={() => onOpenChange(true)} className="gap-2">
         <Mail className="h-4 w-4" />
@@ -331,6 +334,17 @@ export default function AdminMessages() {
       </Button>
     );
   };
+
+  // Transform accepted requests for the AcceptedRequestsList component
+  const transformedAcceptedRequests: TransformedMessage[] = acceptedRequests.map(request => ({
+    id: request.id,
+    content: request.content,
+    from_name: request.sender_name || '',
+    sender_role: 'student',
+    message_type: request.type,
+    created_at: request.created_at,
+    status: request.status
+  }));
 
   return (
     <div className="container mx-auto p-4">
@@ -450,28 +464,10 @@ export default function AdminMessages() {
                 </TabsContent>
 
                 <TabsContent value="accepted">
-                  <div className="space-y-3">
-                    {acceptedRequests.length > 0 ? (
-                      acceptedRequests.map(request => (
-                        <MessageItem 
-                          key={request.id}
-                          message={{
-                            id: request.id,
-                            content: request.content,
-                            from_name: request.sender_name || '',
-                            sender_role: 'student',
-                            message_type: request.type,
-                            created_at: request.created_at,
-                            status: request.status
-                          }}
-                        />
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No accepted requests
-                      </div>
-                    )}
-                  </div>
+                  <AcceptedRequestsList 
+                    requests={transformedAcceptedRequests}
+                    isLoading={false}
+                  />
                 </TabsContent>
               </div>
             </Tabs>
