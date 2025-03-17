@@ -1,177 +1,125 @@
-import { AttendanceCard } from '@/components/dashboard/attendance-card';
-import { useAuth } from '@/context/auth-context';
-import StudentAttendanceDashboard from '@/components/dashboard/student-attendance-dashboard';
-import { StudentGradebookView } from '@/components/gradebook/student-gradebook-view';
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, TrendingDown, GraduationCap } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { StudentProfileCard } from '@/components/dashboard/student-profile-card';
-import styles from "@/styles/layout.module.css";
+import { Calendar, GraduationCap, BookOpen } from "lucide-react";
+import { StudentProfileCard } from "@/components/dashboard/student-profile-card";
+import { useAuth } from "@/context/auth-context";
+import { TasksCard } from "@/components/dashboard/tasks-card";
+import { CalendarCard } from "@/components/dashboard/calendar-card";
+import { format } from "date-fns";
+import { ExamsResultsCard } from "@/components/dashboard/exams-results-card";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
 
-  // Fetch student grades
-  const { data: grades, isLoading: gradesLoading } = useQuery({
-    queryKey: ["student-dashboard-grades", user?.id],
+  // Fetch student data
+  const { data: student, isLoading } = useQuery({
+    queryKey: ["student", user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) return null;
       
       const { data, error } = await supabase
-        .from("grades")
-        .select(`
-          id,
-          score,
-          comment,
-          topics:topic_id(id, name, semester_id),
-          courses:course_id(id, name)
-        `)
-        .eq('student_id', user.id);
+        .from("students")
+        .select("*")
+        .eq("id", user.id)
+        .single();
         
       if (error) throw error;
-      return data || [];
+      return data;
     },
     enabled: !!user?.id,
   });
 
-  // Get high performing topics (score >= 8)
-  const highPerformingTopics = () => {
-    if (!grades) return [];
-    
-    // Filter for high scores (>= 8)
-    const highScores = grades.filter(grade => {
-      const score = Number(grade.score);
-      // Ensure score is within bounds (1-10)
-      const boundedScore = Math.min(Math.max(score, 1), 10);
-      return boundedScore >= 8;
-    });
-    
-    return highScores;
-  };
-
-  // Get low performing topics (score <= 7)
-  const lowPerformingTopics = () => {
-    if (!grades) return [];
-    
-    // Filter for low scores (<= 7)
-    const lowScores = grades.filter(grade => {
-      const score = Number(grade.score);
-      // Ensure score is within bounds (1-10)
-      const boundedScore = Math.min(Math.max(score, 1), 10);
-      return boundedScore <= 7;
-    });
-    
-    return lowScores;
-  };
+  // Fetch upcoming classes/exams
+  const { data: upcomingEvents } = useQuery({
+    queryKey: ["student-upcoming-events", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const today = new Date();
+      const { data, error } = await supabase
+        .from("calendar_events")
+        .select("*")
+        .gte("date", format(today, "yyyy-MM-dd"))
+        .order("date", { ascending: true })
+        .limit(5);
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   return (
-    <div className="flex">
-      {/* Sidebar spacing - matches 15% of the sidebar width */}
-      <div className="hidden md:block w-[calc(var(--sidebar-width)*0.15)] flex-shrink-0"></div>
-      
-      {/* Additional spacing div */}
-      <div className="hidden md:block w-[calc(var(--sidebar-width)*0.9)] flex-shrink-0"></div>
-      
-      <div className={`space-y-8 ${styles.contentContainer} max-w-full overflow-x-hidden px-1`}>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to J-Studios Academy.</p>
-        </div>
-
-        {/* Student Profile Card */}
-        <StudentProfileCard />
-
-        {/* Performance Overview Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-yellow-500" />
-                My Strong Topics (Score 8-10)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {gradesLoading ? (
-                <p className="text-muted-foreground">Loading grade data...</p>
-              ) : highPerformingTopics().length > 0 ? (
-                <div className="space-y-4">
-                  {highPerformingTopics().map(grade => (
-                    <div key={grade.id} className="flex flex-col border-b pb-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{grade.topics?.name}</p>
-                          <p className="text-xs text-muted-foreground">{grade.courses?.name}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-green-600">
-                            {Number(grade.score).toFixed(1)}
-                          </span>
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Strong</span>
-                        </div>
+    <DashboardLayout>
+      <div className="flex">
+        {/* This empty div creates the same space as the sidebar for proper alignment */}
+        <div className="w-16 md:w-24 lg:w-28 h-full flex-shrink-0"></div>
+        
+        <div className="space-y-8 p-4 pt-6 flex-1">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isLoading 
+                ? "Loading..." 
+                : `Welcome, ${student?.name.split(' ')[0] || 'Student'}`
+              }
+            </h1>
+            <p className="text-muted-foreground">
+              Here's an overview of your academic progress and upcoming activities.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="col-span-1 space-y-6">
+              <StudentProfileCard />
+              <ExamsResultsCard />
+            </div>
+            
+            <div className="md:col-span-2 space-y-6">
+              <TasksCard />
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium flex items-center">
+                      <Calendar className="mr-2 h-4 w-4 text-primary" />
+                      Upcoming
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {upcomingEvents && upcomingEvents.length > 0 ? (
+                      <div className="space-y-3">
+                        {upcomingEvents.map((event) => (
+                          <div key={event.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+                            <div>
+                              <div className="font-medium">{event.title}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(event.date), "EEEE, MMM d")} at {event.time || "N/A"}
+                              </div>
+                            </div>
+                            <div className="capitalize text-xs px-2 py-1 bg-muted rounded-full">
+                              {event.type}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No strong topics found yet.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingDown className="h-5 w-5 text-orange-500" />
-                Topics I Need to Work On (Score 1-7)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {gradesLoading ? (
-                <p className="text-muted-foreground">Loading grade data...</p>
-              ) : lowPerformingTopics().length > 0 ? (
-                <div className="space-y-4">
-                  {lowPerformingTopics().map(grade => (
-                    <div key={grade.id} className="flex flex-col border-b pb-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{grade.topics?.name}</p>
-                          <p className="text-xs text-muted-foreground">{grade.courses?.name}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-orange-600">
-                            {Number(grade.score).toFixed(1)}
-                          </span>
-                          <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">Needs Work</span>
-                        </div>
+                    ) : (
+                      <div className="text-center py-3 text-sm text-muted-foreground">
+                        No upcoming events.
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No struggling topics found.</p>
-              )}
-            </CardContent>
-          </Card>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <CalendarCard />
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div className="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10">
-          <h2 className="text-xl font-semibold mb-4">Attendance by Course</h2>
-          <StudentAttendanceDashboard />
-        </div>
-
-        <Card className="glass-morphism rounded-xl border border-white/10">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" />
-              My Recent Grades & Notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <StudentGradebookView />
-          </CardContent>
-        </Card>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

@@ -1,29 +1,28 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Exam, ExamQuestion } from "@/components/exams/types";
+import { Exam } from "@/components/exams/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { ArrowLeft, BookPlus, Users, PenSquare } from "lucide-react";
 import { ExamQuestionsList } from "@/components/exams/exam-questions-list";
 import { CreateQuestionDialog } from "@/components/exams/create-question-dialog";
 import DashboardLayout from "@/components/dashboard-layout";
+import { toast } from "sonner";
+import { AssignedExamsList } from "@/components/exams/assigned-exams-list";
 
 export default function ExamDetail() {
-  const { examId } = useParams<{ examId: string }>();
+  const { examId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
-  const [exam, setExam] = useState<Exam | null>(null);
   const [isCreateQuestionDialogOpen, setIsCreateQuestionDialogOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"questions" | "students">("questions");
 
-  const { data: examData, isLoading: examLoading } = useQuery({
+  // Fetch exam details
+  const { data: exam, isLoading } = useQuery({
     queryKey: ["exam", examId],
     queryFn: async () => {
       if (!examId) return null;
@@ -40,217 +39,144 @@ export default function ExamDetail() {
     enabled: !!examId,
   });
 
-  const { data: questions, isLoading: questionsLoading } = useQuery({
-    queryKey: ["exam-questions", examId],
-    queryFn: async () => {
-      if (!examId) return [];
-      
-      const { data, error } = await supabase
-        .from("exam_questions")
-        .select("*")
-        .eq("exam_id", examId)
-        .order("order_position");
-        
-      if (error) throw error;
-      return data as ExamQuestion[];
-    },
-    enabled: !!examId,
-  });
-
-  useEffect(() => {
-    if (examData) {
-      setExam(examData);
-    }
-  }, [examData]);
-
-  const handleExamChange = (field: keyof Exam, value: any) => {
-    if (!exam) return;
-    setExam({ ...exam, [field]: value });
-  };
-
-  const handleSaveExam = async () => {
-    if (!exam || !examId) return;
-    
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from("exams")
-        .update({
-          name: exam.name,
-          description: exam.description,
-          total_time_minutes: exam.total_time_minutes,
-          is_active: exam.is_active,
-        })
-        .eq("id", examId);
-        
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ["exam", examId] });
-      toast.success("Exam updated successfully");
-    } catch (error) {
-      console.error("Error updating exam:", error);
-      toast.error("Failed to update exam");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleCreateQuestion = async (question: Partial<ExamQuestion>) => {
+  const handleCreateQuestion = async (questionData: { question_text: string; points: number; }) => {
     if (!examId) return null;
     
     try {
-      const nextPosition = questions && questions.length > 0 
-        ? Math.max(...questions.map(q => q.order_position)) + 1 
+      // Get the current max order_position
+      const { data: existingQuestions, error: fetchError } = await supabase
+        .from("exam_questions")
+        .select("order_position")
+        .eq("exam_id", examId)
+        .order("order_position", { ascending: false })
+        .limit(1);
+        
+      if (fetchError) throw fetchError;
+      
+      const nextPosition = existingQuestions.length > 0 
+        ? (existingQuestions[0]?.order_position || 0) + 1 
         : 1;
       
       const { data, error } = await supabase
         .from("exam_questions")
         .insert({
           exam_id: examId,
-          question_text: question.question_text || "",
-          order_position: nextPosition,
-          points: question.points || 10,
+          question_text: questionData.question_text,
+          points: questionData.points,
+          order_position: nextPosition
         })
         .select()
         .single();
         
       if (error) throw error;
       
-      queryClient.invalidateQueries({ queryKey: ["exam-questions", examId] });
+      queryClient.invalidateQueries({ queryKey: ["exam-questions"] });
       toast.success("Question added successfully");
-      return data as ExamQuestion;
+      return data;
     } catch (error) {
-      console.error("Error adding question:", error);
-      toast.error("Failed to add question");
+      console.error("Error creating question:", error);
+      toast.error("Failed to create question");
       return null;
     }
   };
 
-  const handleDeleteQuestion = async (questionId: string) => {
-    try {
-      const { error } = await supabase
-        .from("exam_questions")
-        .delete()
-        .eq("id", questionId);
-        
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ["exam-questions", examId] });
-      toast.success("Question deleted successfully");
-    } catch (error) {
-      console.error("Error deleting question:", error);
-      toast.error("Failed to delete question");
-    }
-  };
-
-  if (examLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex justify-center py-12">
-          <div className="animate-spin h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (!exam && !examLoading) {
-    return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground">Exam not found</p>
-          <Button onClick={() => navigate("/admin/exams")} className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Exams
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   return (
     <div className="flex">
+      {/* Sidebar is already rendered by DashboardLayout */}
+      
+      {/* Empty div spacer */}
       <div className="w-16 md:w-24 lg:w-28 h-full flex-shrink-0"></div>
       
       <div className="flex-1">
         <DashboardLayout>
-          <div className="space-y-6 animate-in-subtle px-4 md:px-3 max-w-full">
+          <div className="space-y-6 animate-in-subtle px-4 md:px-3 max-w-full overflow-x-auto">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => navigate("/admin/exams")}>
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-                <h1 className="text-2xl font-bold">Edit Exam</h1>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={() => navigate("/admin/exams")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Exams
+              </Button>
+            </div>
+            
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
               </div>
-              <Button onClick={handleSaveExam} disabled={isSaving}>
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-
-            {exam && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Exam Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label htmlFor="name">Exam Name</Label>
-                      <Input
-                        id="name"
-                        value={exam.name}
-                        onChange={(e) => handleExamChange("name", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="duration">Duration (minutes)</Label>
-                      <Input
-                        id="duration"
-                        type="number"
-                        min={1}
-                        value={exam.total_time_minutes}
-                        onChange={(e) => handleExamChange("total_time_minutes", parseInt(e.target.value))}
-                      />
-                    </div>
+            ) : exam ? (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">{exam.name}</h1>
+                  <p className="text-muted-foreground mt-1">
+                    {exam.description || "No description provided"}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="capitalize">
+                      {exam.exam_type}
+                    </Badge>
+                    <Badge variant="outline">
+                      {exam.total_time_minutes} minutes
+                    </Badge>
                   </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={exam.description || ""}
-                      onChange={(e) => handleExamChange("description", e.target.value)}
-                      placeholder="Enter exam description..."
-                      className="min-h-[100px]"
-                    />
+                </div>
+                
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "questions" | "students")}>
+                  <div className="flex justify-between items-center">
+                    <TabsList>
+                      <TabsTrigger value="questions" className="flex items-center gap-2">
+                        <BookPlus className="h-4 w-4" />
+                        Questions
+                      </TabsTrigger>
+                      <TabsTrigger value="students" className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Students & Grades
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {activeTab === "questions" && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => setIsCreateQuestionDialogOpen(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <PenSquare className="h-4 w-4" />
+                        Add Question
+                      </Button>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  <TabsContent value="questions" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-xl">Exam Questions</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ExamQuestionsList examId={examId!} />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="students" className="mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-xl">Assigned Students & Grades</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <AssignedExamsList examId={examId!} />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Exam not found</p>
+              </div>
             )}
-
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Questions</h2>
-              <Button onClick={() => setIsCreateQuestionDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Question
-              </Button>
-            </div>
-
-            <Card>
-              <CardContent className="p-4">
-                {questionsLoading ? (
-                  <div className="flex justify-center py-6">
-                    <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
-                  </div>
-                ) : (
-                  <ExamQuestionsList
-                    questions={questions || []}
-                    onDeleteQuestion={handleDeleteQuestion}
-                  />
-                )}
-              </CardContent>
-            </Card>
-
+            
             <CreateQuestionDialog
               open={isCreateQuestionDialogOpen}
               onOpenChange={setIsCreateQuestionDialogOpen}
@@ -262,3 +188,6 @@ export default function ExamDetail() {
     </div>
   );
 }
+
+// Add the missing Badge import
+import { Badge } from "@/components/ui/badge";

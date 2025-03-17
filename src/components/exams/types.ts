@@ -34,6 +34,7 @@ export interface ExamAssignment {
   id: string;
   exam_id: string;
   student_id: string;
+  student_name?: string; // Add student name
   assigned_at: string;
   due_date?: string;
   status: ExamStatus;
