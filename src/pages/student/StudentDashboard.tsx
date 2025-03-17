@@ -55,11 +55,8 @@ export default function StudentDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="flex">
-        {/* This empty div creates the same space as the sidebar for proper alignment */}
-        <div className="w-16 md:w-24 lg:w-28 h-full flex-shrink-0"></div>
-        
-        <div className="space-y-8 p-4 md:pt-6 flex-1 pl-0 md:pl-4 pt-6">
+      <div className="flex flex-col w-full">
+        <div className="space-y-8 p-4 md:p-6 flex-1">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               {isLoading 
