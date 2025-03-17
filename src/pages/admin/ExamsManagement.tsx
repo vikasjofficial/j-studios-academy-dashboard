@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +31,12 @@ export default function ExamsManagement() {
         .order("name");
 
       if (error) throw error;
-      return data || [];
+      
+      // Explicitly cast the exam_type to ExamType to ensure type safety
+      return (data || []).map(folder => ({
+        ...folder,
+        exam_type: folder.exam_type as ExamType
+      }));
     },
   });
 
@@ -47,7 +51,12 @@ export default function ExamsManagement() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as (Exam & { exam_folders: { id: string; name: string } | null })[];
+      
+      // Explicitly cast the exam_type to ExamType
+      return (data || []).map(exam => ({
+        ...exam,
+        exam_type: exam.exam_type as ExamType
+      })) as (Exam & { exam_folders: { id: string; name: string } | null })[];
     },
   });
 
