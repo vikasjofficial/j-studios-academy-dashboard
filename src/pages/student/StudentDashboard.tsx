@@ -1,4 +1,3 @@
-
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { useAuth } from '@/context/auth-context';
 import StudentAttendanceDashboard from '@/components/dashboard/student-attendance-dashboard';
@@ -71,9 +70,8 @@ export default function StudentDashboard() {
       {/* Sidebar spacing - matches 15% of the sidebar width */}
       <div className="hidden md:block w-[calc(var(--sidebar-width)*0.15)] flex-shrink-0"></div>
       
-      {/* Additional spacing divs */}
+      {/* Additional spacing div */}
       <div className="hidden md:block w-[calc(var(--sidebar-width)*0.9)] flex-shrink-0"></div>
-      <div className="hidden md:block w-[calc(var(--sidebar-width)*0.5)] flex-shrink-0"></div>
       
       <div className={`space-y-8 ${styles.contentContainer} max-w-full overflow-x-hidden px-1`}>
         <div>
