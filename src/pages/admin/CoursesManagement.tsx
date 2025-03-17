@@ -1,21 +1,27 @@
+
 import DashboardLayout from '@/components/dashboard-layout';
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Book, Eye, Pencil } from "lucide-react";
+import { Plus, Book, Eye, Pencil, Trash2 } from "lucide-react";
 import { CreateCourseForm } from "@/components/courses/create-course-form";
 import { CourseDetail } from "@/components/courses/course-detail";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { EditCourseForm } from "@/components/courses/edit-course-form";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CoursesManagement() {
   const [activeTab, setActiveTab] = useState("courses");
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [courseToEdit, setCourseToEdit] = useState<any>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<any>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: courses, isLoading } = useQuery({
     queryKey: ["courses"],
@@ -30,6 +36,36 @@ export default function CoursesManagement() {
     },
   });
 
+  // Delete course mutation
+  const deleteCourse = useMutation({
+    mutationFn: async (courseId: string) => {
+      const { error } = await supabase
+        .from("courses")
+        .delete()
+        .eq("id", courseId);
+
+      if (error) throw error;
+      return courseId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      toast({
+        title: "Course deleted",
+        description: "The course has been successfully deleted",
+      });
+      setIsDeleteDialogOpen(false);
+      setCourseToDelete(null);
+    },
+    onError: (error) => {
+      console.error("Error deleting course:", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the course. It may have related records.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourseId(courseId);
   };
@@ -37,6 +73,18 @@ export default function CoursesManagement() {
   const handleEditCourse = (course: any) => {
     setCourseToEdit(course);
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteCourse = (course: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCourseToDelete(course);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (courseToDelete) {
+      deleteCourse.mutate(courseToDelete.id);
+    }
   };
 
   return (
@@ -95,6 +143,14 @@ export default function CoursesManagement() {
                           <Pencil className="h-4 w-4" />
                           Edit
                         </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="icon"
+                          onClick={(e) => handleDeleteCourse(course, e)}
+                          title="Delete course"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </CardFooter>
                     </Card>
                   ))}
@@ -127,6 +183,7 @@ export default function CoursesManagement() {
           </div>
         )}
 
+        {/* Edit Course Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
@@ -144,6 +201,36 @@ export default function CoursesManagement() {
                 }} 
               />
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Course Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <Trash2 className="h-5 w-5" />
+                Delete Course
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{courseToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2 sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteCourse.isPending}
+              >
+                {deleteCourse.isPending ? "Deleting..." : "Delete Course"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
