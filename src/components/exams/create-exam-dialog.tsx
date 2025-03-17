@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -63,6 +64,7 @@ export function CreateExamDialog({
 }: CreateExamDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Reset the form when the exam type changes or dialog opens/closes
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -74,13 +76,24 @@ export function CreateExamDialog({
     },
   });
 
+  // Update exam_type when examType prop changes
+  useState(() => {
+    form.setValue("exam_type", examType);
+  });
+
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await onCreateExam({
+      // Ensure the exam_type is correctly set based on the active tab
+      const examData = {
         ...values,
-        folder_id: values.folder_id && values.folder_id !== "" ? values.folder_id : null,
-      });
+        exam_type: examType, // Use the examType from props to ensure correct type
+        folder_id: values.folder_id && values.folder_id !== "none" ? values.folder_id : null,
+      };
+      
+      console.log("Creating exam with data:", examData);
+      
+      await onCreateExam(examData);
       form.reset();
       onOpenChange(false);
     } catch (error) {
@@ -98,6 +111,9 @@ export function CreateExamDialog({
             <BookPlus className="h-5 w-5" />
             Create New {examType.charAt(0).toUpperCase() + examType.slice(1)} Exam
           </DialogTitle>
+          <DialogDescription>
+            Create a new {examType} exam. The exam will appear in the {examType} exams tab.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -189,7 +205,12 @@ export function CreateExamDialog({
               )}
             />
 
-            <input type="hidden" {...form.register("exam_type")} value={examType} />
+            {/* Hidden field to store the exam type */}
+            <input 
+              type="hidden" 
+              {...form.register("exam_type")} 
+              value={examType} // Ensure correct exam type
+            />
 
             <DialogFooter>
               <Button

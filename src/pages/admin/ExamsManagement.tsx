@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,8 @@ export default function ExamsManagement() {
   const { data: exams, isLoading } = useQuery({
     queryKey: ["exams", activeTab],
     queryFn: async () => {
+      console.log("Fetching exams for type:", activeTab);
+      
       const { data, error } = await supabase
         .from("exams")
         .select("*, exam_folders(id, name)")
@@ -51,6 +54,8 @@ export default function ExamsManagement() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      
+      console.log("Fetched exams:", data);
       
       // Explicitly cast the exam_type to ExamType
       return (data || []).map(exam => ({
@@ -66,12 +71,14 @@ export default function ExamsManagement() {
       const examData = {
         name: exam.name || "",
         description: exam.description,
-        exam_type: exam.exam_type || "oral",
+        exam_type: exam.exam_type || activeTab, // Ensure we use the active tab type
         total_time_minutes: exam.total_time_minutes || 60,
         created_by: user?.email || "Admin",
         is_active: true,
         folder_id: exam.folder_id
       };
+      
+      console.log("Creating exam with data:", examData);
 
       const { data, error } = await supabase
         .from("exams")
@@ -81,7 +88,8 @@ export default function ExamsManagement() {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["exams"] });
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["exams", activeTab] });
       toast.success(`${exam.name} exam created successfully!`);
       return data as Exam;
     } catch (error) {
@@ -104,7 +112,7 @@ export default function ExamsManagement() {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ["exam-folders"] });
+      queryClient.invalidateQueries({ queryKey: ["exam-folders", activeTab] });
       toast.success(`Folder "${folderName}" created successfully!`);
       return data;
     } catch (error) {
