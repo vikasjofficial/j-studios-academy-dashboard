@@ -135,7 +135,7 @@ export function CreateExamDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No folder</SelectItem>
+                      <SelectItem value="none">No folder</SelectItem>
                       {folders.map((folder) => (
                         <SelectItem key={folder.id} value={folder.id}>
                           <div className="flex items-center">
