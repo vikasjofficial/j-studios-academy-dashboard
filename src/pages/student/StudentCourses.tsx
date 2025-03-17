@@ -48,7 +48,7 @@ export default function StudentCourses() {
   });
 
   return (
-    <>
+    <div className="flex w-full">
       {/* Empty spacing div with responsive width */}
       <div className="hidden md:block w-16 md:w-24 lg:w-28 flex-shrink-0"></div>
       
@@ -133,6 +133,6 @@ export default function StudentCourses() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
