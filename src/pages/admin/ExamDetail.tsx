@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,6 @@ export default function ExamDetail() {
   const [isCreateQuestionDialogOpen, setIsCreateQuestionDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch exam details
   const { data: examData, isLoading: examLoading } = useQuery({
     queryKey: ["exam", examId],
     queryFn: async () => {
@@ -42,7 +40,6 @@ export default function ExamDetail() {
     enabled: !!examId,
   });
 
-  // Fetch exam questions
   const { data: questions, isLoading: questionsLoading } = useQuery({
     queryKey: ["exam-questions", examId],
     queryFn: async () => {
@@ -102,7 +99,6 @@ export default function ExamDetail() {
     if (!examId) return null;
     
     try {
-      // Get the next order position
       const nextPosition = questions && questions.length > 0 
         ? Math.max(...questions.map(q => q.order_position)) + 1 
         : 1;
@@ -111,7 +107,7 @@ export default function ExamDetail() {
         .from("exam_questions")
         .insert({
           exam_id: examId,
-          question_text: question.question_text || "", // Ensure question_text is not optional
+          question_text: question.question_text || "",
           order_position: nextPosition,
           points: question.points || 10,
         })
@@ -172,91 +168,97 @@ export default function ExamDetail() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 animate-in-subtle px-4 md:px-3 max-w-full">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/admin/exams")}>
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-            <h1 className="text-2xl font-bold">Edit Exam</h1>
-          </div>
-          <Button onClick={handleSaveExam} disabled={isSaving}>
-            <Save className="mr-2 h-4 w-4" />
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-
-        {exam && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Exam Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="name">Exam Name</Label>
-                  <Input
-                    id="name"
-                    value={exam.name}
-                    onChange={(e) => handleExamChange("name", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="duration">Duration (minutes)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    min={1}
-                    value={exam.total_time_minutes}
-                    onChange={(e) => handleExamChange("total_time_minutes", parseInt(e.target.value))}
-                  />
-                </div>
+    <div className="flex">
+      <div className="w-16 md:w-24 lg:w-28 h-full flex-shrink-0"></div>
+      
+      <div className="flex-1">
+        <DashboardLayout>
+          <div className="space-y-6 animate-in-subtle px-4 md:px-3 max-w-full">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/exams")}>
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back
+                </Button>
+                <h1 className="text-2xl font-bold">Edit Exam</h1>
               </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={exam.description || ""}
-                  onChange={(e) => handleExamChange("description", e.target.value)}
-                  placeholder="Enter exam description..."
-                  className="min-h-[100px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              <Button onClick={handleSaveExam} disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
 
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Questions</h2>
-          <Button onClick={() => setIsCreateQuestionDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Question
-          </Button>
-        </div>
-
-        <Card>
-          <CardContent className="p-4">
-            {questionsLoading ? (
-              <div className="flex justify-center py-6">
-                <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
-              </div>
-            ) : (
-              <ExamQuestionsList
-                questions={questions || []}
-                onDeleteQuestion={handleDeleteQuestion}
-              />
+            {exam && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Exam Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label htmlFor="name">Exam Name</Label>
+                      <Input
+                        id="name"
+                        value={exam.name}
+                        onChange={(e) => handleExamChange("name", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="duration">Duration (minutes)</Label>
+                      <Input
+                        id="duration"
+                        type="number"
+                        min={1}
+                        value={exam.total_time_minutes}
+                        onChange={(e) => handleExamChange("total_time_minutes", parseInt(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={exam.description || ""}
+                      onChange={(e) => handleExamChange("description", e.target.value)}
+                      placeholder="Enter exam description..."
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
 
-        <CreateQuestionDialog
-          open={isCreateQuestionDialogOpen}
-          onOpenChange={setIsCreateQuestionDialogOpen}
-          onCreateQuestion={handleCreateQuestion}
-        />
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Questions</h2>
+              <Button onClick={() => setIsCreateQuestionDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Question
+              </Button>
+            </div>
+
+            <Card>
+              <CardContent className="p-4">
+                {questionsLoading ? (
+                  <div className="flex justify-center py-6">
+                    <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
+                  </div>
+                ) : (
+                  <ExamQuestionsList
+                    questions={questions || []}
+                    onDeleteQuestion={handleDeleteQuestion}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            <CreateQuestionDialog
+              open={isCreateQuestionDialogOpen}
+              onOpenChange={setIsCreateQuestionDialogOpen}
+              onCreateQuestion={handleCreateQuestion}
+            />
+          </div>
+        </DashboardLayout>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
