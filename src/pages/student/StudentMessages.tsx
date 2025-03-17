@@ -55,38 +55,43 @@ export default function StudentMessages() {
   }
   
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-        <p className="text-muted-foreground">Communicate with your instructors and administrators</p>
-      </div>
+    <div className="flex w-full">
+      {/* Empty div on the left side */}
+      <div className="hidden md:block w-16 md:w-24 lg:w-28 flex-shrink-0"></div>
       
-      <Card className="flex flex-col h-[70vh]">
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
-              Messages
-            </CardTitle>
-            <Button onClick={() => setComposeDialogOpen(true)}>
-              <Send className="mr-2 h-4 w-4" />
-              New Message
-            </Button>
-          </div>
-        </CardHeader>
+      <div className="space-y-6 w-full">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+          <p className="text-muted-foreground">Communicate with your instructors and administrators</p>
+        </div>
         
-        <CardContent className="flex-1 flex flex-col">
-          <MessageList messages={messages} isLoading={isLoading} />
-        </CardContent>
-      </Card>
+        <Card className="flex flex-col h-[70vh]">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                Messages
+              </CardTitle>
+              <Button onClick={() => setComposeDialogOpen(true)}>
+                <Send className="mr-2 h-4 w-4" />
+                New Message
+              </Button>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="flex-1 flex flex-col">
+            <MessageList messages={messages} isLoading={isLoading} />
+          </CardContent>
+        </Card>
 
-      <Dialog open={composeDialogOpen} onOpenChange={setComposeDialogOpen}>
-        <ComposeMessageDialog
-          onSubmit={handleSendMessage}
-          onClose={() => setComposeDialogOpen(false)}
-          isSending={isSending}
-        />
-      </Dialog>
+        <Dialog open={composeDialogOpen} onOpenChange={setComposeDialogOpen}>
+          <ComposeMessageDialog
+            onSubmit={handleSendMessage}
+            onClose={() => setComposeDialogOpen(false)}
+            isSending={isSending}
+          />
+        </Dialog>
+      </div>
     </div>
   );
 }
