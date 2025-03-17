@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
 import { 
   Home, Users, BookOpen, Calendar, 
-  CheckSquare, MessageSquare, Settings, BookOpenText
+  CheckSquare, MessageSquare, Settings, BookOpenText, BookPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ export function AdminNavigation() {
     { href: '/admin/gradebook', icon: CheckSquare, label: 'Gradebook' },
     { href: '/admin/attendance', icon: Calendar, label: 'Attendance' },
     { href: '/admin/lectures', icon: BookOpenText, label: 'Lectures' },
+    { href: '/admin/exams', icon: BookPlus, label: 'Exams' },
     { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
