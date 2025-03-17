@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Book, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, Book, Eye, Pencil, Trash2, Copy } from "lucide-react";
 import { CreateCourseForm } from "@/components/courses/create-course-form";
 import { CourseDetail } from "@/components/courses/course-detail";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -66,6 +66,46 @@ export default function CoursesManagement() {
     },
   });
 
+  // Duplicate course mutation
+  const duplicateCourse = useMutation({
+    mutationFn: async (course: any) => {
+      // Create a new course with the same details but a modified name
+      const newCourseName = `${course.name} (Copy)`;
+      const newCourseCode = `${course.code}-COPY`;
+      
+      const { data, error } = await supabase
+        .from("courses")
+        .insert({
+          name: newCourseName,
+          code: newCourseCode,
+          description: course.description,
+          instructor: course.instructor,
+          start_date: course.start_date,
+          end_date: course.end_date,
+          status: course.status
+        })
+        .select();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      toast({
+        title: "Course duplicated",
+        description: "The course has been successfully duplicated",
+      });
+    },
+    onError: (error) => {
+      console.error("Error duplicating course:", error);
+      toast({
+        title: "Error",
+        description: "There was an error duplicating the course",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCourseSelect = (courseId: string) => {
     setSelectedCourseId(courseId);
   };
@@ -79,6 +119,11 @@ export default function CoursesManagement() {
     e.stopPropagation();
     setCourseToDelete(course);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleDuplicateCourse = (course: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    duplicateCourse.mutate(course);
   };
 
   const confirmDelete = () => {
@@ -142,6 +187,14 @@ export default function CoursesManagement() {
                         >
                           <Pencil className="h-4 w-4" />
                           Edit
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="icon"
+                          onClick={(e) => handleDuplicateCourse(course, e)}
+                          title="Duplicate course"
+                        >
+                          <Copy className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="destructive" 
