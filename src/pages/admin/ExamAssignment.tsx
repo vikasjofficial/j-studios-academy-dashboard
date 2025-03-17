@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Exam, ExamAssignment } from "@/components/exams/types";
+import { Exam, ExamAssignment as ExamAssignmentType } from "@/components/exams/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Calendar, Users, Check } from "lucide-react";
@@ -73,7 +73,7 @@ export default function ExamAssignment() {
         .eq("exam_id", examId);
         
       if (error) throw error;
-      return data as ExamAssignment[];
+      return data as ExamAssignmentType[];
     },
     enabled: !!examId,
   });

@@ -36,12 +36,19 @@ export default function ExamsManagement() {
 
   const handleCreateExam = async (exam: Partial<Exam>) => {
     try {
+      // Ensure required fields are not undefined
+      const examData = {
+        name: exam.name || "",
+        description: exam.description,
+        exam_type: exam.exam_type || "oral",
+        total_time_minutes: exam.total_time_minutes || 60,
+        created_by: user?.email || "Admin",
+        is_active: true
+      };
+
       const { data, error } = await supabase
         .from("exams")
-        .insert({
-          ...exam,
-          created_by: user?.email || "Admin",
-        })
+        .insert(examData)
         .select()
         .single();
 
@@ -49,7 +56,7 @@ export default function ExamsManagement() {
 
       queryClient.invalidateQueries({ queryKey: ["exams"] });
       toast.success(`${exam.name} exam created successfully!`);
-      return data;
+      return data as Exam;
     } catch (error) {
       console.error("Error creating exam:", error);
       toast.error("Failed to create exam");

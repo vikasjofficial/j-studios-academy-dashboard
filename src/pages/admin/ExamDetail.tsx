@@ -110,9 +110,10 @@ export default function ExamDetail() {
       const { data, error } = await supabase
         .from("exam_questions")
         .insert({
-          ...question,
           exam_id: examId,
+          question_text: question.question_text || "", // Ensure question_text is not optional
           order_position: nextPosition,
+          points: question.points || 10,
         })
         .select()
         .single();

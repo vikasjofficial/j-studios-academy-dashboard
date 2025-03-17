@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useRouter } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Exam, ExamType } from "./types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ interface ExamsListProps {
 }
 
 export function ExamsList({ exams, examType }: ExamsListProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [examToDelete, setExamToDelete] = useState<Exam | null>(null);
@@ -57,11 +57,11 @@ export function ExamsList({ exams, examType }: ExamsListProps) {
   };
 
   const navigateToExamDetail = (examId: string) => {
-    router.navigate(`/admin/exams/${examId}`);
+    navigate(`/admin/exams/${examId}`);
   };
 
   const navigateToAssignExam = (examId: string) => {
-    router.navigate(`/admin/exams/${examId}/assign`);
+    navigate(`/admin/exams/${examId}/assign`);
   };
 
   if (exams.length === 0) {

@@ -127,7 +127,7 @@ export default function ExamSession() {
 
   // Create or update exam result
   const createResultMutation = useMutation({
-    mutationFn: async (resultData: Partial<ExamResult>) => {
+    mutationFn: async (resultData: { assignment_id: string; started_at?: string }) => {
       const { data, error } = await supabase
         .from("exam_results")
         .insert(resultData)
@@ -346,18 +346,18 @@ export default function ExamSession() {
   };
 
   const startExam = async () => {
-    if (!assignment) return;
+    if (!assignment || !assignmentId) return;
     
     try {
-      // Create exam result
+      // Create exam result with required assignment_id
       createResultMutation.mutate({
-        assignment_id: assignmentId!,
+        assignment_id: assignmentId,
         started_at: new Date().toISOString(),
       });
       
       // Update assignment status
       updateAssignmentMutation.mutate({
-        id: assignmentId!,
+        id: assignmentId,
         status: "in_progress",
       });
       
