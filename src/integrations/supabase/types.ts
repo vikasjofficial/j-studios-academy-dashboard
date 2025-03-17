@@ -407,6 +407,196 @@ export type Database = {
           },
         ]
       }
+      exam_assignments: {
+        Row: {
+          assigned_at: string
+          due_date: string | null
+          exam_id: string
+          id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          due_date?: string | null
+          exam_id: string
+          id?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string
+          due_date?: string | null
+          exam_id?: string
+          id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_assignments_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_question_responses: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          response_text: string | null
+          result_id: string
+          score: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          response_text?: string | null
+          result_id: string
+          score?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          response_text?: string | null
+          result_id?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_question_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "exam_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_question_responses_result_id_fkey"
+            columns: ["result_id"]
+            isOneToOne: false
+            referencedRelation: "exam_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_questions: {
+        Row: {
+          created_at: string
+          exam_id: string
+          id: string
+          order_position: number
+          points: number
+          question_text: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          id?: string
+          order_position: number
+          points?: number
+          question_text: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          id?: string
+          order_position?: number
+          points?: number
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_results: {
+        Row: {
+          assignment_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          started_at: string | null
+          teacher_notes: string | null
+          total_score: number | null
+        }
+        Insert: {
+          assignment_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string | null
+          teacher_notes?: string | null
+          total_score?: number | null
+        }
+        Update: {
+          assignment_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string | null
+          teacher_notes?: string | null
+          total_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_results_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "exam_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          exam_type: string
+          id: string
+          is_active: boolean
+          name: string
+          total_time_minutes: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          exam_type: string
+          id?: string
+          is_active?: boolean
+          name: string
+          total_time_minutes: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          exam_type?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          total_time_minutes?: number
+        }
+        Relationships: []
+      }
       grades: {
         Row: {
           comment: string | null

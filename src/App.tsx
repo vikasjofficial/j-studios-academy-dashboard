@@ -19,6 +19,11 @@ import StudentCourses from '@/pages/student/StudentCourses';
 import StudentAttendance from '@/pages/student/StudentAttendance';
 import StudentMessages from '@/pages/student/StudentMessages';
 import StudentLectures from '@/pages/student/StudentLectures';
+import ExamsManagement from '@/pages/admin/ExamsManagement';
+import ExamDetail from '@/pages/admin/ExamDetail';
+import ExamAssignment from '@/pages/admin/ExamAssignment';
+import StudentExams from '@/pages/student/StudentExams';
+import ExamSession from '@/pages/student/ExamSession';
 import ProtectedRoute from '@/components/protected-route';
 import DashboardLayout from '@/components/dashboard-layout';
 import './App.css';
@@ -85,6 +90,22 @@ function App() {
                 </DashboardLayout>
               </ProtectedRoute>
             } />
+            {/* New Exams Routes */}
+            <Route path="/admin/exams" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamsManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/exams/:examId" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/exams/:examId/assign" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ExamAssignment />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/settings" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
@@ -127,6 +148,17 @@ function App() {
                 <DashboardLayout>
                   <StudentLectures />
                 </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            {/* New Student Exam Routes */}
+            <Route path="/student/exams" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentExams />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/exams/:assignmentId" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ExamSession />
               </ProtectedRoute>
             } />
             
