@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/context/auth-context";
 import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { Button } from "./ui/button";
@@ -172,7 +171,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className={`flex-1 ${styles.contentContainer}`}>
           <SidebarInset className={styles.customScrollbar}>
             <div className={styles.mainContent}>
-              <main className="p-4 pl-8 md:p-6 md:pl-10 lg:p-8 lg:pl-12 w-full">
+              <main className="p-4 pl-8 md:p-8 md:pl-12 lg:p-10 lg:pl-16 w-full">
                 {children}
               </main>
             </div>
