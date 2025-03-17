@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -464,184 +463,189 @@ export default function ExamSession() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-full px-4">
-        {!examStarted && !examCompleted ? (
-          <Card className="max-w-3xl mx-auto">
-            <CardHeader>
-              <CardTitle>{assignment.exam.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border rounded-lg p-4 bg-card">
-                <h3 className="font-semibold mb-2">Exam Instructions</h3>
-                <ul className="space-y-2 text-muted-foreground ml-6 list-disc">
-                  <li>This exam contains {questions?.length || 0} questions.</li>
-                  <li>You have {assignment.exam.total_time_minutes} minutes to complete the exam.</li>
-                  <li>Once you start the exam, the timer cannot be paused.</li>
-                  <li>Your answers are saved automatically when you navigate between questions.</li>
-                  <li>Submit your exam before the time runs out.</li>
-                </ul>
-              </div>
-              
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <AlertTriangle className="h-4 w-4 text-warning" />
-                <span>
-                  Once you start the exam, you must complete it. The timer will continue even if you close the browser.
-                </span>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button onClick={startExam}>
-                Start Exam
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : examCompleted ? (
-          <Card className="max-w-3xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-success" />
-                Exam Completed
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>
-                You have successfully completed the "{assignment.exam.name}" exam.
-              </p>
-              <p className="text-muted-foreground">
-                Your responses have been submitted and will be reviewed by your instructor.
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={() => navigate("/student/exams")}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Exams
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : (
-          <>
-            {/* Exam Header */}
-            <div className="bg-card sticky top-16 z-10 p-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl font-bold">{assignment.exam.name}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Question {currentQuestionIndex + 1} of {questions?.length || 0}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className={`flex items-center gap-2 ${
-                  remainingTime !== null && remainingTime <= 60 
-                    ? "text-destructive animate-pulse font-bold" 
-                    : ""
-                }`}>
-                  <Clock className="h-5 w-5" />
-                  <span className="text-lg">{formatTime(remainingTime)}</span>
+      <div className="flex">
+        {/* Responsive spacing div */}
+        <div className="w-16 md:w-24 lg:w-28 shrink-0"></div>
+        
+        <div className="space-y-6 max-w-full px-4 flex-1">
+          {!examStarted && !examCompleted ? (
+            <Card className="max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle>{assignment.exam.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="border rounded-lg p-4 bg-card">
+                  <h3 className="font-semibold mb-2">Exam Instructions</h3>
+                  <ul className="space-y-2 text-muted-foreground ml-6 list-disc">
+                    <li>This exam contains {questions?.length || 0} questions.</li>
+                    <li>You have {assignment.exam.total_time_minutes} minutes to complete the exam.</li>
+                    <li>Once you start the exam, the timer cannot be paused.</li>
+                    <li>Your answers are saved automatically when you navigate between questions.</li>
+                    <li>Submit your exam before the time runs out.</li>
+                  </ul>
                 </div>
                 
-                <Button
-                  variant="destructive"
-                  onClick={submitExam}
-                  disabled={isSubmitting}
-                >
-                  Submit Exam
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  <span>
+                    Once you start the exam, you must complete it. The timer will continue even if you close the browser.
+                  </span>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-end">
+                <Button onClick={startExam}>
+                  Start Exam
                 </Button>
-              </div>
-            </div>
-            
-            {/* Question & Response */}
-            {questions && questions.length > 0 && (
-              <div className="grid md:grid-cols-4 gap-6">
-                {/* Question Navigation */}
-                <div className="md:col-span-1">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Questions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {questions.map((_, index) => (
-                          <Button
-                            key={index}
-                            variant={currentQuestionIndex === index ? "default" : "outline"}
-                            className="h-10 w-10 p-0"
-                            onClick={() => navigateToQuestion(index)}
-                          >
-                            {index + 1}
-                          </Button>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+              </CardFooter>
+            </Card>
+          ) : examCompleted ? (
+            <Card className="max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                  Exam Completed
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p>
+                  You have successfully completed the "{assignment.exam.name}" exam.
+                </p>
+                <p className="text-muted-foreground">
+                  Your responses have been submitted and will be reviewed by your instructor.
+                </p>
+              </CardContent>
+              <CardFooter>
+                <Button onClick={() => navigate("/student/exams")}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Exams
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <>
+              {/* Exam Header */}
+              <div className="bg-card sticky top-16 z-10 p-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-xl font-bold">{assignment.exam.name}</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Question {currentQuestionIndex + 1} of {questions?.length || 0}
+                  </p>
                 </div>
                 
-                {/* Current Question */}
-                <div className="md:col-span-3">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center justify-between">
-                        <span>Question {currentQuestionIndex + 1}</span>
-                        <span className="text-sm font-normal bg-muted px-2 py-1 rounded">
-                          {questions[currentQuestionIndex].points} points
-                        </span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="p-4 bg-muted/30 rounded-md">
-                        <p className="whitespace-pre-wrap">{questions[currentQuestionIndex].question_text}</p>
-                      </div>
-                      
-                      <Textarea
-                        placeholder="Enter your answer here..."
-                        value={responses[questions[currentQuestionIndex].id] || ""}
-                        onChange={(e) => handleResponseChange(questions[currentQuestionIndex].id, e.target.value)}
-                        className="min-h-[200px]"
-                      />
-                      
-                      <div className="flex justify-between">
-                        <Button
-                          variant="outline"
-                          onClick={() => navigateToQuestion(currentQuestionIndex - 1)}
-                          disabled={currentQuestionIndex === 0 || isSubmitting}
-                        >
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                          Previous
-                        </Button>
-                        
-                        <Button 
-                          onClick={() => saveCurrentResponse()}
-                          variant="outline"
-                          disabled={isSubmitting}
-                        >
-                          <Save className="mr-2 h-4 w-4" />
-                          {isSubmitting ? "Saving..." : "Save"}
-                        </Button>
-                        
-                        {currentQuestionIndex < questions.length - 1 ? (
-                          <Button
-                            onClick={() => navigateToQuestion(currentQuestionIndex + 1)}
-                            disabled={isSubmitting}
-                          >
-                            Next
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="default"
-                            onClick={submitExam}
-                            disabled={isSubmitting}
-                          >
-                            Finish Exam
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center gap-4">
+                  <div className={`flex items-center gap-2 ${
+                    remainingTime !== null && remainingTime <= 60 
+                      ? "text-destructive animate-pulse font-bold" 
+                      : ""
+                  }`}>
+                    <Clock className="h-5 w-5" />
+                    <span className="text-lg">{formatTime(remainingTime)}</span>
+                  </div>
+                  
+                  <Button
+                    variant="destructive"
+                    onClick={submitExam}
+                    disabled={isSubmitting}
+                  >
+                    Submit Exam
+                  </Button>
                 </div>
               </div>
-            )}
-          </>
-        )}
+              
+              {/* Question & Response */}
+              {questions && questions.length > 0 && (
+                <div className="grid md:grid-cols-4 gap-6">
+                  {/* Question Navigation */}
+                  <div className="md:col-span-1">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">Questions</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {questions.map((_, index) => (
+                            <Button
+                              key={index}
+                              variant={currentQuestionIndex === index ? "default" : "outline"}
+                              className="h-10 w-10 p-0"
+                              onClick={() => navigateToQuestion(index)}
+                            >
+                              {index + 1}
+                            </Button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {/* Current Question */}
+                  <div className="md:col-span-3">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center justify-between">
+                          <span>Question {currentQuestionIndex + 1}</span>
+                          <span className="text-sm font-normal bg-muted px-2 py-1 rounded">
+                            {questions[currentQuestionIndex].points} points
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="p-4 bg-muted/30 rounded-md">
+                          <p className="whitespace-pre-wrap">{questions[currentQuestionIndex].question_text}</p>
+                        </div>
+                        
+                        <Textarea
+                          placeholder="Enter your answer here..."
+                          value={responses[questions[currentQuestionIndex].id] || ""}
+                          onChange={(e) => handleResponseChange(questions[currentQuestionIndex].id, e.target.value)}
+                          className="min-h-[200px]"
+                        />
+                        
+                        <div className="flex justify-between">
+                          <Button
+                            variant="outline"
+                            onClick={() => navigateToQuestion(currentQuestionIndex - 1)}
+                            disabled={currentQuestionIndex === 0 || isSubmitting}
+                          >
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Previous
+                          </Button>
+                          
+                          <Button 
+                            onClick={() => saveCurrentResponse()}
+                            variant="outline"
+                            disabled={isSubmitting}
+                          >
+                            <Save className="mr-2 h-4 w-4" />
+                            {isSubmitting ? "Saving..." : "Save"}
+                          </Button>
+                          
+                          {currentQuestionIndex < questions.length - 1 ? (
+                            <Button
+                              onClick={() => navigateToQuestion(currentQuestionIndex + 1)}
+                              disabled={isSubmitting}
+                            >
+                              Next
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="default"
+                              onClick={submitExam}
+                              disabled={isSubmitting}
+                            >
+                              Finish Exam
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
