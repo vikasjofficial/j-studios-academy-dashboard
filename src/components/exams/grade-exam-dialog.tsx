@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExamAssignment } from "./types";
+import { ExamAssignment, ExamResult } from "./types";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,6 +15,11 @@ interface GradeExamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assignment: ExamAssignment | null;
+}
+
+// We need to extend the ExamAssignment type for our component usage
+interface AssignmentWithResult extends ExamAssignment {
+  result?: ExamResult;
 }
 
 export function GradeExamDialog({ open, onOpenChange, assignment }: GradeExamDialogProps) {
@@ -128,12 +133,15 @@ export function GradeExamDialog({ open, onOpenChange, assignment }: GradeExamDia
     }
   };
 
+  // Cast assignment to AssignmentWithResult to safely access the result property
+  const assignmentWithResult = assignment as AssignmentWithResult | null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {assignment?.result ? "Edit Exam Grade" : "Grade Exam"}
+            {assignmentWithResult?.result ? "Edit Exam Grade" : "Grade Exam"}
           </DialogTitle>
         </DialogHeader>
 
