@@ -11,6 +11,14 @@ export interface Exam {
   created_at: string;
   created_by: string;
   is_active: boolean;
+  folder_id?: string | null;
+}
+
+export interface ExamFolder {
+  id: string;
+  name: string;
+  exam_type: ExamType;
+  created_at: string;
 }
 
 export interface ExamQuestion {
@@ -40,6 +48,7 @@ export interface ExamResult {
   total_score?: number;
   teacher_notes?: string;
   created_at: string;
+  view_results: boolean;
 }
 
 export interface ExamQuestionResponse {

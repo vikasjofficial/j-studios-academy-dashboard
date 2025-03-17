@@ -6,18 +6,35 @@ import { Exam, ExamType } from "@/components/exams/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { BookPlus, Edit, Trash2, Users } from "lucide-react";
+import { BookPlus, Edit, Trash2, Users, FolderPlus, Folder } from "lucide-react";
 import { CreateExamDialog } from "@/components/exams/create-exam-dialog";
 import { ExamsList } from "@/components/exams/exams-list";
 import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard-layout";
+import { CreateFolderDialog } from "@/components/exams/create-folder-dialog";
 
 export default function ExamsManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateFolderDialogOpen, setIsCreateFolderDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ExamType>("oral");
+
+  // Fetch exam folders of the selected type
+  const { data: folders, isLoading: foldersLoading } = useQuery({
+    queryKey: ["exam-folders", activeTab],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exam_folders")
+        .select("*")
+        .eq("exam_type", activeTab)
+        .order("name");
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   // Fetch exams of the selected type
   const { data: exams, isLoading } = useQuery({
@@ -25,12 +42,12 @@ export default function ExamsManagement() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exams")
-        .select("*")
+        .select("*, exam_folders(id, name)")
         .eq("exam_type", activeTab)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Exam[];
+      return data as (Exam & { exam_folders: { id: string; name: string } | null })[];
     },
   });
 
@@ -43,7 +60,8 @@ export default function ExamsManagement() {
         exam_type: exam.exam_type || "oral",
         total_time_minutes: exam.total_time_minutes || 60,
         created_by: user?.email || "Admin",
-        is_active: true
+        is_active: true,
+        folder_id: exam.folder_id
       };
 
       const { data, error } = await supabase
@@ -60,6 +78,29 @@ export default function ExamsManagement() {
     } catch (error) {
       console.error("Error creating exam:", error);
       toast.error("Failed to create exam");
+      return null;
+    }
+  };
+
+  const handleCreateFolder = async (folderName: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("exam_folders")
+        .insert({
+          name: folderName,
+          exam_type: activeTab
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ["exam-folders"] });
+      toast.success(`Folder "${folderName}" created successfully!`);
+      return data;
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast.error("Failed to create folder");
       return null;
     }
   };
@@ -102,10 +143,19 @@ export default function ExamsManagement() {
                 </TabsList>
               </Tabs>
 
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <BookPlus className="mr-2 h-4 w-4" />
-                Create Exam
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreateFolderDialogOpen(true)}
+                >
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  Create Folder
+                </Button>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <BookPlus className="mr-2 h-4 w-4" />
+                  Create Exam
+                </Button>
+              </div>
             </div>
 
             <Card className="glass-morphism rounded-xl border border-white/10">
@@ -118,12 +168,16 @@ export default function ExamsManagement() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {isLoading || foldersLoading ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
                   </div>
                 ) : (
-                  <ExamsList exams={exams || []} examType={activeTab} />
+                  <ExamsList 
+                    exams={exams || []} 
+                    examType={activeTab}
+                    folders={folders || []}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -132,6 +186,14 @@ export default function ExamsManagement() {
               open={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
               onCreateExam={handleCreateExam}
+              examType={activeTab}
+              folders={folders || []}
+            />
+
+            <CreateFolderDialog
+              open={isCreateFolderDialogOpen}
+              onOpenChange={setIsCreateFolderDialogOpen}
+              onCreateFolder={handleCreateFolder}
               examType={activeTab}
             />
           </div>

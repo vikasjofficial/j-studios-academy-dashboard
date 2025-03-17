@@ -22,13 +22,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { BookPlus } from "lucide-react";
+import { BookPlus, Folder } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+
+interface ExamFolder {
+  id: string;
+  name: string;
+  exam_type: ExamType;
+  created_at: string;
+}
 
 const formSchema = z.object({
   name: z.string().min(3, "Exam name must be at least 3 characters"),
   description: z.string().optional(),
   total_time_minutes: z.number().min(1, "Exam must have a duration"),
   exam_type: z.enum(["oral", "written", "practical"]),
+  folder_id: z.string().optional(),
 });
 
 interface CreateExamDialogProps {
@@ -36,6 +51,7 @@ interface CreateExamDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreateExam: (exam: Partial<Exam>) => Promise<Exam | null>;
   examType: ExamType;
+  folders: ExamFolder[];
 }
 
 export function CreateExamDialog({
@@ -43,6 +59,7 @@ export function CreateExamDialog({
   onOpenChange,
   onCreateExam,
   examType,
+  folders,
 }: CreateExamDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,13 +70,17 @@ export function CreateExamDialog({
       description: "",
       total_time_minutes: 60,
       exam_type: examType,
+      folder_id: "",
     },
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await onCreateExam(values);
+      await onCreateExam({
+        ...values,
+        folder_id: values.folder_id && values.folder_id !== "" ? values.folder_id : null,
+      });
       form.reset();
       onOpenChange(false);
     } catch (error) {
@@ -93,6 +114,38 @@ export function CreateExamDialog({
                       {...field} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="folder_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Folder (Optional)</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a folder (optional)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No folder</SelectItem>
+                      {folders.map((folder) => (
+                        <SelectItem key={folder.id} value={folder.id}>
+                          <div className="flex items-center">
+                            <Folder className="h-4 w-4 mr-2" />
+                            {folder.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

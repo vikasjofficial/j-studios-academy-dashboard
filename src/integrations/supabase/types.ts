@@ -449,6 +449,30 @@ export type Database = {
           },
         ]
       }
+      exam_folders: {
+        Row: {
+          created_at: string
+          exam_type: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exam_type: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exam_type?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_question_responses: {
         Row: {
           created_at: string
@@ -535,6 +559,7 @@ export type Database = {
           started_at: string | null
           teacher_notes: string | null
           total_score: number | null
+          view_results: boolean
         }
         Insert: {
           assignment_id: string
@@ -544,6 +569,7 @@ export type Database = {
           started_at?: string | null
           teacher_notes?: string | null
           total_score?: number | null
+          view_results?: boolean
         }
         Update: {
           assignment_id?: string
@@ -553,6 +579,7 @@ export type Database = {
           started_at?: string | null
           teacher_notes?: string | null
           total_score?: number | null
+          view_results?: boolean
         }
         Relationships: [
           {
@@ -570,6 +597,7 @@ export type Database = {
           created_by: string
           description: string | null
           exam_type: string
+          folder_id: string | null
           id: string
           is_active: boolean
           name: string
@@ -580,6 +608,7 @@ export type Database = {
           created_by: string
           description?: string | null
           exam_type: string
+          folder_id?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -590,12 +619,21 @@ export type Database = {
           created_by?: string
           description?: string | null
           exam_type?: string
+          folder_id?: string | null
           id?: string
           is_active?: boolean
           name?: string
           total_time_minutes?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exams_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "exam_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       grades: {
         Row: {
