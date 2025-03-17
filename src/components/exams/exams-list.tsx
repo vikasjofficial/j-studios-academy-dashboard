@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Exam, ExamType } from "./types";
@@ -155,9 +154,12 @@ export function ExamsList({ exams, examType, folders }: ExamsListProps) {
     if (!examToAssignFolder) return;
 
     try {
+      // Handle the special "none" value to set folder_id to null
+      const folderIdToAssign = selectedFolderId === "none" ? null : selectedFolderId;
+      
       const { error } = await supabase
         .from("exams")
-        .update({ folder_id: selectedFolderId })
+        .update({ folder_id: folderIdToAssign })
         .eq("id", examToAssignFolder.id);
 
       if (error) throw error;
@@ -373,12 +375,12 @@ export function ExamsList({ exams, examType, folders }: ExamsListProps) {
             <p className="mb-4">
               Select a folder to move <span className="font-semibold">{examToAssignFolder?.name}</span> to:
             </p>
-            <Select value={selectedFolderId || ""} onValueChange={setSelectedFolderId}>
+            <Select value={selectedFolderId || "none"} onValueChange={setSelectedFolderId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a folder" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None (Remove from folder)</SelectItem>
+                <SelectItem value="none">None (Remove from folder)</SelectItem>
                 {folders.map(folder => (
                   <SelectItem key={folder.id} value={folder.id}>
                     {folder.name}
