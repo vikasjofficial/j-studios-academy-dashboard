@@ -72,8 +72,8 @@ export default function ExamsManagement() {
     <div className="flex">
       {/* Sidebar is already rendered by DashboardLayout */}
       
-      {/* Empty div spacer - only for exams page */}
-      <div className="w-12 md:w-16 lg:w-20 h-full flex-shrink-0"></div>
+      {/* Empty div spacer - only for exams page - increased width */}
+      <div className="w-16 md:w-24 lg:w-28 h-full flex-shrink-0"></div>
       
       <div className="flex-1">
         <DashboardLayout>
