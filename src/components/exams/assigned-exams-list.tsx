@@ -11,6 +11,26 @@ import { format } from "date-fns";
 import { GradeExamDialog } from "./grade-exam-dialog";
 import { useGradeExamDialog } from "./hooks/use-grade-exam-dialog";
 
+// Define a more specific type for the assignments with additional fields
+interface AssignmentWithExtras extends ExamAssignment {
+  student_name?: string;
+  student_id_number?: string;
+  result?: {
+    id: string;
+    assignment_id: string;
+    started_at?: string;
+    completed_at?: string;
+    total_score?: number;
+    teacher_notes?: string;
+    created_at: string;
+    view_results: boolean;
+  };
+  students?: {
+    name: string;
+    student_id: string;
+  };
+}
+
 export function AssignedExamsList({ examId }: { examId: string }) {
   const { isGradeDialogOpen, setIsGradeDialogOpen, assignmentToGrade, openGradeDialog } = useGradeExamDialog();
   
@@ -23,6 +43,7 @@ export function AssignedExamsList({ examId }: { examId: string }) {
         .from("exam_assignments")
         .select(`
           id,
+          exam_id,
           student_id,
           assigned_at,
           due_date,
@@ -56,11 +77,7 @@ export function AssignedExamsList({ examId }: { examId: string }) {
         };
       });
       
-      return assignmentsWithResults as (ExamAssignment & { 
-        student_name: string, 
-        student_id_number: string,
-        result?: any 
-      })[];
+      return assignmentsWithResults as AssignmentWithExtras[];
     },
     enabled: !!examId,
   });

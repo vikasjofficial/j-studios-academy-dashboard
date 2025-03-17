@@ -1,19 +1,38 @@
 
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ExamQuestion } from "./types";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
-interface ExamQuestionsListProps {
-  questions: ExamQuestion[];
-  onDeleteQuestion: (questionId: string) => Promise<void>;
+export interface ExamQuestionsListProps {
+  examId: string;
 }
 
-export function ExamQuestionsList({ questions, onDeleteQuestion }: ExamQuestionsListProps) {
+export function ExamQuestionsList({ examId }: ExamQuestionsListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<ExamQuestion | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Fetch questions for this exam
+  const { data: questions = [], isLoading } = useQuery({
+    queryKey: ["exam-questions", examId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exam_questions")
+        .select("*")
+        .eq("exam_id", examId)
+        .order("order_position");
+        
+      if (error) throw error;
+      return data as ExamQuestion[];
+    },
+    enabled: !!examId,
+  });
 
   const handleDeleteClick = (question: ExamQuestion) => {
     setQuestionToDelete(question);
@@ -25,14 +44,31 @@ export function ExamQuestionsList({ questions, onDeleteQuestion }: ExamQuestions
     
     setIsDeleting(true);
     try {
-      await onDeleteQuestion(questionToDelete.id);
+      const { error } = await supabase
+        .from("exam_questions")
+        .delete()
+        .eq("id", questionToDelete.id);
+        
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ["exam-questions", examId] });
       setDeleteDialogOpen(false);
+      toast.success("Question deleted successfully");
     } catch (error) {
       console.error("Error deleting question:", error);
+      toast.error("Failed to delete question");
     } finally {
       setIsDeleting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-6">
+        <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   if (questions.length === 0) {
     return (
