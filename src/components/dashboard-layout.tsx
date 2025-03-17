@@ -166,7 +166,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <LeftSidebar />
         </div>
         
-        <div className="hidden md:block w-[calc(var(--sidebar-width)/3)] flex-shrink-0"></div>
+        <div className="hidden md:block w-16 md:w-24 lg:w-28 flex-shrink-0"></div>
         
         <div className={`flex-1 ${styles.contentContainer}`}>
           <SidebarInset className={styles.customScrollbar}>
