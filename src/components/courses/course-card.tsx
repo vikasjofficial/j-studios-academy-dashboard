@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Book, Eye, Pencil, Trash2, Copy } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Course = Tables<"courses">;
 
@@ -12,14 +13,35 @@ interface CourseCardProps {
   onEdit: (course: Course) => void;
   onDelete: (course: Course, e: React.MouseEvent) => void;
   onDuplicate: (course: Course, e: React.MouseEvent) => void;
+  isSelected?: boolean;
+  onSelectChange?: (courseId: string, isSelected: boolean) => void;
+  bulkSelectMode?: boolean;
 }
 
-export function CourseCard({ course, onSelect, onEdit, onDelete, onDuplicate }: CourseCardProps) {
+export function CourseCard({ 
+  course, 
+  onSelect, 
+  onEdit, 
+  onDelete, 
+  onDuplicate, 
+  isSelected = false,
+  onSelectChange,
+  bulkSelectMode = false
+}: CourseCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
         <CardTitle className="flex justify-between items-center">
           <div className="flex items-center gap-2">
+            {bulkSelectMode && (
+              <Checkbox 
+                id={`select-course-${course.id}`}
+                checked={isSelected} 
+                onCheckedChange={(checked) => onSelectChange?.(course.id, checked === true)}
+                className="mr-1"
+                aria-label={`Select ${course.name}`}
+              />
+            )}
             <Book className="h-5 w-5 text-primary" />
             <span className="truncate">{course.name}</span>
           </div>

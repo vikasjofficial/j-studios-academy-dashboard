@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { Tables } from "@/integrations/supabase/types";
 import { Book, Search, SlidersHorizontal } from "lucide-react";
+import { BulkActionBar } from "./bulk-action-bar";
 
 type Course = Tables<"courses">;
 
@@ -18,6 +19,8 @@ interface CoursesGridProps {
   onDeleteCourse: (course: Course, e: React.MouseEvent) => void;
   onDuplicateCourse: (course: Course, e: React.MouseEvent) => void;
   onCreateCourse: () => void;
+  onBulkDelete?: (courseIds: string[]) => void;
+  onBulkUpdateStatus?: (courseIds: string[], status: string) => void;
 }
 
 export function CoursesGrid({ 
@@ -27,10 +30,14 @@ export function CoursesGrid({
   onEditCourse, 
   onDeleteCourse, 
   onDuplicateCourse,
-  onCreateCourse 
+  onCreateCourse,
+  onBulkDelete,
+  onBulkUpdateStatus
 }: CoursesGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
 
   // Filter courses based on search query and status filter
   const filteredCourses = courses?.filter(course => {
@@ -43,6 +50,45 @@ export function CoursesGrid({
     
     return matchesSearch && matchesStatus;
   });
+
+  const handleSelectAll = () => {
+    if (filteredCourses && filteredCourses.length > 0) {
+      setSelectedCourseIds(filteredCourses.map(course => course.id));
+    }
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedCourseIds([]);
+  };
+
+  const handleCourseSelection = (courseId: string, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedCourseIds(prev => [...prev, courseId]);
+    } else {
+      setSelectedCourseIds(prev => prev.filter(id => id !== courseId));
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedCourseIds.length > 0 && onBulkDelete) {
+      onBulkDelete(selectedCourseIds);
+      setSelectedCourseIds([]);
+    }
+  };
+
+  const handleBulkUpdateStatus = (status: string) => {
+    if (selectedCourseIds.length > 0 && onBulkUpdateStatus) {
+      onBulkUpdateStatus(selectedCourseIds, status);
+      setSelectedCourseIds([]);
+    }
+  };
+
+  const toggleBulkSelectMode = () => {
+    setBulkSelectMode(!bulkSelectMode);
+    if (bulkSelectMode) {
+      setSelectedCourseIds([]);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -92,10 +138,28 @@ export function CoursesGrid({
             </SelectContent>
           </Select>
         </div>
+        <Button 
+          variant={bulkSelectMode ? "secondary" : "outline"} 
+          className="w-full md:w-auto"
+          onClick={toggleBulkSelectMode}
+        >
+          {bulkSelectMode ? "Exit Bulk Select" : "Bulk Actions"}
+        </Button>
       </div>
 
       {filteredCourses && filteredCourses.length > 0 ? (
         <>
+          {bulkSelectMode && (
+            <BulkActionBar 
+              selectedCourses={selectedCourseIds}
+              onSelectAll={handleSelectAll}
+              onDeselectAll={handleDeselectAll}
+              onDeleteSelected={handleBulkDelete}
+              onUpdateStatusSelected={handleBulkUpdateStatus}
+              totalCourses={filteredCourses.length}
+            />
+          )}
+          
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Showing {filteredCourses.length} of {courses.length} courses
@@ -118,6 +182,9 @@ export function CoursesGrid({
                 onEdit={onEditCourse}
                 onDelete={onDeleteCourse}
                 onDuplicate={onDuplicateCourse}
+                bulkSelectMode={bulkSelectMode}
+                isSelected={selectedCourseIds.includes(course.id)}
+                onSelectChange={handleCourseSelection}
               />
             ))}
           </div>

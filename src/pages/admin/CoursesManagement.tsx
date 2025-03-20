@@ -24,8 +24,15 @@ export default function CoursesManagement() {
   const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [coursesToBulkDelete, setCoursesToBulkDelete] = useState<string[]>([]);
   
-  const { deleteCourse, duplicateCourse } = useCourseMutations();
+  const { 
+    deleteCourse, 
+    duplicateCourse, 
+    bulkDeleteCourses, 
+    updateCoursesStatus 
+  } = useCourseMutations();
   
   const { data: courses, isLoading } = useQuery({
     queryKey: ["courses"],
@@ -63,7 +70,26 @@ export default function CoursesManagement() {
   const confirmDelete = () => {
     if (courseToDelete) {
       deleteCourse.mutate(courseToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setCourseToDelete(null);
     }
+  };
+
+  const handleBulkDelete = (courseIds: string[]) => {
+    setCoursesToBulkDelete(courseIds);
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    if (coursesToBulkDelete.length > 0) {
+      bulkDeleteCourses.mutate(coursesToBulkDelete);
+      setBulkDeleteDialogOpen(false);
+      setCoursesToBulkDelete([]);
+    }
+  };
+
+  const handleBulkUpdateStatus = (courseIds: string[], status: string) => {
+    updateCoursesStatus.mutate({ courseIds, status });
   };
 
   return (
@@ -90,6 +116,8 @@ export default function CoursesManagement() {
                 onDeleteCourse={handleDeleteCourse}
                 onDuplicateCourse={handleDuplicateCourse}
                 onCreateCourse={() => setActiveTab("create")}
+                onBulkDelete={handleBulkDelete}
+                onBulkUpdateStatus={handleBulkUpdateStatus}
               />
             </TabsContent>
             
@@ -138,6 +166,36 @@ export default function CoursesManagement() {
           onClose={() => setIsDeleteDialogOpen(false)}
           onConfirm={confirmDelete}
         />
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <Book className="h-5 w-5" />
+                Delete Multiple Courses
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p>Are you sure you want to delete {coursesToBulkDelete.length} selected courses? This action cannot be undone.</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setBulkDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmBulkDelete}
+                disabled={bulkDeleteCourses.isPending}
+              >
+                {bulkDeleteCourses.isPending ? "Deleting..." : "Delete Courses"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
