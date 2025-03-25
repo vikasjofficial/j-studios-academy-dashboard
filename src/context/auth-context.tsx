@@ -211,6 +211,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
       
+      // Store the old admin object temporarily for debugging
+      const oldAdmin = {...ADMIN_USER};
+      
       // Update the ADMIN_USER object with new credentials
       ADMIN_USER = {
         ...ADMIN_USER,
@@ -218,7 +221,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password: newPassword,
       };
       
-      console.log('Admin credentials updated successfully:', { email, password: newPassword });
+      console.log('Admin credentials updated:', { 
+        oldEmail: oldAdmin.email, 
+        oldPassword: oldAdmin.password,
+        newEmail: ADMIN_USER.email, 
+        newPassword: ADMIN_USER.password 
+      });
       
       // Update the current user in state if logged in as admin
       if (user && user.role === 'admin') {

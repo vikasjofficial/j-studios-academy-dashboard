@@ -44,6 +44,12 @@ export default function Settings() {
     try {
       setIsSubmitting(true);
       
+      console.log('Attempting to update admin credentials:', {
+        email: values.email,
+        currentPassword: values.currentPassword,
+        newPasswordLength: values.newPassword.length
+      });
+      
       if (!updateAdminCredentials) {
         toast.error('Update credentials functionality is not available');
         setIsSubmitting(false);
