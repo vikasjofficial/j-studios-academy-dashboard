@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
@@ -41,14 +40,14 @@ export default function Login() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: activeTab === 'admin' ? 'admin@jstudios.com' : '',
-      password: activeTab === 'admin' ? 'admin123' : ''
+      password: ''
     }
   });
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'admin' | 'student');
     form.setValue('email', value === 'admin' ? 'admin@jstudios.com' : '');
-    form.setValue('password', value === 'admin' ? 'admin123' : '');
+    form.setValue('password', '');
   };
 
   const onSubmit = async (data: FormValues) => {

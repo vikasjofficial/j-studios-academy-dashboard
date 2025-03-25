@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -120,31 +119,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Check if this is for the mock admin
-    // If the email matches our updated ADMIN_USER or the original hardcoded value
-    if ((email === ADMIN_USER.email && password === ADMIN_USER.password) || 
-        (email === 'admin@jstudios.com' && password === 'admin123')) {
+    // Check if this is for the admin user
+    if (email === ADMIN_USER.email && password === ADMIN_USER.password) {
+      // Handle admin login with current admin data
+      const { password: _, ...userWithoutPassword } = ADMIN_USER;
       
-      // If login is with the original credentials but ADMIN_USER has been updated
-      if (email === 'admin@jstudios.com' && password === 'admin123' && 
-          (ADMIN_USER.email !== 'admin@jstudios.com' || ADMIN_USER.password !== 'admin123')) {
-        // Use the original admin credentials for backward compatibility
-        const adminUser = {
-          id: 'admin-1',
-          name: 'Admin User',
-          email: 'admin@jstudios.com',
-          role: 'admin' as UserRole,
-          avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
-        };
-        setUser(adminUser);
-        localStorage.setItem('j-studios-user', JSON.stringify(adminUser));
-      } else {
-        // Handle admin login with current admin data
-        const { password: _, ...userWithoutPassword } = ADMIN_USER;
-        
-        setUser(userWithoutPassword);
-        localStorage.setItem('j-studios-user', JSON.stringify(userWithoutPassword));
-      }
+      setUser(userWithoutPassword);
+      localStorage.setItem('j-studios-user', JSON.stringify(userWithoutPassword));
       
       toast.success(`Welcome back, Admin!`);
       setIsLoading(false);
