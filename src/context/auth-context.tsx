@@ -34,7 +34,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   createStudentCredentials: (studentId: string, email: string, password: string) => Promise<boolean>;
-  updateAdminCredentials?: (email: string, password: string) => Promise<boolean>;
+  updateAdminCredentials: (email: string, currentPassword: string, newPassword: string) => Promise<boolean>;
 }
 
 // Define StudentCredential interface to match database table
@@ -219,16 +219,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Update admin credentials
-  const updateAdminCredentials = async (email: string, password: string): Promise<boolean> => {
+  const updateAdminCredentials = async (email: string, currentPassword: string, newPassword: string): Promise<boolean> => {
     try {
+      setIsLoading(true);
+      
+      // Verify current password is correct
+      if (currentPassword !== ADMIN_USER.password) {
+        toast.error('Current password is incorrect');
+        setIsLoading(false);
+        return false;
+      }
+      
       // Update the ADMIN_USER object with new credentials
       ADMIN_USER = {
         ...ADMIN_USER,
         email,
-        password,
+        password: newPassword,
       };
       
-      // Update the current user in state
+      console.log('Admin credentials updated successfully:', { email, password: newPassword });
+      
+      // Update the current user in state if logged in as admin
       if (user && user.role === 'admin') {
         const updatedUser = {
           ...user,
@@ -239,9 +250,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('j-studios-user', JSON.stringify(updatedUser));
       }
       
+      toast.success('Admin credentials updated successfully');
+      setIsLoading(false);
       return true;
     } catch (error) {
       console.error('Error updating admin credentials:', error);
+      toast.error('Failed to update admin credentials');
+      setIsLoading(false);
       return false;
     }
   };

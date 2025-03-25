@@ -27,7 +27,7 @@ const formSchema = z.object({
 });
 
 export default function Settings() {
-  const { user, login } = useAuth();
+  const { user, updateAdminCredentials } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -44,37 +44,27 @@ export default function Settings() {
     try {
       setIsSubmitting(true);
       
-      // For the admin mock user, we need to update localStorage
-      const storedUser = localStorage.getItem('j-studios-user');
+      if (!updateAdminCredentials) {
+        toast.error('Update credentials functionality is not available');
+        setIsSubmitting(false);
+        return;
+      }
       
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        
-        // First check if current password is correct
-        if (parsedUser.email === 'admin@jstudios.com' && values.currentPassword !== 'admin123') {
-          toast.error('Current password is incorrect');
-          setIsSubmitting(false);
-          return;
-        }
-        
-        // Update admin credentials in localStorage
-        localStorage.removeItem('j-studios-user');
-        
-        // Force logout and re-login with new credentials
-        // We'll modify the auth context to handle admin credential updates
-        const success = await login(values.email, values.newPassword);
-        
-        if (success) {
-          toast.success('Credentials updated successfully');
-          form.reset({
-            email: values.email,
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: '',
-          });
-        } else {
-          toast.error('Failed to update credentials');
-        }
+      // Call the updateAdminCredentials function with the correct parameters
+      const success = await updateAdminCredentials(
+        values.email, 
+        values.currentPassword, 
+        values.newPassword
+      );
+      
+      if (success) {
+        toast.success('Credentials updated successfully');
+        form.reset({
+          email: values.email,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
       }
     } catch (error) {
       console.error('Error updating admin credentials:', error);
