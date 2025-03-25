@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +22,7 @@ let ADMIN_USER = {
   name: 'Admin User',
   email: 'admin@jstudios.com',
   role: 'admin' as UserRole,
-  password: 'admin123',
+  password: 'saikvvv',
   avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
 };
 
