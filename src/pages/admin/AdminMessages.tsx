@@ -1,4 +1,3 @@
-
 import DashboardLayout from '@/components/dashboard-layout';
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -249,19 +248,16 @@ export default function AdminMessages() {
     try {
       console.log(`Admin deleting message with ID: ${messageToDelete.id}`);
       
-      // Delete from Supabase with count to verify deletion
-      const { error, count } = await supabase
+      // Delete from Supabase without using count
+      const { error } = await supabase
         .from('messages')
         .delete()
-        .eq('id', messageToDelete.id)
-        .select('count');
+        .eq('id', messageToDelete.id);
         
       if (error) {
         console.error('Supabase delete error:', error);
         throw error;
       }
-      
-      console.log(`Deleted ${count} messages from Supabase`);
       
       // Update local state
       setMessages(messages.filter(m => m.id !== messageToDelete.id));

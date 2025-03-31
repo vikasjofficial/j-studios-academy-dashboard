@@ -82,18 +82,18 @@ export function useStudentMessages(userId: string | undefined) {
     try {
       console.log(`Attempting to delete message with ID: ${messageId}`);
       
-      const { error, count } = await supabase
+      // Delete from Supabase without using count
+      const { error } = await supabase
         .from('messages')
         .delete()
-        .eq('id', messageId)
-        .select('count');
+        .eq('id', messageId);
         
       if (error) {
         console.error('Supabase delete error:', error);
         throw error;
       }
       
-      console.log(`Deleted ${count} messages from Supabase`);
+      console.log(`Message deleted successfully`);
       
       // Remove message from local state
       setMessages(messages.filter(message => message.id !== messageId));
