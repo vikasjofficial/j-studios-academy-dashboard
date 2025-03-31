@@ -18,12 +18,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Send, Loader2, Mail, MessageSquare, CheckCircle, XCircle, X } from "lucide-react";
+import { Search, Send, Loader2, Mail, MessageSquare, CheckCircle, XCircle, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Student {
   id: string;
@@ -58,6 +68,9 @@ export default function AdminMessages() {
   const [messageTypeFilter, setMessageTypeFilter] = useState<string>("all");
   const [processingMessageId, setProcessingMessageId] = useState<string | null>(null);
   const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const [isDeletingMessage, setIsDeletingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof sendMessageSchema>>({
@@ -219,6 +232,36 @@ export default function AdminMessages() {
       toast.error(`Failed to ${status} request`);
     } finally {
       setProcessingMessageId(null);
+    }
+  };
+
+  const handleDeleteMessage = (message: Message) => {
+    setMessageToDelete(message);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteMessage = async () => {
+    if (!messageToDelete) return;
+    
+    setIsDeletingMessage(true);
+    
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageToDelete.id);
+        
+      if (error) throw error;
+      
+      setMessages(messages.filter(m => m.id !== messageToDelete.id));
+      toast.success('Message deleted successfully');
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Failed to delete message');
+    } finally {
+      setIsDeletingMessage(false);
+      setDeleteDialogOpen(false);
+      setMessageToDelete(null);
     }
   };
 
@@ -401,8 +444,18 @@ export default function AdminMessages() {
                                 {message.message_type && getMessageTypeBadge(message.message_type)}
                                 {message.status && getStatusBadge(message.status)}
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                              <div className="flex items-center gap-2">
+                                <div className="text-xs text-muted-foreground">
+                                  {format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                  onClick={() => handleDeleteMessage(message)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
                             <p className="text-sm">{message.content}</p>
@@ -554,6 +607,34 @@ export default function AdminMessages() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Message</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this message? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingMessage}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDeleteMessage}
+                disabled={isDeletingMessage}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeletingMessage ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );

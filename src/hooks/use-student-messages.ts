@@ -23,6 +23,7 @@ export function useStudentMessages(userId: string | undefined) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchMessages = async () => {
     if (!userId) return;
@@ -72,6 +73,32 @@ export function useStudentMessages(userId: string | undefined) {
     }
   };
 
+  const deleteMessage = async (messageId: string) => {
+    if (!userId) return false;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('student_id', userId); // Ensure only messages for this student can be deleted
+        
+      if (error) throw error;
+      
+      // Remove message from local state
+      setMessages(messages.filter(message => message.id !== messageId));
+      toast.success("Message deleted successfully");
+      return true;
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error("Failed to delete message");
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     if (userId) {
       fetchMessages();
@@ -87,6 +114,17 @@ export function useStudentMessages(userId: string | undefined) {
           const newMessage = payload.new as Message;
           setMessages(current => [...current, newMessage]);
         })
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `student_id=eq.${userId}`,
+        }, (payload) => {
+          const deletedMessage = payload.old as Message;
+          setMessages(current => 
+            current.filter(message => message.id !== deletedMessage.id)
+          );
+        })
         .subscribe();
         
       return () => {
@@ -99,7 +137,9 @@ export function useStudentMessages(userId: string | undefined) {
     messages,
     isLoading,
     isSending,
+    isDeleting,
     fetchMessages,
-    sendMessage
+    sendMessage,
+    deleteMessage
   };
 }
