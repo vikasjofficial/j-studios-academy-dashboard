@@ -91,7 +91,7 @@ export default function Login() {
       
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-blue-400">
-          J-Studios
+          J STUDIOS ACADEMY
         </h1>
         <p className="text-gray-400 mt-2">Education Management System</p>
       </div>
