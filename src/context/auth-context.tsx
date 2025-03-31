@@ -16,16 +16,6 @@ export interface User {
   studentId?: string; // Add studentId for student users
 }
 
-// Mock admin user for demo purposes
-let ADMIN_USER = {
-  id: 'admin-1',
-  name: 'Admin User',
-  email: 'admin@jstudios.com',
-  role: 'admin' as UserRole,
-  password: 'saikvvv',
-  avatarUrl: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff'
-};
-
 // Context interface
 interface AuthContextType {
   user: User | null;
@@ -43,6 +33,17 @@ interface StudentCredential {
   student_id: string;
   email: string;
   password: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Define AdminCredential interface to match database table
+interface AdminCredential {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  avatar_url?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -120,21 +121,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Check if this is for the admin user
-    if (email === ADMIN_USER.email && password === ADMIN_USER.password) {
-      // Handle admin login with current admin data
-      const { password: _, ...userWithoutPassword } = ADMIN_USER;
-      
-      setUser(userWithoutPassword);
-      localStorage.setItem('j-studios-user', JSON.stringify(userWithoutPassword));
-      
-      toast.success(`Welcome back, Admin!`);
-      setIsLoading(false);
-      return true;
-    } 
-    
-    // Authentication for student users
     try {
+      // Check for admin login first
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_credentials')
+        .select('*')
+        .eq('email', email)
+        .single();
+      
+      if (adminData && !adminError) {
+        // Check if password matches
+        if (adminData.password === password) {
+          // Admin login successful
+          const adminUser: User = {
+            id: adminData.id,
+            name: adminData.name,
+            email: adminData.email,
+            role: 'admin',
+            avatarUrl: adminData.avatar_url || `https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff`
+          };
+          
+          setUser(adminUser);
+          localStorage.setItem('j-studios-user', JSON.stringify(adminUser));
+          toast.success(`Welcome back, Admin!`);
+          setIsLoading(false);
+          return true;
+        } else {
+          console.error('Admin password does not match');
+          toast.error('Invalid email or password');
+          setIsLoading(false);
+          return false;
+        }
+      }
+      
+      // If not an admin, try student login
       console.log('Attempting student login for:', email);
       
       // For student login, check the student_credentials table
@@ -205,29 +225,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
+      // First, verify the admin exists and the current password is correct
+      const { data: adminData, error: fetchError } = await supabase
+        .from('admin_credentials')
+        .select('*')
+        .eq('email', user?.email || '')
+        .single();
+      
+      if (fetchError || !adminData) {
+        toast.error('Admin account not found');
+        setIsLoading(false);
+        return false;
+      }
+      
       // Verify current password is correct
-      if (currentPassword !== ADMIN_USER.password) {
+      if (adminData.password !== currentPassword) {
         toast.error('Current password is incorrect');
         setIsLoading(false);
         return false;
       }
       
-      // Store the old admin object temporarily for debugging
-      const oldAdmin = {...ADMIN_USER};
+      // Update the admin credentials in the database
+      const { error: updateError } = await supabase
+        .from('admin_credentials')
+        .update({
+          email: email,
+          password: newPassword,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', adminData.id);
       
-      // Update the ADMIN_USER object with new credentials
-      ADMIN_USER = {
-        ...ADMIN_USER,
-        email,
-        password: newPassword,
-      };
-      
-      console.log('Admin credentials updated:', { 
-        oldEmail: oldAdmin.email, 
-        oldPassword: oldAdmin.password,
-        newEmail: ADMIN_USER.email, 
-        newPassword: ADMIN_USER.password 
-      });
+      if (updateError) {
+        console.error('Error updating admin credentials:', updateError);
+        toast.error('Failed to update admin credentials');
+        setIsLoading(false);
+        return false;
+      }
       
       // Update the current user in state if logged in as admin
       if (user && user.role === 'admin') {
