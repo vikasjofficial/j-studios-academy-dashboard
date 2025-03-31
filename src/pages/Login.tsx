@@ -84,7 +84,7 @@ export default function Login() {
           <img 
             src="https://images.pexels.com/photos/31419747/pexels-photo-31419747.jpeg" 
             alt="J-Studios Logo" 
-            className="w-48 h-48 object-cover rounded-xl"
+            className="w-40 h-40 object-cover rounded-xl" /* Reduced from w-48 h-48 to w-40 h-40 */
           />
         </div>
       </div>
