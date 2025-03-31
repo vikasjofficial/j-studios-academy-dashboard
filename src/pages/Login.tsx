@@ -96,7 +96,7 @@ export default function Login() {
         <p className="text-gray-400 mt-2">Education Management System</p>
       </div>
       
-      <Card className="w-full max-w-md border-0 shadow-2xl bg-card/30 backdrop-blur-lg">
+      <Card className="w-full max-w-md border border-[#eeeeee]/20 shadow-2xl bg-card/30 backdrop-blur-lg">
         <CardContent className="pt-6">
           <Tabs defaultValue="admin" className="w-full" onValueChange={handleTabChange}>
             <TabsList className="grid grid-cols-2 w-full mb-6">
