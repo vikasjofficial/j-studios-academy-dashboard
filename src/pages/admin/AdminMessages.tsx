@@ -93,9 +93,49 @@ export default function AdminMessages() {
 
   useEffect(() => {
     if (selectedStudent) {
-      fetchMessages(selectedStudent.id);
+      console.log('Setting up realtime subscription for student:', selectedStudent.id);
+      
+      const channel = supabase
+        .channel(`admin-messages-${selectedStudent.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `student_id=eq.${selectedStudent.id}`,
+        }, (payload) => {
+          console.log('Realtime: New message received', payload.new);
+          const newMessage = payload.new as Message;
+          setMessages(current => [...current, newMessage]);
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          }, 100);
+        })
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `student_id=eq.${selectedStudent.id}`,
+        }, (payload) => {
+          console.log('Realtime: Message deleted', payload.old);
+          const deletedMessage = payload.old as Message;
+          setMessages(current => 
+            current.filter(message => message.id !== deletedMessage.id)
+          );
+        })
+        .subscribe();
+      
+      return () => {
+        console.log('Cleaning up realtime subscription');
+        supabase.removeChannel(channel);
+      };
     }
   }, [selectedStudent]);
+
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchMessages(selectedStudent.id);
+    }
+  }, [selectedStudent, messageTypeFilter]);
 
   useEffect(() => {
     if (searchQuery) {
@@ -185,7 +225,6 @@ export default function AdminMessages() {
       form.reset();
       inlineForm.reset();
       toast.success('Message sent successfully');
-      fetchMessages(selectedStudent.id);
       setReplyDialogOpen(false);
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -226,7 +265,6 @@ export default function AdminMessages() {
       if (responseError) throw responseError;
       
       toast.success(`Request ${status} successfully`);
-      fetchMessages(selectedStudent.id);
     } catch (error) {
       console.error(`Failed to ${status} request:`, error);
       toast.error(`Failed to ${status} request`);
@@ -248,7 +286,6 @@ export default function AdminMessages() {
     try {
       console.log(`Admin deleting message with ID: ${messageToDelete.id}`);
       
-      // Delete from Supabase without using count
       const { error } = await supabase
         .from('messages')
         .delete()
@@ -259,14 +296,7 @@ export default function AdminMessages() {
         throw error;
       }
       
-      // Update local state
-      setMessages(messages.filter(m => m.id !== messageToDelete.id));
       toast.success('Message permanently deleted');
-      
-      // Refresh messages to ensure our state matches the database
-      if (selectedStudent) {
-        setTimeout(() => fetchMessages(selectedStudent.id), 500);
-      }
     } catch (error) {
       console.error('Error deleting message:', error);
       toast.error('Failed to delete message');

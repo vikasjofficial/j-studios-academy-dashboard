@@ -63,8 +63,7 @@ export function useStudentMessages(userId: string | undefined) {
         
       if (error) throw error;
       
-      // Fetch the updated list of messages after sending
-      await fetchMessages();
+      // No need to fetch messages here as the realtime subscription will update the UI
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -82,7 +81,6 @@ export function useStudentMessages(userId: string | undefined) {
     try {
       console.log(`Attempting to delete message with ID: ${messageId}`);
       
-      // Delete from Supabase without using count
       const { error } = await supabase
         .from('messages')
         .delete()
@@ -95,8 +93,7 @@ export function useStudentMessages(userId: string | undefined) {
       
       console.log(`Message deleted successfully`);
       
-      // Remove message from local state
-      setMessages(messages.filter(message => message.id !== messageId));
+      // Message will be removed from state by the realtime subscription
       toast.success("Message permanently deleted");
       return true;
     } catch (error) {
@@ -112,6 +109,7 @@ export function useStudentMessages(userId: string | undefined) {
     if (userId) {
       fetchMessages();
       
+      // Set up realtime subscription
       const channel = supabase
         .channel('student-messages')
         .on('postgres_changes', {
@@ -121,6 +119,7 @@ export function useStudentMessages(userId: string | undefined) {
           filter: `student_id=eq.${userId}`,
         }, (payload) => {
           const newMessage = payload.new as Message;
+          console.log('Realtime: New message received', newMessage);
           setMessages(current => [...current, newMessage]);
         })
         .on('postgres_changes', {
@@ -130,13 +129,17 @@ export function useStudentMessages(userId: string | undefined) {
           filter: `student_id=eq.${userId}`,
         }, (payload) => {
           const deletedMessage = payload.old as Message;
+          console.log('Realtime: Message deleted', deletedMessage);
           setMessages(current => 
             current.filter(message => message.id !== deletedMessage.id)
           );
         })
         .subscribe();
         
+      console.log('Realtime subscription activated for student_id:', userId);
+        
       return () => {
+        console.log('Cleaning up realtime subscription');
         supabase.removeChannel(channel);
       };
     }
