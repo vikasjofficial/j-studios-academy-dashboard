@@ -1,3 +1,4 @@
+
 import DashboardLayout from '@/components/dashboard-layout';
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -246,6 +247,7 @@ export default function AdminMessages() {
     setIsDeletingMessage(true);
     
     try {
+      // Delete from Supabase
       const { error } = await supabase
         .from('messages')
         .delete()
@@ -253,8 +255,9 @@ export default function AdminMessages() {
         
       if (error) throw error;
       
+      // Update local state
       setMessages(messages.filter(m => m.id !== messageToDelete.id));
-      toast.success('Message deleted successfully');
+      toast.success('Message permanently deleted');
     } catch (error) {
       console.error('Error deleting message:', error);
       toast.error('Failed to delete message');

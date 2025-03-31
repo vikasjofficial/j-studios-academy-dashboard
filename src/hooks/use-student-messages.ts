@@ -88,7 +88,7 @@ export function useStudentMessages(userId: string | undefined) {
       
       // Remove message from local state
       setMessages(messages.filter(message => message.id !== messageId));
-      toast.success("Message deleted successfully");
+      toast.success("Message permanently deleted");
       return true;
     } catch (error) {
       console.error('Error deleting message:', error);
