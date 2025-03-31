@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
@@ -13,6 +14,7 @@ import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Laptop, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import styles from '@/styles/moving-border.module.css';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -76,6 +78,17 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#222131] to-[#383565] p-4">
+      {/* Logo with glowing border */}
+      <div className={`${styles.movingBorderWrapper} mb-8 rounded-2xl overflow-hidden`}>
+        <div className="p-1">
+          <img 
+            src="https://images.pexels.com/photos/31419747/pexels-photo-31419747.jpeg" 
+            alt="J-Studios Logo" 
+            className="w-48 h-48 object-cover rounded-xl"
+          />
+        </div>
+      </div>
+      
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-blue-400">
           J-Studios
