@@ -247,17 +247,30 @@ export default function AdminMessages() {
     setIsDeletingMessage(true);
     
     try {
-      // Delete from Supabase
-      const { error } = await supabase
+      console.log(`Admin deleting message with ID: ${messageToDelete.id}`);
+      
+      // Delete from Supabase with count to verify deletion
+      const { error, count } = await supabase
         .from('messages')
         .delete()
-        .eq('id', messageToDelete.id);
+        .eq('id', messageToDelete.id)
+        .select('count');
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+      
+      console.log(`Deleted ${count} messages from Supabase`);
       
       // Update local state
       setMessages(messages.filter(m => m.id !== messageToDelete.id));
       toast.success('Message permanently deleted');
+      
+      // Refresh messages to ensure our state matches the database
+      if (selectedStudent) {
+        setTimeout(() => fetchMessages(selectedStudent.id), 500);
+      }
     } catch (error) {
       console.error('Error deleting message:', error);
       toast.error('Failed to delete message');

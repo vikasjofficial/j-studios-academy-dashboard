@@ -63,6 +63,8 @@ export function useStudentMessages(userId: string | undefined) {
         
       if (error) throw error;
       
+      // Fetch the updated list of messages after sending
+      await fetchMessages();
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -78,13 +80,20 @@ export function useStudentMessages(userId: string | undefined) {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      console.log(`Attempting to delete message with ID: ${messageId}`);
+      
+      const { error, count } = await supabase
         .from('messages')
         .delete()
         .eq('id', messageId)
-        .eq('student_id', userId); // Ensure only messages for this student can be deleted
+        .select('count');
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase delete error:', error);
+        throw error;
+      }
+      
+      console.log(`Deleted ${count} messages from Supabase`);
       
       // Remove message from local state
       setMessages(messages.filter(message => message.id !== messageId));
