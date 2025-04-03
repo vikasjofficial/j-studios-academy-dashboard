@@ -289,7 +289,7 @@ export default function Login() {
           
           <div className="mt-6 pt-6 border-t border-[#3f3b54] text-center">
             <p className="text-gray-400 text-sm">
-              Need help? Contact <a className="text-[#8c82e3] hover:underline" href="#">support@jstudios.com</a>
+              Need help? Contact <a className="text-[#8c82e3] hover:underline" href="#">jstudiosacademy@gmail.com</a>
             </p>
           </div>
         </div>
