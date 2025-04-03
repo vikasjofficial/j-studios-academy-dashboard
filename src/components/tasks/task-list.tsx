@@ -30,8 +30,9 @@ export function TaskList() {
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ["admin-tasks"],
     queryFn: async () => {
+      // Use type assertion to fix TypeScript errors
       const { data, error } = await supabase
-        .from("tasks")
+        .from("tasks" as any)
         .select("*")
         .order("created_at", { ascending: false });
         

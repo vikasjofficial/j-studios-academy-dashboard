@@ -31,8 +31,9 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
     setIsSubmitting(true);
     
     try {
+      // Use type assertion to fix TypeScript errors
       const { error } = await supabase
-        .from("tasks")
+        .from("tasks" as any)
         .insert({
           title,
           description: description || null,

@@ -33,8 +33,9 @@ export function TasksCard() {
         
       if (studentError) throw studentError;
       
+      // Use type assertion to fix TypeScript errors
       const { data, error } = await supabase
-        .from("student_tasks")
+        .from("student_tasks" as any)
         .select(`
           id,
           tasks:task_id(title),
@@ -46,7 +47,7 @@ export function TasksCard() {
         
       if (error) throw error;
       
-      return data.map(item => ({
+      return (data as any[]).map(item => ({
         id: item.id,
         title: item.tasks.title,
         due_date: format(new Date(item.due_date), "MMM d, yyyy"),

@@ -49,8 +49,9 @@ export function EditTaskStatusDialog({ open, onOpenChange, task, onStatusUpdated
   const { data: studentTasks, isLoading, refetch } = useQuery({
     queryKey: ["student-tasks", task.id],
     queryFn: async () => {
+      // Use type assertion to fix TypeScript errors
       const { data, error } = await supabase
-        .from("student_tasks")
+        .from("student_tasks" as any)
         .select(`
           id,
           student_id,
@@ -90,8 +91,9 @@ export function EditTaskStatusDialog({ open, onOpenChange, task, onStatusUpdated
         updateData.completed_at = null;
       }
       
+      // Use type assertion to fix TypeScript errors
       const { error } = await supabase
-        .from("student_tasks")
+        .from("student_tasks" as any)
         .update(updateData)
         .eq("id", selectedTaskId);
         

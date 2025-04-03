@@ -69,8 +69,9 @@ export function AssignTaskDialog({ open, onOpenChange, task, onTaskAssigned }: A
     setIsSubmitting(true);
     
     try {
+      // Use type assertion to fix TypeScript errors
       const { error } = await supabase
-        .from("student_tasks")
+        .from("student_tasks" as any)
         .insert({
           task_id: task.id,
           student_id: studentId,
@@ -124,7 +125,7 @@ export function AssignTaskDialog({ open, onOpenChange, task, onTaskAssigned }: A
             
             <div className="grid gap-2">
               <Label htmlFor="dueDate">Due Date</Label>
-              <DatePicker date={dueDate} onDateChange={setDueDate} />
+              <DatePicker date={dueDate} setDate={setDueDate} />
             </div>
             
             <div className="grid gap-2">
