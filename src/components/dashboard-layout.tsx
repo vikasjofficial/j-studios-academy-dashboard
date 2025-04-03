@@ -1,7 +1,7 @@
 import { useAuth } from "@/context/auth-context";
 import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { Button } from "./ui/button";
-import { PanelLeftClose, PanelLeftOpen, Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText, LogOut, Clock, Download, BookPlus } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText, LogOut, Clock, Download, BookPlus, CheckCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link, useLocation } from "react-router-dom";
 import styles from "@/styles/layout.module.css";
@@ -39,6 +39,7 @@ function LeftSidebar() {
     { href: '/admin/attendance', icon: Calendar, label: 'Attendance' },
     { href: '/admin/lectures', icon: BookOpenText, label: 'Lectures' },
     { href: '/admin/exams', icon: BookPlus, label: 'Exams' },
+    { href: '/admin/tasks', icon: CheckCircle, label: 'Tasks' },
     { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
