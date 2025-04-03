@@ -8,17 +8,21 @@ import { CheckCircle, Clock, CircleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export interface Task {
   id: string;
   title: string;
   due_date: string;
   status: string;
+  description?: string;
 }
 
 export function TasksCard() {
   const { user } = useAuth();
   const [showAll, setShowAll] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
   // Fetch student tasks
   const { data: tasks, isLoading } = useQuery({
@@ -39,7 +43,7 @@ export function TasksCard() {
         .from("student_tasks" as any)
         .select(`
           id,
-          tasks:task_id(title),
+          tasks:task_id(id, title, description),
           due_date,
           status
         `)
@@ -51,6 +55,7 @@ export function TasksCard() {
       return (data as any[]).map(item => ({
         id: item.id,
         title: item.tasks.title,
+        description: item.tasks.description,
         due_date: format(new Date(item.due_date), "MMM d, yyyy"),
         status: item.status
       }));
@@ -93,6 +98,11 @@ export function TasksCard() {
     }
   };
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setTaskDialogOpen(true);
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -114,7 +124,11 @@ export function TasksCard() {
           <>
             <div className="space-y-3">
               {displayedTasks?.map(task => (
-                <div key={task.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+                <div 
+                  key={task.id} 
+                  className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+                  onClick={() => handleTaskClick(task)}
+                >
                   <div className="font-medium">
                     {task.title}
                     {getStatusBadge(task.status)}
@@ -140,6 +154,28 @@ export function TasksCard() {
             )}
           </>
         )}
+
+        {/* Task Detail Dialog */}
+        <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selectedTask?.title}</DialogTitle>
+              <DialogDescription className="flex items-center pt-2">
+                <span className="mr-2">Due Date: {selectedTask?.due_date}</span>
+                {selectedTask && getStatusBadge(selectedTask.status)}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <h4 className="text-sm font-medium mb-2">Description:</h4>
+              <div className="text-sm bg-muted/30 p-4 rounded-md">
+                {selectedTask?.description || "No description provided."}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setTaskDialogOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
