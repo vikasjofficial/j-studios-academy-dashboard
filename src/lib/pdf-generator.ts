@@ -153,7 +153,7 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '-9999px';
-    container.style.width = '1100px'; // A4 width at 150 DPI
+    container.style.width = '800px'; // Reduced width to fit better on PDF
     container.className = 'bg-background text-foreground';
     
     container.innerHTML = createPDFTemplate(studentData);
@@ -162,7 +162,7 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
     // Generate PDF
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'px',
+      unit: 'pt',
       format: 'a4',
       hotfixes: ['px_scaling']
     });
@@ -178,24 +178,29 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
     const canvas = await html2canvas(container, canvasOptions);
     const imgData = canvas.toDataURL('image/png');
     
-    // Add to PDF (A4 dimensions at 150 DPI)
+    // Add to PDF - adjust dimensions to fill the page width
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Calculate the aspect ratio to maintain proportions while fitting to page width
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
     
-    // Add the image to the PDF
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth * ratio, imgHeight * ratio);
+    // Use the full width of the PDF page and adjust height proportionally
+    const scaledWidth = pdfWidth;
+    const scaledHeight = (imgHeight * scaledWidth) / imgWidth;
+    
+    // Add the image to the PDF, filling the full width
+    pdf.addImage(imgData, 'PNG', 0, 0, scaledWidth, scaledHeight);
     
     // If content is longer than one page, add more pages
-    let heightLeft = imgHeight * ratio - pdfHeight;
+    let heightLeft = scaledHeight - pdfHeight;
     let position = -pdfHeight;
     
     while (heightLeft >= 0) {
       position = position - pdfHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth * ratio, imgHeight * ratio);
+      pdf.addImage(imgData, 'PNG', 0, position, scaledWidth, scaledHeight);
       heightLeft -= pdfHeight;
     }
     
@@ -214,7 +219,7 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
 // Create HTML template for the PDF
 function createPDFTemplate(data: StudentData): string {
   return `
-    <div class="p-8 bg-background text-foreground" style="font-family: Arial, sans-serif;">
+    <div class="p-8 bg-background text-foreground" style="font-family: Arial, sans-serif; max-width: 100%;">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-primary mb-2">J-Studios</h1>
         <h2 class="text-2xl font-semibold mb-6">Student Profile Report</h2>
@@ -389,4 +394,3 @@ function createPDFTemplate(data: StudentData): string {
     </div>
   `;
 }
-
