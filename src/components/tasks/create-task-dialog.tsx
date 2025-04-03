@@ -31,27 +31,31 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
     setIsSubmitting(true);
     
     try {
-      console.log("Creating task with title:", title);
-      const { error } = await supabase
+      console.log("Creating task with title:", title, "for user:", user?.id);
+      
+      const { data, error } = await supabase
         .from("tasks")
         .insert({
           title,
           description: description || null,
           created_by: user?.name || user?.email || "Admin",
           is_active: true
-        });
+        })
+        .select();
         
       if (error) {
         console.error("Supabase error creating task:", error);
         throw error;
       }
       
+      console.log("Task created successfully:", data);
+      toast.success("Task created successfully");
       setTitle("");
       setDescription("");
       onTaskCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating task:", error);
-      toast.error("Failed to create task");
+      toast.error(error.message || "Failed to create task. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
