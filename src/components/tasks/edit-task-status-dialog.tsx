@@ -66,7 +66,9 @@ export function EditTaskStatusDialog({ open, onOpenChange, task, onStatusUpdated
         .order("assigned_at", { ascending: false });
         
       if (error) throw error;
-      return data as StudentTask[];
+      
+      // Use as unknown first and then as StudentTask[] to satisfy TypeScript
+      return (data as unknown) as StudentTask[];
     },
     enabled: open,
   });

@@ -41,7 +41,8 @@ export function TaskList() {
         throw error;
       }
       
-      return data as Task[];
+      // Use as unknown first and then as Task[] to satisfy TypeScript
+      return (data as unknown) as Task[];
     },
   });
   
