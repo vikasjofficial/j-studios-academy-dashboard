@@ -11,22 +11,8 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom right,
-    #9b87f5,
-    #7E69AB,
-    #6E59A5,
-    #8B5CF6,
-    #D946EF,
-    #F97316,
-    #0EA5E9,
-    #1EAEDB,
-    #33C3F0,
-    #9b87f5
-  );
+  background: hsl(220 20% 25%);
   z-index: -2;
-  background-size: 400%;
-  animation: borderAnimation 12s linear infinite, breathingEffect 3s ease-in-out infinite alternate;
 }
 
 .movingBorderWrapper::after {
@@ -42,27 +28,4 @@
   position: relative;
   z-index: 1;
   background: white;
-}
-
-@keyframes borderAnimation {
-  0% {
-    background-position: 0% 0%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
-  100% {
-    background-position: 0% 0%;
-  }
-}
-
-@keyframes breathingEffect {
-  0% {
-    opacity: 0.7;
-    filter: blur(4px);
-  }
-  100% {
-    opacity: 1;
-    filter: blur(1px);
-  }
 }
