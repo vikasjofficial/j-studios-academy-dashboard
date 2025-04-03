@@ -109,7 +109,7 @@ export default function Login() {
           <p className="text-gray-400 mb-8">Please sign in to continue</p>
           
           <Tabs defaultValue="admin" className="w-full" onValueChange={handleTabChange}>
-            <TabsList className="grid grid-cols-2 w-full mb-6 bg-[#2a2838]">
+            <TabsList className="grid grid-cols-2 w-full mb-6 bg-[#2a2838] h-14">
               <TabsTrigger 
                 value="admin" 
                 className="flex-1 justify-center py-4 data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white"
