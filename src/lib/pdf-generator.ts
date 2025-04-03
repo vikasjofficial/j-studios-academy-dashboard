@@ -182,22 +182,7 @@ export async function fetchStudentData(studentId: string): Promise<StudentData |
 // Generate PDF from HTML template
 export async function generateStudentPDF(studentData: StudentData): Promise<void> {
   try {
-    // Create a container for PDF content with improved sizing for better pagination
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.width = '800px'; // Consistent width
-    container.style.padding = '20px'; 
-    container.className = 'bg-background text-foreground pdf-container';
-    
-    // Create separate HTML for each page
-    const page1HTML = createPage1Template(studentData);
-    const page2HTML = createPage2Template(studentData);
-    const page3HTML = createPage3Template(studentData);
-    const page4HTML = createPage4Template(studentData);
-    
-    // Initialize PDF document
+    // Initialize PDF document with compression for smaller file size
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'pt',
@@ -205,53 +190,82 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
       compress: true 
     });
     
-    // Render and add each page one by one
-    await addHtmlPageToPdf(pdf, page1HTML, 1, container);
-    await addHtmlPageToPdf(pdf, page2HTML, 2, container);
-    await addHtmlPageToPdf(pdf, page3HTML, 3, container);
-    await addHtmlPageToPdf(pdf, page4HTML, 4, container);
+    // Create page templates
+    const pages = [
+      createPage1Template(studentData),
+      createPage2Template(studentData),
+      createPage3Template(studentData),
+      createPage4Template(studentData)
+    ];
+    
+    // Process each page
+    for (let i = 0; i < pages.length; i++) {
+      // Add a new page if not the first page
+      if (i > 0) {
+        pdf.addPage();
+      }
+      
+      await addPageContentToPdf(pdf, pages[i], i);
+    }
     
     // Save PDF
     pdf.save(`${studentData.name}_profile.pdf`);
-    
-    // Clean up
-    document.body.removeChild(container);
-    
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw error;
   }
 }
 
-// Helper function to add an HTML page to the PDF
-async function addHtmlPageToPdf(pdf: jsPDF, html: string, pageNum: number, container: HTMLDivElement): Promise<void> {
-  // Add a new page if not the first page
-  if (pageNum > 1) {
-    pdf.addPage();
-  }
-  
-  // Set the container content to current page HTML
-  container.innerHTML = html;
+// Improved function to add page content to PDF with better pagination
+async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: number): Promise<void> {
+  const container = document.createElement('div');
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
+  container.style.width = '800px'; // Fixed width for consistent rendering
+  container.style.backgroundColor = '#1A1C23';
+  container.style.color = 'white';
+  container.style.fontFamily = 'Arial, sans-serif';
+  container.innerHTML = pageHtml;
   document.body.appendChild(container);
   
-  // Canvas options for better rendering
+  // Enhanced canvas options for better rendering
   const canvasOptions = {
-    scale: 1.5,
+    scale: 1.5, // Higher scale for better quality
     useCORS: true,
-    logging: false,
     backgroundColor: '#1A1C23',
     allowTaint: true,
     letterRendering: true,
     onclone: (clonedDoc: Document) => {
-      // Apply additional styles to the cloned document
+      // Apply additional styles to the cloned document for better pagination
       const styleElement = clonedDoc.createElement('style');
       styleElement.textContent = `
-        .pdf-container * {
+        * {
           font-family: Arial, sans-serif !important;
           box-sizing: border-box !important;
         }
-        table { page-break-inside: avoid; }
-        .pdf-section { margin-bottom: 15px; }
+        table { 
+          page-break-inside: avoid; 
+          break-inside: avoid;
+        }
+        .pdf-section { 
+          margin-bottom: 15px; 
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        .pdf-table-container {
+          overflow: visible !important;
+        }
+        .pdf-no-break {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        p, div {
+          margin-bottom: 2px;
+          margin-top: 2px;
+        }
+        td, th {
+          padding: 2px 4px;
+        }
       `;
       clonedDoc.head.appendChild(styleElement);
     }
@@ -261,7 +275,7 @@ async function addHtmlPageToPdf(pdf: jsPDF, html: string, pageNum: number, conta
   const canvas = await html2canvas(container, canvasOptions);
   const imgData = canvas.toDataURL('image/png', 1.0);
   
-  // Add image to PDF with proper dimensions
+  // Calculate dimensions for the PDF
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
   const margin = 40;
@@ -270,32 +284,74 @@ async function addHtmlPageToPdf(pdf: jsPDF, html: string, pageNum: number, conta
   const contentWidth = pdfWidth - (margin * 2);
   const contentHeight = (canvas.height * contentWidth) / canvas.width;
   
-  pdf.addImage(
-    imgData,
-    'PNG',
-    margin,
-    margin,
-    contentWidth,
-    contentHeight,
-    undefined,
-    'FAST'
-  );
+  // If content is taller than page, we need to split it across multiple pages
+  const maxContentHeight = pdfHeight - (margin * 2);
   
-  // For testing only - clean up after each page to avoid memory issues
+  if (contentHeight <= maxContentHeight) {
+    // Content fits in a single page
+    pdf.addImage(
+      imgData,
+      'PNG',
+      margin,
+      margin,
+      contentWidth,
+      contentHeight,
+      undefined,
+      'FAST'
+    );
+  } else {
+    // Content needs to be split across multiple pages
+    let heightLeft = contentHeight;
+    let position = 0;
+    let isFirstPage = true;
+    
+    // Add image to the first page
+    pdf.addImage(
+      imgData,
+      'PNG',
+      margin,
+      isFirstPage ? margin : 0,
+      contentWidth,
+      contentHeight,
+      undefined,
+      'FAST'
+    );
+    
+    heightLeft -= maxContentHeight;
+    position = -maxContentHeight;
+    
+    // Add additional pages for overflowing content
+    while (heightLeft > 0) {
+      position -= maxContentHeight;
+      pdf.addPage();
+      pdf.addImage(
+        imgData,
+        'PNG',
+        margin,
+        position + (isFirstPage ? margin : 0),
+        contentWidth,
+        contentHeight,
+        undefined,
+        'FAST'
+      );
+      heightLeft -= maxContentHeight;
+    }
+  }
+  
+  // Clean up
   document.body.removeChild(container);
-  document.body.appendChild(container);
 }
 
 // Page 1: Title, Profile & Basic Info
 function createPage1Template(data: StudentData): string {
   return `
-    <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
+    <div id="pdf-content" class="bg-[#1A1C23] text-white pdf-no-break" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Header Section -->
       <div class="pdf-section text-center mb-6 pt-4">
         <h1 class="text-2xl font-bold text-blue-400 mb-2">J-Studios</h1>
         <h2 class="text-xl font-semibold mb-3">Student Profile Report</h2>
         
-        <div class="flex justify-center items-center mb-6">
+        <div class="flex justify-center items-center mb-6 pdf-no-break">
           <div class="flex flex-col items-center p-4 bg-[#22242D] rounded-lg border border-gray-700 w-2/3">
             ${data.avatar 
               ? `<img src="${data.avatar}" alt="${data.name}" class="w-20 h-20 rounded-full border-2 border-blue-400 mb-2" />`
@@ -309,7 +365,7 @@ function createPage1Template(data: StudentData): string {
       </div>
 
       <!-- Courses Section -->
-      <div class="pdf-section mb-6">
+      <div class="pdf-section mb-6 pdf-no-break">
         <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">Enrolled Courses</h3>
         <div class="grid grid-cols-2 gap-3">
           ${data.courses?.map(course => `
@@ -324,7 +380,7 @@ function createPage1Template(data: StudentData): string {
       </div>
 
       <!-- Attendance Summary Section -->
-      <div class="pdf-section mb-4">
+      <div class="pdf-section mb-4 pdf-no-break">
         <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">Attendance Summary</h3>
         <div class="grid grid-cols-3 gap-3">
           <div class="p-3 bg-green-900/30 rounded-lg border border-green-800 text-center">
@@ -360,19 +416,19 @@ function createPage2Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Page Header -->
-      <div class="pdf-section text-center mb-6 pt-2">
+      <div class="pdf-section text-center mb-4 pt-2">
         <h2 class="text-xl font-semibold mb-1">Performance Overview</h2>
-        <p class="text-sm text-gray-400 mb-3">Student: ${data.name} (${data.studentId})</p>
+        <p class="text-sm text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
       </div>
 
       <!-- Strong Topics Section -->
-      <div class="pdf-section mb-6">
-        <h3 class="text-base font-bold mb-3 flex items-center">
+      <div class="pdf-section mb-5 pdf-no-break">
+        <h3 class="text-base font-bold mb-2 flex items-center">
           <span class="inline-block w-3 h-3 mr-2 rounded-full bg-green-500"></span>
           Strong Topics (8-10)
         </h3>
-        <div class="overflow-hidden rounded-lg border border-gray-700">
-          <table class="w-full text-sm" style="border-collapse: collapse;">
+        <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
+          <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
                 <th class="p-2 text-left">Topic</th>
@@ -408,13 +464,13 @@ function createPage2Template(data: StudentData): string {
       </div>
 
       <!-- Needs Work Topics Section -->
-      <div class="pdf-section mb-4">
-        <h3 class="text-base font-bold mb-3 flex items-center">
+      <div class="pdf-section mb-4 pdf-no-break">
+        <h3 class="text-base font-bold mb-2 flex items-center">
           <span class="inline-block w-3 h-3 mr-2 rounded-full bg-orange-500"></span>
           Needs Work Topics (1-7)
         </h3>
-        <div class="overflow-hidden rounded-lg border border-gray-700">
-          <table class="w-full text-sm" style="border-collapse: collapse;">
+        <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
+          <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
                 <th class="p-2 text-left">Topic</th>
@@ -463,31 +519,31 @@ function createPage3Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Page Header -->
-      <div class="pdf-section text-center mb-6 pt-2">
+      <div class="pdf-section text-center mb-4 pt-2">
         <h2 class="text-xl font-semibold mb-1">Student Tasks</h2>
-        <p class="text-sm text-gray-400 mb-3">Student: ${data.name} (${data.studentId})</p>
+        <p class="text-sm text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
       </div>
 
       <!-- Student Tasks Section -->
-      <div class="pdf-section mb-6">
-        <div class="overflow-hidden rounded-lg border border-gray-700">
-          <table class="w-full text-sm" style="border-collapse: collapse;">
+      <div class="pdf-section mb-5 pdf-no-break">
+        <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
+          <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
-                <th class="p-3 text-left" style="width: 40%;">Task</th>
-                <th class="p-3 text-left" style="width: 20%;">Due Date</th>
-                <th class="p-3 text-left" style="width: 40%;">Description</th>
-                <th class="p-3 text-left" style="width: 20%;">Status</th>
+                <th class="p-2 text-left" style="width: 30%;">Task</th>
+                <th class="p-2 text-left" style="width: 15%;">Due Date</th>
+                <th class="p-2 text-left" style="width: 35%;">Description</th>
+                <th class="p-2 text-left" style="width: 20%;">Status</th>
               </tr>
             </thead>
             <tbody>
               ${data.tasks && data.tasks.length > 0 
                 ? data.tasks.map((task, i) => `
                   <tr class="${i % 2 === 0 ? 'bg-[#22242D]' : 'bg-[#1D1F26]'}">
-                    <td class="p-3 font-medium">${task.title}</td>
-                    <td class="p-3">${task.due_date}</td>
-                    <td class="p-3 text-xs">${task.description || 'No description'}</td>
-                    <td class="p-3">
+                    <td class="p-2 font-medium">${task.title}</td>
+                    <td class="p-2">${task.due_date}</td>
+                    <td class="p-2 text-xs">${task.description || 'No description'}</td>
+                    <td class="p-2">
                       <span class="px-2 py-1 rounded text-xs font-medium 
                         ${task.status === 'completed' ? 'bg-green-900 text-green-300' : 
                           task.status === 'overdue' ? 'bg-red-900 text-red-300' : 
@@ -497,7 +553,7 @@ function createPage3Template(data: StudentData): string {
                     </td>
                   </tr>
                 `).join('') 
-                : '<tr><td colspan="4" class="p-3 text-center text-gray-400">No tasks assigned</td></tr>'
+                : '<tr><td colspan="4" class="p-2 text-center text-gray-400">No tasks assigned</td></tr>'
               }
             </tbody>
           </table>
@@ -505,7 +561,7 @@ function createPage3Template(data: StudentData): string {
       </div>
 
       <!-- Task Status Summary -->
-      <div class="pdf-section mb-4">
+      <div class="pdf-section mb-4 pdf-no-break">
         <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">Task Status Overview</h3>
         <div class="grid grid-cols-3 gap-3">
           ${(() => {
@@ -562,7 +618,7 @@ function createPage4Template(data: StudentData): string {
     `;
   }
   
-  // Generate HTML for semesters
+  // Generate HTML for semesters - each semester will be in its own section that can break to next page if needed
   let semestersHtml = '';
   
   semesterEntries.forEach(([semesterKey, topics], index) => {
@@ -575,10 +631,10 @@ function createPage4Template(data: StudentData): string {
       : `Semester ${semesterName}`;
     
     semestersHtml += `
-      <div class="pdf-section mb-6">
-        <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">${displayName}</h3>
-        <div class="overflow-hidden rounded-lg border border-gray-700">
-          <table class="w-full text-sm" style="border-collapse: collapse;">
+      <div class="pdf-section mb-5 pdf-no-break">
+        <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-2">${displayName}</h3>
+        <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
+          <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
                 <th class="p-2 text-left" style="width: 30%;">Topic</th>
@@ -602,7 +658,7 @@ function createPage4Template(data: StudentData): string {
                   </td>
                   <td class="p-2">
                     ${topic.comment ? 
-                      `<p class="text-xs italic">"${topic.comment.substring(0, 60)}${topic.comment.length > 60 ? '...' : ''}"</p>
+                      `<p class="text-xs italic">"${topic.comment.substring(0, 40)}${topic.comment.length > 40 ? '...' : ''}"</p>
                        <p class="text-xs text-gray-400">${topic.graded_by || 'Instructor'}</p>` 
                       : '<span class="text-xs text-gray-500">No comments</span>'}
                   </td>
@@ -618,9 +674,9 @@ function createPage4Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Page Header -->
-      <div class="pdf-section text-center mb-6 pt-2">
+      <div class="pdf-section text-center mb-4 pt-2">
         <h2 class="text-xl font-semibold mb-1">Topics Performance by Semester</h2>
-        <p class="text-sm text-gray-400 mb-3">Student: ${data.name} (${data.studentId})</p>
+        <p class="text-sm text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
       </div>
 
       ${semestersHtml}
@@ -632,6 +688,3 @@ function createPage4Template(data: StudentData): string {
     </div>
   `;
 }
-
-// Removed original createPDFTemplate function since we're using page-specific templates now
-
