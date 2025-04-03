@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth-context";
@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clock, CircleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export interface Task {
   id: string;
   title: string;
   due_date: string;
-  is_completed: boolean;
+  status: string;
 }
 
 export function TasksCard() {
@@ -60,16 +61,35 @@ export function TasksCard() {
   const displayedTasks = showAll ? tasks : tasks?.slice(0, 3);
 
   // Get badge color based on status
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return "text-green-700";
+        return (
+          <Badge variant="success" className="ml-2">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Completed
+          </Badge>
+        );
       case 'pending':
-        return "text-blue-700";
+        return (
+          <Badge variant="warning" className="ml-2">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
       case 'overdue':
-        return "text-red-700";
+        return (
+          <Badge variant="destructive" className="ml-2">
+            <CircleAlert className="h-3 w-3 mr-1" />
+            Overdue
+          </Badge>
+        );
       default:
-        return "text-gray-700";
+        return (
+          <Badge variant="secondary" className="ml-2">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -94,13 +114,14 @@ export function TasksCard() {
           <>
             <div className="space-y-3">
               {displayedTasks?.map(task => (
-                <div key={task.id} className="flex justify-between border-b pb-2 last:border-0 last:pb-0">
-                  <div className="font-medium">{task.title}</div>
-                  <div className="flex items-center">
-                    <Clock className="mr-2 h-3 w-3 text-muted-foreground" />
-                    <span className={`text-xs ${getStatusColor(task.status)}`}>
-                      {task.due_date}
-                    </span>
+                <div key={task.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
+                  <div className="font-medium">
+                    {task.title}
+                    {getStatusBadge(task.status)}
+                  </div>
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Clock className="mr-1 h-3 w-3" />
+                    <span>Due: {task.due_date}</span>
                   </div>
                 </div>
               ))}
