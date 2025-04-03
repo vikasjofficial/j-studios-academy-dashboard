@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { supabase } from '@/integrations/supabase/client';
@@ -250,18 +249,18 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
         const sourceY = i * pdfHeight;
         const sourceHeight = Math.min(pdfHeight, imgHeight - sourceY);
         
-        // Add the image slice to the PDF
+        // Add the image slice to the PDF - FIX HERE: Removed the excessive parameters
+        // The correct signature is: addImage(imageData, format, x, y, width, height, alias, compression, rotation)
         pdf.addImage(
-          imgData, 
-          'PNG', 
-          margin, // X position
-          margin, // Y position
-          contentWidth, // Width
-          (sourceHeight * contentWidth) / pdfWidth, // Height scaled proportionally
-          '', // Alias
-          'FAST', // Compression
-          0, // Rotation
-          sourceY // Source Y
+          imgData,       // imageData
+          'PNG',         // format
+          margin,        // x position
+          margin,        // y position
+          contentWidth,  // width
+          (sourceHeight * contentWidth) / pdfWidth, // height scaled proportionally
+          '',            // alias
+          'FAST',        // compression
+          0              // rotation
         );
       }
     } else {
