@@ -239,10 +239,13 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.left = '-9999px';
-  container.style.width = '750px'; // Slightly reduced width for better scaling
+  container.style.width = '790px'; // Wider width to fully utilize page
   container.style.backgroundColor = '#1A1C23';
   container.style.color = 'white';
   container.style.fontFamily = 'Arial, sans-serif';
+  container.style.padding = '0'; // Remove padding
+  container.style.margin = '0'; // Remove margin
+  container.style.border = 'none'; // Remove border
   container.innerHTML = pageHtml;
   document.body.appendChild(container);
   
@@ -260,38 +263,65 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
         * {
           font-family: Arial, sans-serif !important;
           box-sizing: border-box !important;
-          font-size: 95% !important; /* Slightly reduce font size */
+          font-size: 90% !important; /* Further reduce font size */
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
         }
-        .text-2xl { font-size: 1.4rem !important; }
-        .text-xl { font-size: 1.25rem !important; }
+        .pdf-section {
+          padding: 0 !important;
+          margin: 0 !important;
+          margin-bottom: 8px !important;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        .text-2xl { font-size: 1.3rem !important; }
+        .text-xl { font-size: 1.2rem !important; }
         .text-lg { font-size: 1.1rem !important; }
-        .text-base { font-size: 0.95rem !important; }
-        .text-sm { font-size: 0.85rem !important; }
-        .text-xs { font-size: 0.75rem !important; }
+        .text-base { font-size: 0.9rem !important; }
+        .text-sm { font-size: 0.8rem !important; }
+        .text-xs { font-size: 0.7rem !important; }
         
         p, div {
-          margin-bottom: 2px;
-          margin-top: 2px;
+          margin-bottom: 2px !important;
+          margin-top: 2px !important;
         }
         td, th {
           padding: 2px 3px !important;
-          font-size: 0.75rem !important;
+          font-size: 0.7rem !important;
         }
         table { 
           page-break-inside: avoid; 
           break-inside: avoid;
-        }
-        .pdf-section { 
-          margin-bottom: 12px !important; 
-          page-break-inside: avoid;
-          break-inside: avoid;
+          border-collapse: collapse !important;
         }
         .pdf-table-container {
           overflow: visible !important;
+          border: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
         }
         .pdf-no-break {
           page-break-inside: avoid;
           break-inside: avoid;
+        }
+        
+        /* Remove all borders and padding from top-level containers */
+        #pdf-content {
+          padding: 0 !important;
+          margin: 0 !important;
+          border: none !important;
+        }
+        
+        /* Ensure headers don't have margins/padding */
+        h1, h2, h3, h4, h5, h6 {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        
+        /* Remove padding from card-like elements */
+        .bg-[#22242D], .bg-[#1D1F26], .bg-[#2A2D3A] {
+          padding: 2px !important;
         }
       `;
       clonedDoc.head.appendChild(styleElement);
@@ -305,22 +335,24 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
   // Calculate dimensions for the PDF
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
-  const margin = 30; // Slightly reduced margins
   
-  // Scale the image to fit the page width with margins
-  const contentWidth = pdfWidth - (margin * 2);
+  // Remove all margins - content spans entire page
+  const margin = 0;
+  
+  // Scale the image to fit the page width without margins
+  const contentWidth = pdfWidth;
   const contentHeight = (canvas.height * contentWidth) / canvas.width;
   
   // If content is taller than page, we need to split it across multiple pages
-  const maxContentHeight = pdfHeight - (margin * 2);
+  const maxContentHeight = pdfHeight;
   
   if (contentHeight <= maxContentHeight) {
     // Content fits in a single page
     pdf.addImage(
       imgData,
       'PNG',
-      margin,
-      margin,
+      0, // x-coordinate (0 for left edge)
+      0, // y-coordinate (0 for top edge)
       contentWidth,
       contentHeight,
       undefined,
@@ -329,22 +361,22 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
   } else {
     // Content needs to be split across multiple pages
     let heightLeft = contentHeight;
-    let position = margin;
+    let position = 0;
     
     // Add image to the first page
     pdf.addImage(
       imgData,
       'PNG',
-      margin,
-      position,
+      0, // x-coordinate
+      position, // y-coordinate
       contentWidth,
       contentHeight,
       undefined,
       'FAST'
     );
     
-    heightLeft -= (maxContentHeight - margin);
-    position = margin - maxContentHeight;
+    heightLeft -= maxContentHeight;
+    position = -maxContentHeight;
     
     // Add additional pages for overflowing content
     while (heightLeft > 0) {
@@ -353,8 +385,8 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
       pdf.addImage(
         imgData,
         'PNG',
-        margin,
-        position,
+        0, // x-coordinate
+        position, // y-coordinate
         contentWidth,
         contentHeight,
         undefined,
