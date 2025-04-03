@@ -1,10 +1,9 @@
 
 .movingBorderWrapper {
   position: relative;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   z-index: 0;
-  padding: 1px;
 }
 
 .movingBorderWrapper::before {
@@ -18,9 +17,9 @@
 .movingBorderWrapper::after {
   content: "";
   position: absolute;
-  inset: 1px; /* Reduced from 2px to 1px for thinner border */
+  inset: 0;
   background: var(--background, hsl(220 20% 15%));
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   z-index: -1;
 }
 

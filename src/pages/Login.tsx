@@ -12,9 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff, Laptop, User } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import styles from '@/styles/moving-border.module.css';
+import { Eye, EyeOff, Laptop, User, ArrowLeft } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -77,34 +75,59 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#222131] to-[#383565] p-4">
-      {/* Logo with glowing border */}
-      <div className={`${styles.movingBorderWrapper} mb-8 rounded-2xl overflow-hidden`}>
-        <div className="p-1">
-          <img 
-            src="https://images.pexels.com/photos/31419747/pexels-photo-31419747.jpeg" 
-            alt="J-Studios Logo" 
-            className="w-40 h-40 object-cover rounded-xl" /* Reduced from w-48 h-48 to w-40 h-40 */
-          />
+    <div className="min-h-screen flex items-center justify-center bg-[#5d5b70] p-4">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 overflow-hidden rounded-2xl shadow-2xl">
+        {/* Left side - Image and tagline */}
+        <div className="relative bg-gradient-to-br from-[#5b52ab] to-[#372f6a] p-8 flex flex-col">
+          <div className="mb-2">
+            <h2 className="text-2xl font-bold text-white">J STUDIOS</h2>
+          </div>
+          
+          <div className="absolute top-8 right-8">
+            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 rounded-full px-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to website
+            </Button>
+          </div>
+          
+          <div className="flex-1 flex items-center justify-center">
+            <img 
+              src="https://images.pexels.com/photos/31419747/pexels-photo-31419747.jpeg" 
+              alt="J-Studios" 
+              className="w-full max-w-md h-auto object-cover rounded-xl" 
+            />
+          </div>
+          
+          <div className="mt-auto text-center text-white">
+            <h3 className="text-3xl font-light mb-1">J STUDIOS ACADEMY</h3>
+            <p className="text-xl font-light text-white/80">Education Management System</p>
+            
+            <div className="flex justify-center mt-6 space-x-2">
+              <div className="w-2 h-2 rounded-full bg-white/40"></div>
+              <div className="w-2 h-2 rounded-full bg-white/40"></div>
+              <div className="w-8 h-2 rounded-full bg-white"></div>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-400 to-blue-400">
-          J STUDIOS ACADEMY
-        </h1>
-        <p className="text-gray-400 mt-2">Education Management System</p>
-      </div>
-      
-      <Card className="w-full max-w-md border border-[#eeeeee]/20 shadow-2xl bg-card/30 backdrop-blur-lg">
-        <CardContent className="pt-6">
+        
+        {/* Right side - Login form */}
+        <div className="bg-[#1e1c2a] p-8 md:p-12 flex flex-col">
+          <h1 className="text-4xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-gray-400 mb-8">Please sign in to continue</p>
+          
           <Tabs defaultValue="admin" className="w-full" onValueChange={handleTabChange}>
-            <TabsList className="grid grid-cols-2 w-full mb-6">
-              <TabsTrigger value="admin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsList className="grid grid-cols-2 w-full mb-6 bg-[#2a2838]">
+              <TabsTrigger 
+                value="admin" 
+                className="data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white py-3"
+              >
                 <Laptop className="mr-2 h-4 w-4" />
                 Admin
               </TabsTrigger>
-              <TabsTrigger value="student" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <TabsTrigger 
+                value="student" 
+                className="data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white py-3"
+              >
                 <User className="mr-2 h-4 w-4" />
                 Student
               </TabsTrigger>
@@ -124,7 +147,7 @@ export default function Login() {
                             type="email"
                             autoComplete="email"
                             disabled={isLoading}
-                            className="h-12 bg-background/50 backdrop-blur-sm border-border/50"
+                            className="h-12 bg-[#2a2838] border-[#3f3b54] text-white placeholder:text-gray-500 focus-visible:ring-[#5b52ab]"
                             {...field}
                           />
                         </FormControl>
@@ -143,12 +166,12 @@ export default function Login() {
                               placeholder="Enter your password"
                               type={showPassword ? "text" : "password"}
                               disabled={isLoading}
-                              className="h-12 bg-background/50 backdrop-blur-sm border-border/50 pr-10"
+                              className="h-12 bg-[#2a2838] border-[#3f3b54] text-white placeholder:text-gray-500 focus-visible:ring-[#5b52ab] pr-10"
                               {...field}
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-3 text-muted-foreground"
+                              className="absolute right-3 top-3 text-gray-400 hover:text-white"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
@@ -164,14 +187,17 @@ export default function Login() {
                     )}
                   />
                   <div className="flex items-center">
-                    <Checkbox id="remember" className="border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
-                    <label htmlFor="remember" className="ml-2 text-sm text-muted-foreground">
+                    <Checkbox 
+                      id="remember" 
+                      className="border-[#3f3b54] data-[state=checked]:bg-[#5b52ab] data-[state=checked]:border-[#5b52ab]" 
+                    />
+                    <label htmlFor="remember" className="ml-2 text-sm text-gray-400">
                       Remember me for 30 days
                     </label>
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-primary hover:bg-primary/90"
+                    className="w-full h-12 bg-[#5b52ab] hover:bg-[#4a4294] text-white"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -201,7 +227,7 @@ export default function Login() {
                             type="email"
                             autoComplete="email"
                             disabled={isLoading}
-                            className="h-12 bg-background/50 backdrop-blur-sm border-border/50"
+                            className="h-12 bg-[#2a2838] border-[#3f3b54] text-white placeholder:text-gray-500 focus-visible:ring-[#5b52ab]"
                             {...field}
                           />
                         </FormControl>
@@ -220,12 +246,12 @@ export default function Login() {
                               placeholder="Enter your password"
                               type={showPassword ? "text" : "password"}
                               disabled={isLoading}
-                              className="h-12 bg-background/50 backdrop-blur-sm border-border/50 pr-10"
+                              className="h-12 bg-[#2a2838] border-[#3f3b54] text-white placeholder:text-gray-500 focus-visible:ring-[#5b52ab] pr-10"
                               {...field}
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-3 text-muted-foreground"
+                              className="absolute right-3 top-3 text-gray-400 hover:text-white"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? (
@@ -241,14 +267,17 @@ export default function Login() {
                     )}
                   />
                   <div className="flex items-center">
-                    <Checkbox id="remember-student" className="border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
-                    <label htmlFor="remember-student" className="ml-2 text-sm text-muted-foreground">
+                    <Checkbox 
+                      id="remember-student" 
+                      className="border-[#3f3b54] data-[state=checked]:bg-[#5b52ab] data-[state=checked]:border-[#5b52ab]" 
+                    />
+                    <label htmlFor="remember-student" className="ml-2 text-sm text-gray-400">
                       Remember me for 30 days
                     </label>
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-primary hover:bg-primary/90"
+                    className="w-full h-12 bg-[#5b52ab] hover:bg-[#4a4294] text-white"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -265,13 +294,13 @@ export default function Login() {
             </TabsContent>
           </Tabs>
           
-          <div className="mt-6 text-center">
-            <p className="text-muted-foreground text-sm">
-              Need help? Contact <a className="text-primary hover:underline" href="#">support@jstudios.com</a>
+          <div className="mt-6 pt-6 border-t border-[#3f3b54] text-center">
+            <p className="text-gray-400 text-sm">
+              Need help? Contact <a className="text-[#8c82e3] hover:underline" href="#">support@jstudios.com</a>
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
