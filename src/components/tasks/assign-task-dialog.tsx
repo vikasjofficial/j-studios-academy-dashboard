@@ -69,23 +69,38 @@ export function AssignTaskDialog({ open, onOpenChange, task, onTaskAssigned }: A
     setIsSubmitting(true);
     
     try {
-      // Use type assertion to fix TypeScript errors
-      const { error } = await supabase
-        .from("student_tasks" as any)
+      console.log("Assigning task to student:", {
+        task_id: task.id,
+        student_id: studentId,
+        due_date: format(dueDate, "yyyy-MM-dd"),
+        notes: notes || null
+      });
+      
+      const { data, error } = await supabase
+        .from("student_tasks")
         .insert({
           task_id: task.id,
           student_id: studentId,
           due_date: format(dueDate, "yyyy-MM-dd"),
           notes: notes || null,
           status: "pending"
-        });
+        })
+        .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error details:", error);
+        throw error;
+      }
       
+      console.log("Task assigned successfully:", data);
+      toast.success("Task assigned successfully to student");
+      setStudentId("");
+      setNotes("");
+      onOpenChange(false);
       onTaskAssigned();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error assigning task:", error);
-      toast.error("Failed to assign task");
+      toast.error(error.message || "Failed to assign task. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
