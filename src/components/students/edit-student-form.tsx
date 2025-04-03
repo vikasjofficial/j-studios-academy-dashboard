@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Check, X, Save, Upload, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentCredentialsForm from './student-credentials-form';
+import StudentCredentialsView from './student-credentials-view';
 import { StudentMessagesTab } from './student-messages-tab';
 import { StudentFeesTab } from './student-fees-tab';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -142,7 +142,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
       try {
         setIsUploading(true);
         if (student.avatar_url) {
-          // Extract the path from the URL
           const path = student.avatar_url.split('/').slice(-1)[0];
           const { error } = await supabase.storage.from('student_avatars').remove([path]);
           if (error) throw error;
@@ -181,11 +180,9 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
     try {
       setIsUploading(true);
       
-      // Create a unique filename
       const fileExt = avatarFile.name.split('.').pop();
       const fileName = `${student.id}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       
-      // Upload the file
       const { data, error } = await supabase.storage
         .from('student_avatars')
         .upload(fileName, avatarFile, {
@@ -195,7 +192,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
         
       if (error) throw error;
       
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('student_avatars')
         .getPublicUrl(fileName);
@@ -219,7 +215,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
     console.log("Form values on submit:", values);
     
     try {
-      // Upload avatar if a new one is selected
       let avatarPublicUrl = student.avatar_url;
       if (avatarFile) {
         avatarPublicUrl = await uploadAvatar();
@@ -240,12 +235,10 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
 
       if (updateError) throw updateError;
 
-      // Handle course enrollments
       const selectedCourses = values.selectedCourses || [];
       console.log("Selected courses:", selectedCourses);
       console.log("Existing enrollments:", studentEnrollments);
       
-      // Courses to remove (enrolled but not in selection)
       for (const existingCourseId of studentEnrollments) {
         if (!selectedCourses.includes(existingCourseId)) {
           console.log("Removing enrollment for course:", existingCourseId);
@@ -262,7 +255,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
         }
       }
       
-      // Courses to add (in selection but not enrolled)
       for (const courseId of selectedCourses) {
         if (!studentEnrollments.includes(courseId)) {
           console.log("Adding enrollment for course:", courseId);
@@ -282,7 +274,6 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
         }
       }
 
-      // Refresh the enrollments list
       fetchStudentEnrollments();
 
       onSuccess();
@@ -518,7 +509,10 @@ export default function EditStudentForm({ student, onSuccess }: EditStudentFormP
       </TabsContent>
       
       <TabsContent value="credentials">
-        <StudentCredentialsForm student={student} />
+        <div className="space-y-6">
+          <StudentCredentialsView studentId={student.id} />
+          <StudentCredentialsForm student={student} />
+        </div>
       </TabsContent>
       
       <TabsContent value="messages">
