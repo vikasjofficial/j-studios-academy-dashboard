@@ -8,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CreateTaskDialog } from "./create-task-dialog";
 import { AssignTaskDialog } from "./assign-task-dialog";
 import { EditTaskStatusDialog } from "./edit-task-status-dialog";
+import { EditTaskDialog } from "./edit-task-dialog";
 import { toast } from "sonner";
-import { CheckCircle, Clock, CircleAlert, PencilLine, UserPlus } from "lucide-react";
+import { CheckCircle, Clock, CircleAlert, PencilLine, UserPlus, Edit } from "lucide-react";
 
 export type Task = {
   id: string;
@@ -24,6 +25,7 @@ export function TaskList() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isEditStatusDialogOpen, setIsEditStatusDialogOpen] = useState(false);
+  const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // Fetch all tasks
@@ -65,6 +67,11 @@ export function TaskList() {
     setIsEditStatusDialogOpen(false);
     toast.success("Task status updated successfully");
   };
+
+  const handleTaskUpdated = () => {
+    refetch();
+    toast.success("Task updated successfully");
+  };
   
   const openAssignDialog = (task: Task) => {
     setSelectedTask(task);
@@ -74,6 +81,11 @@ export function TaskList() {
   const openEditStatusDialog = (task: Task) => {
     setSelectedTask(task);
     setIsEditStatusDialogOpen(true);
+  };
+
+  const openEditTaskDialog = (task: Task) => {
+    setSelectedTask(task);
+    setIsEditTaskDialogOpen(true);
   };
 
   return (
@@ -123,6 +135,14 @@ export function TaskList() {
                         <Button 
                           variant="outline" 
                           size="sm" 
+                          onClick={() => openEditTaskDialog(task)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
                           onClick={() => openAssignDialog(task)}
                         >
                           <UserPlus className="h-4 w-4 mr-1" />
@@ -167,6 +187,13 @@ export function TaskList() {
             onOpenChange={setIsEditStatusDialogOpen}
             task={selectedTask}
             onStatusUpdated={handleStatusUpdated}
+          />
+
+          <EditTaskDialog
+            open={isEditTaskDialogOpen}
+            onOpenChange={setIsEditTaskDialogOpen}
+            task={selectedTask}
+            onTaskUpdated={handleTaskUpdated}
           />
         </>
       )}
