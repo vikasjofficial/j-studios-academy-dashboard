@@ -239,7 +239,7 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
   const container = document.createElement('div');
   container.style.position = 'absolute';
   container.style.left = '-9999px';
-  container.style.width = '800px'; // Fixed width for consistent rendering
+  container.style.width = '750px'; // Slightly reduced width for better scaling
   container.style.backgroundColor = '#1A1C23';
   container.style.color = 'white';
   container.style.fontFamily = 'Arial, sans-serif';
@@ -260,13 +260,29 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
         * {
           font-family: Arial, sans-serif !important;
           box-sizing: border-box !important;
+          font-size: 95% !important; /* Slightly reduce font size */
+        }
+        .text-2xl { font-size: 1.4rem !important; }
+        .text-xl { font-size: 1.25rem !important; }
+        .text-lg { font-size: 1.1rem !important; }
+        .text-base { font-size: 0.95rem !important; }
+        .text-sm { font-size: 0.85rem !important; }
+        .text-xs { font-size: 0.75rem !important; }
+        
+        p, div {
+          margin-bottom: 2px;
+          margin-top: 2px;
+        }
+        td, th {
+          padding: 2px 3px !important;
+          font-size: 0.75rem !important;
         }
         table { 
           page-break-inside: avoid; 
           break-inside: avoid;
         }
         .pdf-section { 
-          margin-bottom: 15px; 
+          margin-bottom: 12px !important; 
           page-break-inside: avoid;
           break-inside: avoid;
         }
@@ -277,13 +293,6 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
           page-break-inside: avoid;
           break-inside: avoid;
         }
-        p, div {
-          margin-bottom: 2px;
-          margin-top: 2px;
-        }
-        td, th {
-          padding: 2px 4px;
-        }
       `;
       clonedDoc.head.appendChild(styleElement);
     }
@@ -291,12 +300,12 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
   
   // Capture the HTML as canvas
   const canvas = await html2canvas(container, canvasOptions);
-  const imgData = canvas.toDataURL('image/png', 1.0);
+  const imgData = canvas.toDataURL('image/png', 0.9); // Slightly reduce quality for smaller file size
   
   // Calculate dimensions for the PDF
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfHeight = pdf.internal.pageSize.getHeight();
-  const margin = 40;
+  const margin = 30; // Slightly reduced margins
   
   // Scale the image to fit the page width with margins
   const contentWidth = pdfWidth - (margin * 2);
@@ -320,39 +329,40 @@ async function addPageContentToPdf(pdf: jsPDF, pageHtml: string, pageIndex: numb
   } else {
     // Content needs to be split across multiple pages
     let heightLeft = contentHeight;
-    let position = 0;
-    let isFirstPage = true;
+    let position = margin;
     
     // Add image to the first page
     pdf.addImage(
       imgData,
       'PNG',
       margin,
-      isFirstPage ? margin : 0,
+      position,
       contentWidth,
       contentHeight,
       undefined,
       'FAST'
     );
     
-    heightLeft -= maxContentHeight;
-    position = -maxContentHeight;
+    heightLeft -= (maxContentHeight - margin);
+    position = margin - maxContentHeight;
     
     // Add additional pages for overflowing content
     while (heightLeft > 0) {
-      position -= maxContentHeight;
       pdf.addPage();
+      
       pdf.addImage(
         imgData,
         'PNG',
         margin,
-        position + (isFirstPage ? margin : 0),
+        position,
         contentWidth,
         contentHeight,
         undefined,
         'FAST'
       );
+      
       heightLeft -= maxContentHeight;
+      position -= maxContentHeight;
     }
   }
   
@@ -365,64 +375,64 @@ function createPage1Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white pdf-no-break" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Header Section -->
-      <div class="pdf-section text-center mb-6 pt-4">
-        <h1 class="text-2xl font-bold text-blue-400 mb-2">J-Studios</h1>
-        <h2 class="text-xl font-semibold mb-3">Student Profile Report</h2>
+      <div class="pdf-section text-center mb-4 pt-3">
+        <h1 class="text-xl font-bold text-blue-400 mb-2">J-Studios</h1>
+        <h2 class="text-lg font-semibold mb-2">Student Profile Report</h2>
         
-        <div class="flex justify-center items-center mb-6 pdf-no-break">
-          <div class="flex flex-col items-center p-4 bg-[#22242D] rounded-lg border border-gray-700 w-2/3">
+        <div class="flex justify-center items-center mb-4 pdf-no-break">
+          <div class="flex flex-col items-center p-3 bg-[#22242D] rounded-lg border border-gray-700 w-2/3">
             ${data.avatar 
-              ? `<img src="${data.avatar}" alt="${data.name}" class="w-20 h-20 rounded-full border-2 border-blue-400 mb-2" />`
-              : `<div class="w-20 h-20 rounded-full bg-blue-700 flex items-center justify-center text-2xl font-bold text-white">${data.name?.charAt(0) || 'S'}</div>`
+              ? `<img src="${data.avatar}" alt="${data.name}" class="w-16 h-16 rounded-full border-2 border-blue-400 mb-2" />`
+              : `<div class="w-16 h-16 rounded-full bg-blue-700 flex items-center justify-center text-xl font-bold text-white">${data.name?.charAt(0) || 'S'}</div>`
             }
-            <h3 class="text-lg font-bold mt-2">${data.name}</h3>
-            <p class="text-sm text-gray-300">Student ID: ${data.studentId}</p>
-            <p class="text-sm text-gray-300">Email: ${data.email}</p>
+            <h3 class="text-base font-bold mt-2">${data.name}</h3>
+            <p class="text-xs text-gray-300">Student ID: ${data.studentId}</p>
+            <p class="text-xs text-gray-300">Email: ${data.email}</p>
           </div>
         </div>
       </div>
 
       <!-- Courses Section -->
-      <div class="pdf-section mb-6 pdf-no-break">
-        <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">Enrolled Courses</h3>
-        <div class="grid grid-cols-2 gap-3">
+      <div class="pdf-section mb-4 pdf-no-break">
+        <h3 class="text-sm font-bold border-b border-gray-700 pb-1 mb-2">Enrolled Courses</h3>
+        <div class="grid grid-cols-2 gap-2">
           ${data.courses?.map(course => `
-            <div class="p-3 bg-[#22242D] rounded-lg border border-gray-700">
-              <h4 class="font-bold text-sm">${course.name}</h4>
+            <div class="p-2 bg-[#22242D] rounded-lg border border-gray-700">
+              <h4 class="font-bold text-xs">${course.name}</h4>
               <p class="text-xs text-gray-400">Code: ${course.code}</p>
               <p class="text-xs">Instructor: ${course.instructor}</p>
               <p class="text-xs">${course.start_date} - ${course.end_date}</p>
             </div>
-          `).join('') || '<p class="text-sm">No courses enrolled</p>'}
+          `).join('') || '<p class="text-xs">No courses enrolled</p>'}
         </div>
       </div>
 
       <!-- Attendance Summary Section -->
-      <div class="pdf-section mb-4 pdf-no-break">
-        <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">Attendance Summary</h3>
-        <div class="grid grid-cols-3 gap-3">
-          <div class="p-3 bg-green-900/30 rounded-lg border border-green-800 text-center">
-            <h4 class="font-bold text-sm text-green-400">Present</h4>
-            <p class="text-xl font-bold text-green-300">${data.attendanceSummary?.present || 0}</p>
+      <div class="pdf-section mb-3 pdf-no-break">
+        <h3 class="text-sm font-bold border-b border-gray-700 pb-1 mb-2">Attendance Summary</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="p-2 bg-green-900/30 rounded-lg border border-green-800 text-center">
+            <h4 class="font-bold text-xs text-green-400">Present</h4>
+            <p class="text-base font-bold text-green-300">${data.attendanceSummary?.present || 0}</p>
             <p class="text-xs text-green-400">of ${data.attendanceSummary?.total || 0}</p>
           </div>
           
-          <div class="p-3 bg-red-900/30 rounded-lg border border-red-800 text-center">
-            <h4 class="font-bold text-sm text-red-400">Absent</h4>
-            <p class="text-xl font-bold text-red-300">${data.attendanceSummary?.absent || 0}</p>
+          <div class="p-2 bg-red-900/30 rounded-lg border border-red-800 text-center">
+            <h4 class="font-bold text-xs text-red-400">Absent</h4>
+            <p class="text-base font-bold text-red-300">${data.attendanceSummary?.absent || 0}</p>
             <p class="text-xs text-red-400">of ${data.attendanceSummary?.total || 0}</p>
           </div>
           
-          <div class="p-3 bg-yellow-900/30 rounded-lg border border-yellow-800 text-center">
-            <h4 class="font-bold text-sm text-yellow-400">Late</h4>
-            <p class="text-xl font-bold text-yellow-300">${data.attendanceSummary?.late || 0}</p>
+          <div class="p-2 bg-yellow-900/30 rounded-lg border border-yellow-800 text-center">
+            <h4 class="font-bold text-xs text-yellow-400">Late</h4>
+            <p class="text-base font-bold text-yellow-300">${data.attendanceSummary?.late || 0}</p>
             <p class="text-xs text-yellow-400">of ${data.attendanceSummary?.total || 0}</p>
           </div>
         </div>
       </div>
 
-      <div class="text-center mt-6 pt-2 border-t border-gray-700">
-        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 1 of 4+</p>
+      <div class="text-center mt-4 pt-2 border-t border-gray-700">
+        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 1</p>
         <p class="text-xs text-gray-400">Generated on ${new Date().toLocaleString()}</p>
       </div>
     </div>
@@ -434,47 +444,47 @@ function createPage2Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Page Header -->
-      <div class="pdf-section text-center mb-4 pt-2">
-        <h2 class="text-xl font-semibold mb-1">Performance Overview</h2>
-        <p class="text-sm text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
+      <div class="pdf-section text-center mb-3 pt-2">
+        <h2 class="text-lg font-semibold mb-1">Performance Overview</h2>
+        <p class="text-xs text-gray-400 mb-1">Student: ${data.name} (${data.studentId})</p>
       </div>
 
       <!-- Strong Topics Section -->
-      <div class="pdf-section mb-5 pdf-no-break">
-        <h3 class="text-base font-bold mb-2 flex items-center">
-          <span class="inline-block w-3 h-3 mr-2 rounded-full bg-green-500"></span>
+      <div class="pdf-section mb-4 pdf-no-break">
+        <h3 class="text-sm font-bold mb-1 flex items-center">
+          <span class="inline-block w-2.5 h-2.5 mr-1.5 rounded-full bg-green-500"></span>
           Strong Topics (8-10)
         </h3>
         <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
           <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
-                <th class="p-2 text-left">Topic</th>
-                <th class="p-2 text-left">Course</th>
-                <th class="p-2 text-left">Score</th>
-                <th class="p-2 text-left">Comments</th>
+                <th class="p-1 text-left">Topic</th>
+                <th class="p-1 text-left">Course</th>
+                <th class="p-1 text-left">Score</th>
+                <th class="p-1 text-left">Comments</th>
               </tr>
             </thead>
             <tbody>
               ${data.topics?.strong && data.topics.strong.length > 0 
                 ? data.topics.strong.map((topic, i) => `
                   <tr class="${i % 2 === 0 ? 'bg-[#22242D]' : 'bg-[#1D1F26]'}">
-                    <td class="p-2 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
-                    <td class="p-2">${topic.course?.name || 'Unknown Course'}</td>
-                    <td class="p-2">
-                      <span class="px-2 py-1 rounded text-xs font-medium bg-green-900 text-green-300">
+                    <td class="p-1 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
+                    <td class="p-1">${topic.course?.name || 'Unknown Course'}</td>
+                    <td class="p-1">
+                      <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-green-900 text-green-300">
                         ${topic.score.toFixed(1)}
                       </span>
                     </td>
-                    <td class="p-2">
+                    <td class="p-1">
                       ${topic.comment ? 
-                        `<p class="text-xs italic">"${topic.comment.substring(0, 40)}${topic.comment.length > 40 ? '...' : ''}"</p>
+                        `<p class="text-xs italic">"${topic.comment.substring(0, 30)}${topic.comment.length > 30 ? '...' : ''}"</p>
                          <p class="text-xs text-gray-400">${topic.graded_by || 'Instructor'}</p>` 
                         : '<span class="text-xs text-gray-500">No comments</span>'}
                     </td>
                   </tr>
                 `).join('') 
-                : '<tr><td colspan="4" class="p-2 text-center text-gray-400">No strong topics found yet.</td></tr>'
+                : '<tr><td colspan="4" class="p-1 text-center text-gray-400">No strong topics found yet.</td></tr>'
               }
             </tbody>
           </table>
@@ -482,50 +492,50 @@ function createPage2Template(data: StudentData): string {
       </div>
 
       <!-- Needs Work Topics Section -->
-      <div class="pdf-section mb-4 pdf-no-break">
-        <h3 class="text-base font-bold mb-2 flex items-center">
-          <span class="inline-block w-3 h-3 mr-2 rounded-full bg-orange-500"></span>
+      <div class="pdf-section mb-3 pdf-no-break">
+        <h3 class="text-sm font-bold mb-1 flex items-center">
+          <span class="inline-block w-2.5 h-2.5 mr-1.5 rounded-full bg-orange-500"></span>
           Needs Work Topics (1-7)
         </h3>
         <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
           <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
-                <th class="p-2 text-left">Topic</th>
-                <th class="p-2 text-left">Course</th>
-                <th class="p-2 text-left">Score</th>
-                <th class="p-2 text-left">Comments</th>
+                <th class="p-1 text-left">Topic</th>
+                <th class="p-1 text-left">Course</th>
+                <th class="p-1 text-left">Score</th>
+                <th class="p-1 text-left">Comments</th>
               </tr>
             </thead>
             <tbody>
               ${data.topics?.needsWork && data.topics.needsWork.length > 0 
                 ? data.topics.needsWork.map((topic, i) => `
                   <tr class="${i % 2 === 0 ? 'bg-[#22242D]' : 'bg-[#1D1F26]'}">
-                    <td class="p-2 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
-                    <td class="p-2">${topic.course?.name || 'Unknown Course'}</td>
-                    <td class="p-2">
-                      <span class="px-2 py-1 rounded text-xs font-medium 
+                    <td class="p-1 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
+                    <td class="p-1">${topic.course?.name || 'Unknown Course'}</td>
+                    <td class="p-1">
+                      <span class="px-1.5 py-0.5 rounded text-xs font-medium 
                         ${topic.score <= 4 ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300'}">
                         ${topic.score.toFixed(1)}
                       </span>
                     </td>
-                    <td class="p-2">
+                    <td class="p-1">
                       ${topic.comment ? 
-                        `<p class="text-xs italic">"${topic.comment.substring(0, 40)}${topic.comment.length > 40 ? '...' : ''}"</p>
+                        `<p class="text-xs italic">"${topic.comment.substring(0, 30)}${topic.comment.length > 30 ? '...' : ''}"</p>
                          <p class="text-xs text-gray-400">${topic.graded_by || 'Instructor'}</p>` 
                         : '<span class="text-xs text-gray-500">No comments</span>'}
                     </td>
                   </tr>
                 `).join('') 
-                : '<tr><td colspan="4" class="p-2 text-center text-gray-400">No struggling topics identified.</td></tr>'
+                : '<tr><td colspan="4" class="p-1 text-center text-gray-400">No struggling topics identified.</td></tr>'
               }
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="text-center mt-6 pt-2 border-t border-gray-700">
-        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 2 of 4+</p>
+      <div class="text-center mt-4 pt-2 border-t border-gray-700">
+        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 2</p>
         <p class="text-xs text-gray-400">Generated on ${new Date().toLocaleString()}</p>
       </div>
     </div>
@@ -537,32 +547,32 @@ function createPage3Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Page Header -->
-      <div class="pdf-section text-center mb-4 pt-2">
-        <h2 class="text-xl font-semibold mb-1">Student Tasks</h2>
-        <p class="text-sm text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
+      <div class="pdf-section text-center mb-3 pt-2">
+        <h2 class="text-lg font-semibold mb-1">Student Tasks</h2>
+        <p class="text-xs text-gray-400 mb-1">Student: ${data.name} (${data.studentId})</p>
       </div>
 
       <!-- Student Tasks Section -->
-      <div class="pdf-section mb-5 pdf-no-break">
+      <div class="pdf-section mb-4 pdf-no-break">
         <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
           <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
-                <th class="p-2 text-left" style="width: 30%;">Task</th>
-                <th class="p-2 text-left" style="width: 15%;">Due Date</th>
-                <th class="p-2 text-left" style="width: 35%;">Description</th>
-                <th class="p-2 text-left" style="width: 20%;">Status</th>
+                <th class="p-1 text-left" style="width: 30%;">Task</th>
+                <th class="p-1 text-left" style="width: 15%;">Due Date</th>
+                <th class="p-1 text-left" style="width: 35%;">Description</th>
+                <th class="p-1 text-left" style="width: 20%;">Status</th>
               </tr>
             </thead>
             <tbody>
               ${data.tasks && data.tasks.length > 0 
                 ? data.tasks.map((task, i) => `
                   <tr class="${i % 2 === 0 ? 'bg-[#22242D]' : 'bg-[#1D1F26]'}">
-                    <td class="p-2 font-medium">${task.title}</td>
-                    <td class="p-2">${task.due_date}</td>
-                    <td class="p-2 text-xs">${task.description || 'No description'}</td>
-                    <td class="p-2">
-                      <span class="px-2 py-1 rounded text-xs font-medium 
+                    <td class="p-1 font-medium">${task.title}</td>
+                    <td class="p-1">${task.due_date}</td>
+                    <td class="p-1 text-xs">${task.description || 'No description'}</td>
+                    <td class="p-1">
+                      <span class="px-1.5 py-0.5 rounded text-xs font-medium 
                         ${task.status === 'completed' ? 'bg-green-900 text-green-300' : 
                           task.status === 'overdue' ? 'bg-red-900 text-red-300' : 
                           'bg-yellow-900 text-yellow-300'}">
@@ -571,7 +581,7 @@ function createPage3Template(data: StudentData): string {
                     </td>
                   </tr>
                 `).join('') 
-                : '<tr><td colspan="4" class="p-2 text-center text-gray-400">No tasks assigned</td></tr>'
+                : '<tr><td colspan="4" class="p-1 text-center text-gray-400">No tasks assigned</td></tr>'
               }
             </tbody>
           </table>
@@ -579,9 +589,9 @@ function createPage3Template(data: StudentData): string {
       </div>
 
       <!-- Task Status Summary -->
-      <div class="pdf-section mb-4 pdf-no-break">
-        <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-3">Task Status Overview</h3>
-        <div class="grid grid-cols-3 gap-3">
+      <div class="pdf-section mb-3 pdf-no-break">
+        <h3 class="text-sm font-bold border-b border-gray-700 pb-1 mb-2">Task Status Overview</h3>
+        <div class="grid grid-cols-3 gap-2">
           ${(() => {
             const completed = data.tasks?.filter(t => t.status === 'completed').length || 0;
             const pending = data.tasks?.filter(t => t.status === 'pending').length || 0;
@@ -589,21 +599,21 @@ function createPage3Template(data: StudentData): string {
             const total = data.tasks?.length || 0;
             
             return `
-              <div class="p-3 bg-green-900/30 rounded-lg border border-green-800 text-center">
-                <h4 class="font-bold text-sm text-green-400">Completed</h4>
-                <p class="text-xl font-bold text-green-300">${completed}</p>
+              <div class="p-2 bg-green-900/30 rounded-lg border border-green-800 text-center">
+                <h4 class="font-bold text-xs text-green-400">Completed</h4>
+                <p class="text-base font-bold text-green-300">${completed}</p>
                 <p class="text-xs text-green-400">of ${total}</p>
               </div>
               
-              <div class="p-3 bg-yellow-900/30 rounded-lg border border-yellow-800 text-center">
-                <h4 class="font-bold text-sm text-yellow-400">Pending</h4>
-                <p class="text-xl font-bold text-yellow-300">${pending}</p>
+              <div class="p-2 bg-yellow-900/30 rounded-lg border border-yellow-800 text-center">
+                <h4 class="font-bold text-xs text-yellow-400">Pending</h4>
+                <p class="text-base font-bold text-yellow-300">${pending}</p>
                 <p class="text-xs text-yellow-400">of ${total}</p>
               </div>
               
-              <div class="p-3 bg-red-900/30 rounded-lg border border-red-800 text-center">
-                <h4 class="font-bold text-sm text-red-400">Overdue</h4>
-                <p class="text-xl font-bold text-red-300">${overdue}</p>
+              <div class="p-2 bg-red-900/30 rounded-lg border border-red-800 text-center">
+                <h4 class="font-bold text-xs text-red-400">Overdue</h4>
+                <p class="text-base font-bold text-red-300">${overdue}</p>
                 <p class="text-xs text-red-400">of ${total}</p>
               </div>
             `;
@@ -611,8 +621,8 @@ function createPage3Template(data: StudentData): string {
         </div>
       </div>
 
-      <div class="text-center mt-6 pt-2 border-t border-gray-700">
-        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 3 of 4+</p>
+      <div class="text-center mt-4 pt-2 border-t border-gray-700">
+        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 3</p>
         <p class="text-xs text-gray-400">Generated on ${new Date().toLocaleString()}</p>
       </div>
     </div>
@@ -627,10 +637,10 @@ function createPage4Template(data: StudentData): string {
   if (semesterEntries.length === 0) {
     return `
       <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
-        <div class="pdf-section text-center mb-6 pt-2">
-          <h2 class="text-xl font-semibold mb-1">Topics Performance by Semester</h2>
-          <p class="text-sm text-gray-400 mb-3">Student: ${data.name} (${data.studentId})</p>
-          <p class="p-6 text-center">No semester data available for this student.</p>
+        <div class="pdf-section text-center mb-4 pt-2">
+          <h2 class="text-lg font-semibold mb-1">Topics Performance by Semester</h2>
+          <p class="text-xs text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
+          <p class="p-4 text-center">No semester data available for this student.</p>
         </div>
       </div>
     `;
@@ -649,34 +659,34 @@ function createPage4Template(data: StudentData): string {
       : `Semester ${semesterName}`;
     
     semestersHtml += `
-      <div class="pdf-section mb-5 pdf-no-break">
-        <h3 class="text-base font-bold border-b border-gray-700 pb-1 mb-2">${displayName}</h3>
+      <div class="pdf-section mb-4 pdf-no-break">
+        <h3 class="text-sm font-bold border-b border-gray-700 pb-1 mb-1">${displayName}</h3>
         <div class="pdf-table-container overflow-hidden rounded-lg border border-gray-700">
           <table class="w-full text-xs" style="border-collapse: collapse;">
             <thead class="bg-[#2A2D3A]">
               <tr>
-                <th class="p-2 text-left" style="width: 30%;">Topic</th>
-                <th class="p-2 text-left" style="width: 30%;">Course</th>
-                <th class="p-2 text-left" style="width: 10%;">Score</th>
-                <th class="p-2 text-left" style="width: 30%;">Comments</th>
+                <th class="p-1 text-left" style="width: 30%;">Topic</th>
+                <th class="p-1 text-left" style="width: 30%;">Course</th>
+                <th class="p-1 text-left" style="width: 10%;">Score</th>
+                <th class="p-1 text-left" style="width: 30%;">Comments</th>
               </tr>
             </thead>
             <tbody>
               ${topics.map((topic, i) => `
                 <tr class="${i % 2 === 0 ? 'bg-[#22242D]' : 'bg-[#1D1F26]'}">
-                  <td class="p-2 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
-                  <td class="p-2">${topic.course?.name || 'Unknown Course'}</td>
-                  <td class="p-2">
-                    <span class="px-2 py-1 rounded text-xs font-medium 
+                  <td class="p-1 font-medium">${topic.topics?.name || 'Unnamed Topic'}</td>
+                  <td class="p-1">${topic.course?.name || 'Unknown Course'}</td>
+                  <td class="p-1">
+                    <span class="px-1.5 py-0.5 rounded text-xs font-medium 
                       ${topic.score >= 8 ? 'bg-green-900 text-green-300' : 
                         topic.score <= 4 ? 'bg-red-900 text-red-300' : 
                         'bg-yellow-900 text-yellow-300'}">
                       ${topic.score.toFixed(1)}
                     </span>
                   </td>
-                  <td class="p-2">
+                  <td class="p-1">
                     ${topic.comment ? 
-                      `<p class="text-xs italic">"${topic.comment.substring(0, 40)}${topic.comment.length > 40 ? '...' : ''}"</p>
+                      `<p class="text-xs italic">"${topic.comment.substring(0, 30)}${topic.comment.length > 30 ? '...' : ''}"</p>
                        <p class="text-xs text-gray-400">${topic.graded_by || 'Instructor'}</p>` 
                       : '<span class="text-xs text-gray-500">No comments</span>'}
                   </td>
@@ -692,17 +702,18 @@ function createPage4Template(data: StudentData): string {
   return `
     <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
       <!-- Page Header -->
-      <div class="pdf-section text-center mb-4 pt-2">
-        <h2 class="text-xl font-semibold mb-1">Topics Performance by Semester</h2>
-        <p class="text-sm text-gray-400 mb-2">Student: ${data.name} (${data.studentId})</p>
+      <div class="pdf-section text-center mb-3 pt-2">
+        <h2 class="text-lg font-semibold mb-1">Topics Performance by Semester</h2>
+        <p class="text-xs text-gray-400 mb-1">Student: ${data.name} (${data.studentId})</p>
       </div>
 
       ${semestersHtml}
 
-      <div class="text-center mt-6 pt-2 border-t border-gray-700">
-        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 4 of 4+</p>
+      <div class="text-center mt-4 pt-2 border-t border-gray-700">
+        <p class="text-xs text-gray-400">J-Studios Academic Portal - Page 4+</p>
         <p class="text-xs text-gray-400">Generated on ${new Date().toLocaleString()}</p>
       </div>
     </div>
   `;
 }
+
