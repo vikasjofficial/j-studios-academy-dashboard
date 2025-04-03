@@ -180,7 +180,10 @@ export async function fetchStudentData(studentId: string): Promise<StudentData |
 }
 
 // Generate PDF from HTML template
-export async function generateStudentPDF(studentData: StudentData): Promise<void> {
+export async function generateStudentPDF(
+  studentData: StudentData, 
+  selectedSections: string[] = ['profile', 'performance', 'tasks', 'byTopic']
+): Promise<void> {
   try {
     // Initialize PDF document with compression for smaller file size
     const pdf = new jsPDF({
@@ -190,13 +193,28 @@ export async function generateStudentPDF(studentData: StudentData): Promise<void
       compress: true 
     });
     
-    // Create page templates
-    const pages = [
-      createPage1Template(studentData),
-      createPage2Template(studentData),
-      createPage3Template(studentData),
-      createPage4Template(studentData)
-    ];
+    // Map section IDs to template functions
+    const sectionTemplates: Record<string, (data: StudentData) => string> = {
+      'profile': createPage1Template,
+      'performance': createPage2Template,
+      'tasks': createPage3Template,
+      'byTopic': createPage4Template
+    };
+    
+    // Create page templates for selected sections only
+    const pages: string[] = [];
+    
+    // Always include profile as the first page if selected
+    if (selectedSections.includes('profile')) {
+      pages.push(createPage1Template(studentData));
+    }
+    
+    // Add other selected sections in order
+    for (const sectionId of ['performance', 'tasks', 'byTopic']) {
+      if (selectedSections.includes(sectionId)) {
+        pages.push(sectionTemplates[sectionId](studentData));
+      }
+    }
     
     // Process each page
     for (let i = 0; i < pages.length; i++) {
