@@ -887,6 +887,54 @@ export type Database = {
           },
         ]
       }
+      student_tasks: {
+        Row: {
+          assigned_at: string
+          completed_at: string | null
+          due_date: string
+          id: string
+          notes: string | null
+          status: string
+          student_id: string
+          task_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          completed_at?: string | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          status?: string
+          student_id: string
+          task_id: string
+        }
+        Update: {
+          assigned_at?: string
+          completed_at?: string | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          student_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_tasks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
@@ -947,6 +995,33 @@ export type Database = {
           phone?: string | null
           student_id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          title?: string
         }
         Relationships: []
       }

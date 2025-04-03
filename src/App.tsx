@@ -13,6 +13,7 @@ import GradebookManagement from '@/pages/admin/GradebookManagement';
 import AttendanceManagement from '@/pages/admin/AttendanceManagement';
 import AdminMessages from '@/pages/admin/AdminMessages';
 import LecturesManagement from '@/pages/admin/LecturesManagement';
+import TasksManagement from '@/pages/admin/TasksManagement';
 import Settings from '@/pages/admin/Settings';
 import StudentDashboard from '@/pages/student/StudentDashboard';
 import StudentCourses from '@/pages/student/StudentCourses';
@@ -87,6 +88,13 @@ function App() {
               <ProtectedRoute allowedRoles={['admin']}>
                 <DashboardLayout>
                   <LecturesManagement />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/tasks" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <DashboardLayout>
+                  <TasksManagement />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
