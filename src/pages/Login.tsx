@@ -112,14 +112,14 @@ export default function Login() {
             <TabsList className="grid grid-cols-2 w-full mb-6 bg-[#2a2838]">
               <TabsTrigger 
                 value="admin" 
-                className="data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white py-3"
+                className="flex-1 justify-center py-4 data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white"
               >
                 <Laptop className="mr-2 h-4 w-4" />
                 Admin
               </TabsTrigger>
               <TabsTrigger 
                 value="student" 
-                className="data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white py-3"
+                className="flex-1 justify-center py-4 data-[state=active]:bg-[#5b52ab] data-[state=active]:text-white"
               >
                 <User className="mr-2 h-4 w-4" />
                 Student
