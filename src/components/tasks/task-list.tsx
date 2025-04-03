@@ -30,19 +30,23 @@ export function TaskList() {
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ["admin-tasks"],
     queryFn: async () => {
-      // Use type assertion to fix TypeScript errors
-      const { data, error } = await supabase
-        .from("tasks" as any)
-        .select("*")
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("tasks")
+          .select("*")
+          .order("created_at", { ascending: false });
+          
+        if (error) {
+          console.error("Error fetching tasks:", error);
+          toast.error("Failed to fetch tasks");
+          throw error;
+        }
         
-      if (error) {
-        toast.error("Failed to fetch tasks");
+        return (data as unknown) as Task[];
+      } catch (error) {
+        console.error("Error in query function:", error);
         throw error;
       }
-      
-      // Use as unknown first and then as Task[] to satisfy TypeScript
-      return (data as unknown) as Task[];
     },
   });
   

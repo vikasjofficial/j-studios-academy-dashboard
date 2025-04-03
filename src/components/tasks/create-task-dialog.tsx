@@ -31,16 +31,20 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
     setIsSubmitting(true);
     
     try {
-      // Use type assertion to fix TypeScript errors
+      console.log("Creating task with title:", title);
       const { error } = await supabase
-        .from("tasks" as any)
+        .from("tasks")
         .insert({
           title,
           description: description || null,
           created_by: user?.name || user?.email || "Admin",
+          is_active: true
         });
         
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error creating task:", error);
+        throw error;
+      }
       
       setTitle("");
       setDescription("");
