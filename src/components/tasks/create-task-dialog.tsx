@@ -52,6 +52,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
       toast.success("Task created successfully");
       setTitle("");
       setDescription("");
+      onOpenChange(false);
       onTaskCreated();
     } catch (error: any) {
       console.error("Error creating task:", error);
