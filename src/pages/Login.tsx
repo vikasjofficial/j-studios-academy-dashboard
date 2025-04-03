@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff, Laptop, User, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Laptop, User } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -81,13 +81,6 @@ export default function Login() {
         <div className="relative bg-gradient-to-br from-[#5b52ab] to-[#372f6a] p-8 flex flex-col">
           <div className="mb-2">
             <h2 className="text-2xl font-bold text-white">J STUDIOS</h2>
-          </div>
-          
-          <div className="absolute top-8 right-8">
-            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 rounded-full px-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to website
-            </Button>
           </div>
           
           <div className="flex-1 flex items-center justify-center">
