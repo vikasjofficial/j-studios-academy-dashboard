@@ -4,131 +4,163 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Star, Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Award, BarChart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import { 
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell 
+} from "@/components/ui/table";
 
 export function ExamsResultsCard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   
-  // Fetch recent exam results for the student
-  const { data: examResults, isLoading } = useQuery({
-    queryKey: ["student-recent-exam-results", user?.id],
+  // First, fetch enrolled courses
+  const { data: courses, isLoading: coursesLoading } = useQuery({
+    queryKey: ["enrolled-courses", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
       const { data, error } = await supabase
-        .from("exam_assignments")
+        .from("enrollments")
         .select(`
-          id,
-          status,
-          assigned_at,
-          exams:exam_id (
-            id,
-            name,
-            exam_type
-          ),
-          exam_results (
-            id,
-            total_score,
-            completed_at,
-            view_results
-          )
+          course:course_id(id, name)
         `)
-        .eq("student_id", user.id)
-        .eq("status", "completed")
-        .order("assigned_at", { ascending: false })
-        .limit(3);
+        .eq("student_id", user.id);
         
       if (error) throw error;
       
-      // Filter to only include results that are visible to students
-      return data.filter(item => 
-        item.exam_results && 
-        item.exam_results.length > 0 && 
-        item.exam_results[0].view_results
-      );
+      return data.map(item => item.course);
     },
     enabled: !!user?.id,
   });
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium flex items-center">
-            <BookOpen className="mr-2 h-4 w-4 text-primary" />
-            Recent Exam Results
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center py-4">
-            <div className="animate-pulse h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  
+  // Set first course as default when courses load
+  useState(() => {
+    if (courses?.length > 0 && !selectedCourseId) {
+      setSelectedCourseId(courses[0].id);
+    }
+  });
+  
+  // Fetch student grades
+  const { data: grades, isLoading: gradesLoading } = useQuery({
+    queryKey: ["student-grades-overview", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("grades")
+        .select(`
+          id,
+          score,
+          comment,
+          topic_id,
+          course_id,
+          topics:topic_id(name)
+        `)
+        .eq("student_id", user.id)
+        .order("created_at", { ascending: false });
+        
+      if (error) throw error;
+      
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+  
+  // Calculate average score
+  const calculateAverageScore = () => {
+    if (!grades || grades.length === 0) return "-";
+    
+    const sum = grades.reduce((acc, grade) => acc + Number(grade.score), 0);
+    return (sum / grades.length).toFixed(1);
+  };
+  
+  // Get color based on score
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return "text-green-500";
+    if (score >= 7) return "text-blue-500";
+    if (score >= 5) return "text-yellow-500";
+    return "text-red-500";
+  };
+  
+  // Navigate to full grades view
+  const navigateToGrades = () => {
+    navigate("/student/courses");
+  };
+  
+  // Get the 5 most recent grades
+  const recentGrades = grades?.slice(0, 5) || [];
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-medium flex items-center">
-          <BookOpen className="mr-2 h-4 w-4 text-primary" />
-          Recent Exam Results
+          <BarChart className="mr-2 h-4 w-4 text-primary" />
+          My Grades & Performance
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {examResults && examResults.length > 0 ? (
-          <div className="space-y-3">
-            {examResults.map((result) => (
-              <div key={result.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                <div>
-                  <div className="font-medium">{result.exams?.name}</div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Badge variant="outline" className="capitalize text-xs">
-                      {result.exams?.exam_type}
-                    </Badge>
-                    {result.exam_results?.[0]?.completed_at && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(result.exam_results[0].completed_at), "MMM d")}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full">
-                    <Star className="h-3 w-3" />
-                    <span className="font-medium">{result.exam_results?.[0]?.total_score || "-"}</span>
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/student/exams/${result.id}`)}
-                  >
-                    View
-                  </Button>
-                </div>
+        {gradesLoading ? (
+          <div className="flex justify-center items-center py-6">
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : grades && grades.length > 0 ? (
+          <>
+            <div className="flex justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-amber-500" />
+                <span className="font-medium">Average Score:</span>
+                <motion.span 
+                  className={`font-bold text-lg ${getScoreColor(parseFloat(calculateAverageScore()))}`}
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {calculateAverageScore()}
+                </motion.span>
               </div>
-            ))}
+            </div>
             
-            <div className="pt-2">
-              <Button 
-                variant="ghost" 
-                className="text-primary w-full justify-center"
-                onClick={() => navigate("/student/exams")}
-              >
-                View All Results
+            <div className="rounded-md overflow-hidden mb-3">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="w-[180px]">Topic</TableHead>
+                    <TableHead className="text-right">Score</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentGrades.map((grade) => (
+                    <TableRow key={grade.id} className="hover:bg-muted/10">
+                      <TableCell className="font-medium">{grade.topics?.name || "Unnamed Topic"}</TableCell>
+                      <TableCell className="text-right">
+                        <span className={`font-medium ${getScoreColor(Number(grade.score))}`}>
+                          {grade.score}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            <div className="flex justify-end">
+              <Button size="sm" onClick={navigateToGrades}>
+                View All Grades
               </Button>
             </div>
-          </div>
+          </>
         ) : (
-          <div className="text-center py-3 text-sm text-muted-foreground">
-            No exam results available yet.
+          <div className="text-center py-6 text-muted-foreground">
+            No grades available yet.
           </div>
         )}
       </CardContent>
