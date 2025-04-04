@@ -8,9 +8,8 @@ import AgoraRTC from 'agora-rtc-sdk-ng';
 import {
   AgoraRTCProvider,
   LocalVideoTrack,
-  RemoteUser,
   useClientEvent,
-  useJoin as useAgoraJoin,
+  useJoin,
   usePublish,
   useRTCClient,
   useRemoteUsers,
@@ -42,8 +41,7 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   const remoteUsers = useRemoteUsers();
   
   // Join the channel
-  useAgoraJoin({
-    appid: client.appId,
+  useJoin({
     channel: channelName,
     uid: user?.id ? String(user.id) : Math.floor(Math.random() * 100000).toString(),
     token: undefined,
@@ -81,7 +79,7 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
           await client.unpublish(localCameraTrack);
         }
         
-        await client.publish(screenTrack);
+        await client.publish(screenTrack as any);
         setScreenTrack(screenTrack);
         setIsScreenSharing(true);
       } catch (error) {
@@ -232,7 +230,7 @@ export function VideoCall(props: VideoCallProps) {
         <CardTitle>Video Classroom</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-1 overflow-hidden">
-        <AgoraRTCProvider client={AgoraRTC.createClient({ mode: "rtc", codec: "vp8" })} appId={props.appId}>
+        <AgoraRTCProvider client={AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }) as any} appId={props.appId}>
           <VideoCallContent {...props} />
         </AgoraRTCProvider>
       </CardContent>
