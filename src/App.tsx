@@ -27,6 +27,7 @@ import StudentExams from '@/pages/student/StudentExams';
 import ExamSession from '@/pages/student/ExamSession';
 import ProtectedRoute from '@/components/protected-route';
 import DashboardLayout from '@/components/dashboard-layout';
+import VideoClassroomPage from '@/pages/video-classroom';
 import './App.css';
 
 // Create a new QueryClient instance
@@ -98,6 +99,12 @@ function App() {
                 </DashboardLayout>
               </ProtectedRoute>
             } />
+            {/* New Video Classroom Route */}
+            <Route path="/admin/video-classroom" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <VideoClassroomPage />
+              </ProtectedRoute>
+            } />
             {/* New Exams Routes */}
             <Route path="/admin/exams" element={
               <ProtectedRoute allowedRoles={['admin']}>
@@ -156,6 +163,12 @@ function App() {
                 <DashboardLayout>
                   <StudentLectures />
                 </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            {/* New Video Classroom Route for students */}
+            <Route path="/student/video-classroom" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <VideoClassroomPage />
               </ProtectedRoute>
             } />
             {/* New Student Exam Routes */}

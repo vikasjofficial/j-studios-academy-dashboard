@@ -1,7 +1,8 @@
+
 import { useAuth } from "@/context/auth-context";
 import { SidebarProvider, SidebarInset, useSidebar } from "./ui/sidebar";
 import { Button } from "./ui/button";
-import { PanelLeftClose, PanelLeftOpen, Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText, LogOut, Clock, Download, BookPlus, CheckCircle } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Home, Users, BookOpen, CheckSquare, Calendar, MessageSquare, Settings, HelpCircle, BookOpenText, LogOut, Clock, Download, BookPlus, CheckCircle, Video } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link, useLocation } from "react-router-dom";
 import styles from "@/styles/layout.module.css";
@@ -40,6 +41,7 @@ function LeftSidebar() {
     { href: '/admin/lectures', icon: BookOpenText, label: 'Lectures' },
     { href: '/admin/exams', icon: BookPlus, label: 'Exams' },
     { href: '/admin/tasks', icon: CheckCircle, label: 'Tasks' },
+    { href: '/admin/video-classroom', icon: Video, label: 'Video Classroom' },
     { href: '/admin/messages', icon: MessageSquare, label: 'Messages' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
@@ -50,6 +52,7 @@ function LeftSidebar() {
     { href: '/student/lectures', icon: BookOpenText, label: 'My Lectures' },
     { href: '/student/attendance', icon: Calendar, label: 'My Attendance' },
     { href: '/student/exams', icon: BookPlus, label: 'My Exams' },
+    { href: '/student/video-classroom', icon: Video, label: 'Video Classroom' },
     { href: '/student/messages', icon: MessageSquare, label: 'Messages' },
   ];
 
