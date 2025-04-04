@@ -4,17 +4,18 @@ import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, MessageSquare, PhoneOff } from "lucide-react";
-import { AgoraRTCProvider, useRtcEngine, useJoin, usePublish, useRemoteUsers, useLocalCameraTrack, useLocalMicrophoneTrack, RemoteUser } from "agora-rtc-react";
+import { 
+  AgoraRTCProvider, 
+  useRtcEngine, 
+  useJoin, 
+  usePublish, 
+  useRemoteUsers, 
+  useLocalCameraTrack, 
+  useLocalMicrophoneTrack 
+} from "agora-rtc-react";
 import VideoPlayer from './video-player';
 import ChatPanel from './chat-panel';
 import { cn } from '@/lib/utils';
-
-interface VideoCallProps {
-  channelName: string;
-  appId: string;
-  token?: string;
-  onLeave?: () => void;
-}
 
 export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   const { user } = useAuth();
@@ -215,6 +216,13 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
       </div>
     </div>
   );
+}
+
+interface VideoCallProps {
+  channelName: string;
+  appId: string;
+  token?: string;
+  onLeave?: () => void;
 }
 
 export function VideoCall(props: VideoCallProps) {
