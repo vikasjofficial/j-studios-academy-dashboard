@@ -1,11 +1,10 @@
 
 import React, { useRef, useEffect } from 'react';
-import { ILocalVideoTrack } from "agora-rtc-react";
 import { Mic, MicOff, User } from "lucide-react";
 import { IAgoraRTCRemoteUser } from "agora-rtc-sdk-ng";
 
 interface VideoPlayerProps {
-  track?: ILocalVideoTrack;
+  track?: any; // Using any for now to avoid type conflicts
   remoteUser?: IAgoraRTCRemoteUser;
   username: string;
   muted?: boolean;

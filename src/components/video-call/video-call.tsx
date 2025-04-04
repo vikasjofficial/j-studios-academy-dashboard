@@ -4,7 +4,13 @@ import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, MessageSquare, PhoneOff } from "lucide-react";
-import AgoraRTC, { IAgoraRTCClient, ScreenVideoTrackInitConfig, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
+import AgoraRTC, { 
+  IAgoraRTCClient, 
+  ScreenVideoTrackInitConfig, 
+  ILocalVideoTrack, 
+  ILocalTrack,
+  ICameraVideoTrack
+} from 'agora-rtc-sdk-ng';
 import {
   AgoraRTCProvider,
   useJoin,
@@ -81,10 +87,12 @@ export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps
         const track = await AgoraRTC.createScreenVideoTrack(trackConfig, "disable");
         
         if (localCameraTrack) {
-          await client.unpublish(localCameraTrack);
+          // Cast to any to resolve type incompatibility
+          await client.unpublish([localCameraTrack] as any);
         }
         
-        await client.publish(track);
+        // Cast to any to resolve type incompatibility
+        await client.publish([track] as any);
         setScreenTrack(track);
         setIsScreenSharing(true);
       } catch (error) {
@@ -92,13 +100,15 @@ export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps
       }
     } else {
       if (screenTrack) {
-        await client.unpublish(screenTrack);
+        // Cast to any to resolve type incompatibility
+        await client.unpublish([screenTrack] as any);
         screenTrack.stop();
         setScreenTrack(null);
       }
       
       if (localCameraTrack) {
-        await client.publish(localCameraTrack);
+        // Cast to any to resolve type incompatibility
+        await client.publish([localCameraTrack] as any);
       }
       
       setIsScreenSharing(false);
@@ -200,7 +210,7 @@ export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps
           ) : (
             <>
               <VideoPlayer 
-                track={isScreenSharing ? screenTrack : localCameraTrack}
+                track={isScreenSharing ? screenTrack as any : localCameraTrack as any}
                 username={`${user?.name || 'You'} ${user?.role === 'admin' ? '(Teacher)' : '(Student)'}`}
                 muted
                 isLocal
