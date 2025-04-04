@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ import { TasksCard } from "@/components/dashboard/tasks-card";
 import { format } from "date-fns";
 import { ExamsResultsCard } from "@/components/dashboard/exams-results-card";
 import { LecturesCard } from "@/components/dashboard/lectures-card";
+import { SemesterProgressChart } from "@/components/dashboard/semester-progress-chart";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -52,6 +54,11 @@ export default function StudentDashboard() {
             {/* Profile card now spans full width */}
             <div className="w-full">
               <StudentProfileCard />
+            </div>
+            
+            {/* Semester Progress Chart */}
+            <div className="w-full">
+              <SemesterProgressChart />
             </div>
             
             {/* Other cards stacked below in a grid */}
