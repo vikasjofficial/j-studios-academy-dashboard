@@ -4,18 +4,29 @@ import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, MessageSquare, PhoneOff } from "lucide-react";
-import { 
-  AgoraRTCProvider, 
-  useRtcEngine, 
-  useJoin, 
-  usePublish, 
-  useRemoteUsers, 
-  useLocalCameraTrack, 
-  useLocalMicrophoneTrack 
+import AgoraRTC from 'agora-rtc-sdk-ng';
+import {
+  AgoraRTCProvider,
+  LocalVideoTrack,
+  RemoteUser,
+  useClientEvent,
+  useJoin as useAgoraJoin,
+  usePublish,
+  useRTCClient,
+  useRemoteUsers,
+  useLocalCameraTrack,
+  useLocalMicrophoneTrack
 } from "agora-rtc-react";
 import VideoPlayer from './video-player';
 import ChatPanel from './chat-panel';
 import { cn } from '@/lib/utils';
+
+interface VideoCallProps {
+  channelName: string;
+  appId: string;
+  token?: string;
+  onLeave?: () => void;
+}
 
 export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   const { user } = useAuth();
@@ -27,13 +38,14 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   
   const { isLoading: isLoadingMic, localMicrophoneTrack } = useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
-  const engine = useRtcEngine();
+  const client = useRTCClient();
   const remoteUsers = useRemoteUsers();
   
   // Join the channel
-  useJoin({
+  useAgoraJoin({
+    appid: client.appId,
     channel: channelName,
-    uid: user?.id || Math.floor(Math.random() * 100000),
+    uid: user?.id ? String(user.id) : Math.floor(Math.random() * 100000).toString(),
     token: undefined,
   });
   
@@ -60,35 +72,30 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   const toggleScreenShare = async () => {
     if (!isScreenSharing) {
       try {
-        const screenTrack = await navigator.mediaDevices.getDisplayMedia({ video: true })
-          .then(stream => stream.getVideoTracks()[0]);
+        const screenTrack = await AgoraRTC.createScreenVideoTrack({
+          encoderConfig: "1080p_2",
+          optimizationMode: "detail",
+        });
           
-        const track = await engine.createScreenVideoTrack({
-          screenVideoTrackInitConfig: {
-            optimizationMode: "detail",
-            encoderConfig: "1080p_2",
-          }
-        }, "auto");
-        
         if (localCameraTrack) {
-          await engine.unpublish(localCameraTrack);
+          await client.unpublish(localCameraTrack);
         }
         
-        await engine.publish(track);
-        setScreenTrack(track);
+        await client.publish(screenTrack);
+        setScreenTrack(screenTrack);
         setIsScreenSharing(true);
       } catch (error) {
         console.error("Error sharing screen:", error);
       }
     } else {
       if (screenTrack) {
-        await engine.unpublish(screenTrack);
+        await client.unpublish(screenTrack);
         screenTrack.stop();
         setScreenTrack(null);
       }
       
       if (localCameraTrack) {
-        await engine.publish(localCameraTrack);
+        await client.publish(localCameraTrack);
       }
       
       setIsScreenSharing(false);
@@ -107,7 +114,7 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
       await screenTrack.stop();
     }
     
-    await engine.leave();
+    await client.leave();
     onLeave?.();
   };
   
@@ -218,13 +225,6 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   );
 }
 
-interface VideoCallProps {
-  channelName: string;
-  appId: string;
-  token?: string;
-  onLeave?: () => void;
-}
-
 export function VideoCall(props: VideoCallProps) {
   return (
     <Card className="h-[calc(100vh-12rem)] flex flex-col overflow-hidden">
@@ -232,7 +232,7 @@ export function VideoCall(props: VideoCallProps) {
         <CardTitle>Video Classroom</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-1 overflow-hidden">
-        <AgoraRTCProvider client={{mode: "rtc", codec: "vp8"}} appId={props.appId}>
+        <AgoraRTCProvider client={AgoraRTC.createClient({ mode: "rtc", codec: "vp8" })} appId={props.appId}>
           <VideoCallContent {...props} />
         </AgoraRTCProvider>
       </CardContent>
