@@ -5,13 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth-context";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import cardStyles from '@/styles/card.module.css';
 
+interface SemesterTopicData {
+  semesterId: string;
+  semesterName: string;
+  startDate: string;
+  topics: Record<string, {
+    topicId: string;
+    topicName: string;
+    score: number;
+    order: number;
+  }>
+}
+
 export function SemesterProgressChart() {
   const { user } = useAuth();
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [semesterData, setSemesterData] = useState<SemesterTopicData[]>([]);
   
   // Fetch grades grouped by topic within semesters
   const { data: gradesData, isLoading } = useQuery({
@@ -54,17 +66,7 @@ export function SemesterProgressChart() {
       if (!grades || grades.length === 0) return [];
       
       // Group grades by semester and topic
-      const semesterTopics: Record<string, {
-        semesterId: string,
-        semesterName: string,
-        startDate: string,
-        topics: Record<string, {
-          topicId: string,
-          topicName: string,
-          score: number,
-          order: number
-        }>
-      }> = {};
+      const semesterTopics: Record<string, SemesterTopicData> = {};
       
       grades.forEach(grade => {
         if (!grade.topics?.semesters) return;
@@ -93,35 +95,16 @@ export function SemesterProgressChart() {
         };
       });
       
-      // Convert data to chart format
+      // Convert to array and sort by start_date
       return Object.values(semesterTopics)
-        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-        .map((semester, index) => {
-          const topicEntries = Object.values(semester.topics)
-            .sort((a, b) => a.order - b.order);
-          
-          // Create a data point with all topics for this semester
-          const dataPoint: Record<string, any> = {
-            name: semester.semesterName,
-            semesterId: semester.semesterId,
-          };
-          
-          // Add each topic as a property (topic1, topic2, etc)
-          topicEntries.forEach((topic, i) => {
-            dataPoint[`topic${i+1}`] = topic.score;
-            // Store topic name for tooltip
-            dataPoint[`topic${i+1}Name`] = topic.topicName;
-          });
-          
-          return dataPoint;
-        });
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
     },
     enabled: !!user?.id,
   });
   
   useEffect(() => {
     if (gradesData && gradesData.length > 0) {
-      setChartData(gradesData);
+      setSemesterData(gradesData);
     }
   }, [gradesData]);
   
@@ -143,7 +126,7 @@ export function SemesterProgressChart() {
     );
   }
   
-  if (!chartData || chartData.length === 0) {
+  if (!semesterData || semesterData.length === 0) {
     return (
       <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
         <CardHeader>
@@ -164,79 +147,86 @@ export function SemesterProgressChart() {
   // Generate dynamic colors for topics
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
   
-  // Determine how many topics we have across all semesters
-  const topicCount = Object.keys(chartData[0])
-    .filter(key => key.startsWith('topic') && !key.includes('Name'))
-    .length;
-  
   return (
-    <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          <span>Semester Topics Progress</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="h-48 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
-              margin={{ top: 5, right: 20, left: 0, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 10 }}
-                angle={-45}
-                textAnchor="end"
-                height={50}
-              />
-              <YAxis 
-                domain={[0, 10]} 
-                tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 10 }}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: 'rgba(30, 30, 30, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  color: 'white',
-                }}
-                formatter={(value, name, props) => {
-                  // Fix the type error by ensuring name is a string before using replace
-                  const topicNum = typeof name === 'string' 
-                    ? name.replace('topic', '') 
-                    : '';
-                  
-                  // Look up the real topic name stored in the data
-                  const topicName = topicNum ? props.payload[`topic${topicNum}Name`] : '';
-                  return [`${value} / 10`, topicName || `Topic ${topicNum}`];
-                }}
-                labelFormatter={(label) => `Semester: ${label}`}
-              />
-              <Legend verticalAlign="bottom" />
-              
-              {/* Dynamically generate lines for each topic */}
-              {Array.from({ length: topicCount }).map((_, i) => {
-                const topicKey = `topic${i+1}`;
-                return (
-                  <Line
-                    key={topicKey}
-                    type="monotone"
-                    dataKey={topicKey}
-                    name={topicKey}
-                    stroke={COLORS[i % COLORS.length]}
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: COLORS[i % COLORS.length], strokeWidth: 1, stroke: "#fff" }}
-                    activeDot={{ r: 6, fill: COLORS[i % COLORS.length] }}
-                  />
-                );
-              })}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold tracking-tight">Semester Topic Progress</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {semesterData.map((semester) => {
+          const topicEntries = Object.values(semester.topics)
+            .sort((a, b) => a.order - b.order);
+            
+          // Create a data point for each topic in this semester
+          const chartData = topicEntries.map((topic) => ({
+            name: topic.topicName,
+            score: topic.score,
+            topicId: topic.topicId
+          }));
+          
+          // Calculate semester average
+          const semesterAvg = topicEntries.reduce((acc, topic) => acc + topic.score, 0) / topicEntries.length;
+          
+          return (
+            <Card key={semester.semesterId} className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <span>{semester.semesterName}</span>
+                  </div>
+                  <span className="text-sm font-normal flex items-center gap-1">
+                    Avg: {semesterAvg.toFixed(1)}
+                    {semesterAvg >= 7 ? (
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-red-500" />
+                    )}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="h-48 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={chartData}
+                      margin={{ top: 5, right: 20, left: 0, bottom: 20 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 10 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={50}
+                      />
+                      <YAxis 
+                        domain={[0, 10]} 
+                        tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 10 }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '8px',
+                          color: 'white',
+                        }}
+                        formatter={(value) => [`${value} / 10`, 'Score']}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        dot={{ r: 4, fill: "#3b82f6", strokeWidth: 1, stroke: "#fff" }}
+                        activeDot={{ r: 6, fill: "#3b82f6" }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 }

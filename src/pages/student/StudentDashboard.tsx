@@ -56,7 +56,7 @@ export default function StudentDashboard() {
               <StudentProfileCard />
             </div>
             
-            {/* Semester Progress Chart */}
+            {/* Semester Progress Charts */}
             <div className="w-full">
               <SemesterProgressChart />
             </div>
