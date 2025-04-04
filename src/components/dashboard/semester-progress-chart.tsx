@@ -204,10 +204,13 @@ export function SemesterProgressChart() {
                   color: 'white',
                 }}
                 formatter={(value, name, props) => {
-                  // Extract the topic number from the name (e.g., "topic1" -> "1")
-                  const topicNum = name.replace('topic', '');
+                  // Fix the type error by ensuring name is a string before using replace
+                  const topicNum = typeof name === 'string' 
+                    ? name.replace('topic', '') 
+                    : '';
+                  
                   // Look up the real topic name stored in the data
-                  const topicName = props.payload[`topic${topicNum}Name`];
+                  const topicName = topicNum ? props.payload[`topic${topicNum}Name`] : '';
                   return [`${value} / 10`, topicName || `Topic ${topicNum}`];
                 }}
                 labelFormatter={(label) => `Semester: ${label}`}
