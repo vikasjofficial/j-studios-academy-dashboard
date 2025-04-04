@@ -27,7 +27,7 @@ interface VideoCallProps {
   onLeave?: () => void;
 }
 
-export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
+export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps) {
   const { user } = useAuth();
   const [showChat, setShowChat] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -40,8 +40,9 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
   const client = useRTCClient();
   const remoteUsers = useRemoteUsers();
   
-  // Join the channel
+  // Join the channel with the correct options format
   useJoin({
+    appid: appId,
     channel: channelName,
     uid: user?.id ? String(user.id) : Math.floor(Math.random() * 100000).toString(),
     token: undefined,
@@ -224,13 +225,16 @@ export function VideoCallContent({ channelName, onLeave }: VideoCallProps) {
 }
 
 export function VideoCall(props: VideoCallProps) {
+  // Create client config
+  const rtcClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+  
   return (
     <Card className="h-[calc(100vh-12rem)] flex flex-col overflow-hidden">
       <CardHeader className="p-4">
         <CardTitle>Video Classroom</CardTitle>
       </CardHeader>
       <CardContent className="p-2 flex-1 overflow-hidden">
-        <AgoraRTCProvider client={AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }) as any} appId={props.appId}>
+        <AgoraRTCProvider client={rtcClient}>
           <VideoCallContent {...props} />
         </AgoraRTCProvider>
       </CardContent>

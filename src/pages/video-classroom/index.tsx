@@ -9,8 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Video, Users } from "lucide-react";
 
-// Replace with your actual Agora App ID
-const AGORA_APP_ID = "your-agora-app-id";
+// Agora App ID
+const AGORA_APP_ID = "472169e734d647f6a6ba179a1b428709";
 
 export default function VideoClassroomPage() {
   const { user } = useAuth();
