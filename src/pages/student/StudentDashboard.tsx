@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,15 +48,23 @@ export default function StudentDashboard() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="col-span-1 space-y-6">
+          <div className="space-y-6">
+            {/* Profile card now spans full width */}
+            <div className="w-full">
               <StudentProfileCard />
-              <ExamsResultsCard />
             </div>
             
-            <div className="md:col-span-2 space-y-6">
-              <TasksCard />
-              <LecturesCard />
+            {/* Other cards stacked below in a grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-1">
+                <ExamsResultsCard />
+              </div>
+              <div className="md:col-span-2">
+                <TasksCard />
+              </div>
+              <div className="md:col-span-3">
+                <LecturesCard />
+              </div>
             </div>
           </div>
         </div>
