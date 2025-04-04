@@ -4,7 +4,7 @@ import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Video, VideoOff, ScreenShare, MessageSquare, PhoneOff } from "lucide-react";
-import AgoraRTC, { IAgoraRTCClient } from 'agora-rtc-sdk-ng';
+import AgoraRTC, { IAgoraRTCClient, ScreenVideoTrackInitConfig, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 import {
   AgoraRTCProvider,
   useJoin,
@@ -31,7 +31,7 @@ export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [screenTrack, setScreenTrack] = useState<any>(null);
+  const [screenTrack, setScreenTrack] = useState<ILocalVideoTrack | null>(null);
   
   const { isLoading: isLoadingMic, localMicrophoneTrack } = useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
@@ -72,16 +72,13 @@ export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps
   const toggleScreenShare = async () => {
     if (!isScreenSharing) {
       try {
-        const screenTrack = await navigator.mediaDevices.getDisplayMedia({
-          video: true
-        }).then(stream => stream.getVideoTracks()[0]);
-          
-        const track = await AgoraRTC.createScreenVideoTrack({
-          screenVideoTrackInitConfig: {
-            optimizationMode: "detail",
-            encoderConfig: "1080p_2"
-          }
-        }, "auto");
+        // Create a screen video track
+        const trackConfig: ScreenVideoTrackInitConfig = {
+          optimizationMode: "detail",
+          encoderConfig: "1080p_2"
+        };
+        
+        const track = await AgoraRTC.createScreenVideoTrack(trackConfig, "disable");
         
         if (localCameraTrack) {
           await client.unpublish(localCameraTrack);
@@ -213,7 +210,7 @@ export function VideoCallContent({ channelName, appId, onLeave }: VideoCallProps
               {remoteUsers.map((remoteUser) => (
                 <VideoPlayer
                   key={remoteUser.uid}
-                  remoteUser={remoteUser}
+                  remoteUser={remoteUser as any}
                   username={`User ${remoteUser.uid}`}
                 />
               ))}
