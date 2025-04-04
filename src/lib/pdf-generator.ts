@@ -186,7 +186,7 @@ export async function generateStudentPDF(
     let combinedHTML = `
       <div id="pdf-content" class="bg-[#1A1C23] text-white" style="font-family: Arial, sans-serif; max-width: 100%;">
         <!-- Header Section -->
-        <div class="pdf-section text-center mb-3">
+        <div class="pdf-section text-center mb-3 pdf-header">
           <h1 class="text-xl font-bold text-blue-400 mb-1">J-Studios</h1>
           <h2 class="text-lg font-semibold mb-1">Student Profile Report</h2>
           <p class="text-xs text-gray-400 mb-2">Student: ${studentData.name} (${studentData.studentId})</p>
@@ -200,7 +200,7 @@ export async function generateStudentPDF(
     }
     
     combinedHTML += `
-        <div class="text-center mt-4 pt-2 border-t border-gray-700">
+        <div class="text-center mt-4 pt-2 border-t border-gray-700 pdf-footer">
           <p class="text-xs text-gray-400">J-Studios Academic Portal</p>
           <p class="text-xs text-gray-400">Generated on ${new Date().toLocaleString()}</p>
         </div>
@@ -251,6 +251,11 @@ async function addContentToPdf(pdf: jsPDF, html: string): Promise<void> {
           padding: 0 !important;
           margin: 0 !important;
           margin-bottom: 6px !important;
+          border-bottom: 2px solid #333 !important;
+          padding-bottom: 8px !important;
+        }
+        .pdf-header, .pdf-footer {
+          border-bottom: none !important;
         }
         .text-2xl { font-size: 1.04rem !important; }
         .text-xl { font-size: 0.96rem !important; }
@@ -272,9 +277,10 @@ async function addContentToPdf(pdf: jsPDF, html: string): Promise<void> {
         }
         .pdf-table-container {
           overflow: visible !important;
-          border: none !important;
+          border: 2px solid #333 !important;
           padding: 0 !important;
           margin: 0 !important;
+          margin-bottom: 8px !important;
         }
         
         #pdf-content {
@@ -290,6 +296,16 @@ async function addContentToPdf(pdf: jsPDF, html: string): Promise<void> {
         
         .bg-[#22242D], .bg-[#1D1F26], .bg-[#2A2D3A] {
           padding: 2px !important;
+          border-bottom: 1px solid #444 !important;
+        }
+
+        .grid {
+          display: grid !important;
+          gap: 0.5rem !important;
+        }
+        
+        .grid > div {
+          border: 2px solid #333 !important;
         }
       `;
       clonedDoc.head.appendChild(styleElement);
