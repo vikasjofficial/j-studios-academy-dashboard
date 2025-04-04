@@ -13,9 +13,9 @@ export function SemesterProgressChart() {
   const { user } = useAuth();
   const [chartData, setChartData] = useState<any[]>([]);
   
-  // Fetch grades grouped by semester
+  // Fetch grades grouped by topic within semesters
   const { data: gradesData, isLoading } = useQuery({
-    queryKey: ["student-semester-grades", user?.id],
+    queryKey: ["student-topic-grades", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       
@@ -30,7 +30,7 @@ export function SemesterProgressChart() {
       
       const courseId = enrollments.course_id;
       
-      // Get all grades for this student in this course
+      // Get all grades for this student in this course with topic info
       const { data: grades } = await supabase
         .from("grades")
         .select(`
@@ -39,6 +39,7 @@ export function SemesterProgressChart() {
           topics:topic_id (
             name,
             semester_id,
+            order_id,
             semesters:semester_id (
               id,
               name,
@@ -52,12 +53,17 @@ export function SemesterProgressChart() {
       
       if (!grades || grades.length === 0) return [];
       
-      // Group grades by semester and calculate averages
-      const semesterGrades: Record<string, { 
-        name: string, 
-        scores: number[], 
+      // Group grades by semester and topic
+      const semesterTopics: Record<string, {
+        semesterId: string,
+        semesterName: string,
         startDate: string,
-        id: string
+        topics: Record<string, {
+          topicId: string,
+          topicName: string,
+          score: number,
+          order: number
+        }>
       }> = {};
       
       grades.forEach(grade => {
@@ -66,33 +72,49 @@ export function SemesterProgressChart() {
         const semesterId = grade.topics.semesters.id;
         const semesterName = grade.topics.semesters.name;
         const startDate = grade.topics.semesters.start_date;
+        const topicId = grade.topic_id;
+        const topicName = grade.topics.name;
+        const order = grade.topics.order_id || 0;
         
-        if (!semesterGrades[semesterId]) {
-          semesterGrades[semesterId] = {
-            name: semesterName,
-            scores: [],
+        if (!semesterTopics[semesterId]) {
+          semesterTopics[semesterId] = {
+            semesterId,
+            semesterName,
             startDate,
-            id: semesterId
+            topics: {}
           };
         }
         
-        semesterGrades[semesterId].scores.push(Number(grade.score));
+        semesterTopics[semesterId].topics[topicId] = {
+          topicId,
+          topicName,
+          score: Number(grade.score),
+          order
+        };
       });
       
-      // Calculate average per semester
-      return Object.values(semesterGrades)
-        .map(semester => {
-          const sum = semester.scores.reduce((a, b) => a + b, 0);
-          const avg = semester.scores.length ? (sum / semester.scores.length) : 0;
+      // Convert data to chart format
+      return Object.values(semesterTopics)
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+        .map((semester, index) => {
+          const topicEntries = Object.values(semester.topics)
+            .sort((a, b) => a.order - b.order);
           
-          return {
-            name: semester.name,
-            average: parseFloat(avg.toFixed(1)),
-            startDate: semester.startDate,
-            id: semester.id
+          // Create a data point with all topics for this semester
+          const dataPoint: Record<string, any> = {
+            name: semester.semesterName,
+            semesterId: semester.semesterId,
           };
-        })
-        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+          
+          // Add each topic as a property (topic1, topic2, etc)
+          topicEntries.forEach((topic, i) => {
+            dataPoint[`topic${i+1}`] = topic.score;
+            // Store topic name for tooltip
+            dataPoint[`topic${i+1}Name`] = topic.topicName;
+          });
+          
+          return dataPoint;
+        });
     },
     enabled: !!user?.id,
   });
@@ -109,7 +131,7 @@ export function SemesterProgressChart() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <span>Semester Progress</span>
+            <span>Semester Topics Progress</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -121,44 +143,38 @@ export function SemesterProgressChart() {
     );
   }
   
-  if (!chartData || chartData.length < 2) {
+  if (!chartData || chartData.length === 0) {
     return (
       <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <span>Semester Progress</span>
+            <span>Semester Topics Progress</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center h-48 text-center">
-            <p className="text-muted-foreground">
-              {chartData && chartData.length === 1 
-                ? "At least two semesters are needed to show progress" 
-                : "No semester data available"}
-            </p>
+            <p className="text-muted-foreground">No topic data available</p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  // Calculate if the latest semester average has improved
-  const trend = chartData.length >= 2 
-    ? chartData[chartData.length - 1].average > chartData[chartData.length - 2].average
-    : null;
+  // Generate dynamic colors for topics
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+  
+  // Determine how many topics we have across all semesters
+  const topicCount = Object.keys(chartData[0])
+    .filter(key => key.startsWith('topic') && !key.includes('Name'))
+    .length;
   
   return (
     <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
-          <span>Semester Progress</span>
-          {trend !== null && (
-            <span className={`text-xs px-2 py-1 rounded-full ${trend ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-              {trend ? 'Improving' : 'Declining'}
-            </span>
-          )}
+          <span>Semester Topics Progress</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
@@ -187,19 +203,33 @@ export function SemesterProgressChart() {
                   borderRadius: '8px',
                   color: 'white',
                 }}
-                formatter={(value) => [`${value} / 10`, 'Average Score']}
+                formatter={(value, name, props) => {
+                  // Extract the topic number from the name (e.g., "topic1" -> "1")
+                  const topicNum = name.replace('topic', '');
+                  // Look up the real topic name stored in the data
+                  const topicName = props.payload[`topic${topicNum}Name`];
+                  return [`${value} / 10`, topicName || `Topic ${topicNum}`];
+                }}
                 labelFormatter={(label) => `Semester: ${label}`}
               />
               <Legend verticalAlign="bottom" />
-              <Line
-                type="monotone"
-                dataKey="average"
-                name="Semester Average"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ r: 4, fill: "#1e3a8a", strokeWidth: 2, stroke: "#3b82f6" }}
-                activeDot={{ r: 6, fill: "#3b82f6" }}
-              />
+              
+              {/* Dynamically generate lines for each topic */}
+              {Array.from({ length: topicCount }).map((_, i) => {
+                const topicKey = `topic${i+1}`;
+                return (
+                  <Line
+                    key={topicKey}
+                    type="monotone"
+                    dataKey={topicKey}
+                    name={topicKey}
+                    stroke={COLORS[i % COLORS.length]}
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: COLORS[i % COLORS.length], strokeWidth: 1, stroke: "#fff" }}
+                    activeDot={{ r: 6, fill: COLORS[i % COLORS.length] }}
+                  />
+                );
+              })}
             </LineChart>
           </ResponsiveContainer>
         </div>
