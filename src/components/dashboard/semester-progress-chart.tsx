@@ -152,8 +152,18 @@ export function SemesterProgressChart() {
       <h2 className="text-2xl font-bold tracking-tight">Semester Topic Progress</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {semesterData.map((semester) => {
+          // Guard against null/undefined topics
+          if (!semester || !semester.topics) {
+            return null;
+          }
+          
           const topicEntries = Object.values(semester.topics)
+            .filter(topic => topic !== null && topic !== undefined) // Ensure no null/undefined values
             .sort((a, b) => a.order - b.order);
+            
+          if (topicEntries.length === 0) {
+            return null;
+          }
             
           // Create a data point for each topic in this semester
           const chartData = topicEntries.map((topic) => ({
