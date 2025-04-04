@@ -242,7 +242,7 @@ async function addContentToPdf(pdf: jsPDF, html: string): Promise<void> {
         * {
           font-family: Arial, sans-serif !important;
           box-sizing: border-box !important;
-          font-size: 90% !important;
+          font-size: 80% !important;
           margin: 0 !important;
           padding: 0 !important;
           border: none !important;
@@ -250,14 +250,14 @@ async function addContentToPdf(pdf: jsPDF, html: string): Promise<void> {
         .pdf-section {
           padding: 0 !important;
           margin: 0 !important;
-          margin-bottom: 8px !important;
+          margin-bottom: 6px !important;
         }
-        .text-2xl { font-size: 1.3rem !important; }
-        .text-xl { font-size: 1.2rem !important; }
-        .text-lg { font-size: 1.1rem !important; }
-        .text-base { font-size: 0.9rem !important; }
-        .text-sm { font-size: 0.8rem !important; }
-        .text-xs { font-size: 0.7rem !important; }
+        .text-2xl { font-size: 1.04rem !important; }
+        .text-xl { font-size: 0.96rem !important; }
+        .text-lg { font-size: 0.88rem !important; }
+        .text-base { font-size: 0.72rem !important; }
+        .text-sm { font-size: 0.64rem !important; }
+        .text-xs { font-size: 0.56rem !important; }
         
         p, div {
           margin-bottom: 2px !important;
@@ -265,7 +265,7 @@ async function addContentToPdf(pdf: jsPDF, html: string): Promise<void> {
         }
         td, th {
           padding: 2px 3px !important;
-          font-size: 0.7rem !important;
+          font-size: 0.56rem !important;
         }
         table { 
           border-collapse: collapse !important;
