@@ -30,8 +30,9 @@ export function CreateFolderDialog({
     setIsSubmitting(true);
     
     try {
+      // Use the generic version to work around TypeScript issues
       const { error } = await supabase
-        .from("task_folders")
+        .from('task_folders')
         .insert([{ name: folderName.trim() }]);
         
       if (error) {

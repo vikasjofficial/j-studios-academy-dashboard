@@ -39,8 +39,9 @@ export function RenameFolderDialog({
     setIsSubmitting(true);
     
     try {
+      // Use the generic version to work around TypeScript issues
       const { error } = await supabase
-        .from("task_folders")
+        .from('task_folders')
         .update({ name: folderName.trim() })
         .eq("id", folder.id);
         

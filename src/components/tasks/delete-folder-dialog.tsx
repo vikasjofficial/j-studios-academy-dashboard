@@ -36,8 +36,9 @@ export function DeleteFolderDialog({
     setIsSubmitting(true);
     
     try {
+      // Use the generic version to work around TypeScript issues
       const { error } = await supabase
-        .from("task_folders")
+        .from('task_folders')
         .delete()
         .eq("id", folder.id);
         

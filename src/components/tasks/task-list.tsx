@@ -55,39 +55,56 @@ export function TaskList() {
   const [selectedFolder, setSelectedFolder] = useState<TaskFolder | null>(null);
   const [folderToEdit, setFolderToEdit] = useState<TaskFolder | null>(null);
 
-  // Fetch all tasks, optionally filtered by folder
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ["admin-tasks", selectedFolder?.id],
     queryFn: async () => {
       try {
         let query = supabase
           .from("tasks")
-          .select(`
-            *,
-            task_folders(name)
-          `)
-          .order("created_at", { ascending: false });
+          .select("*");
           
-        // Apply folder filter if a folder is selected
         if (selectedFolder) {
           query = query.eq("folder_id", selectedFolder.id);
         }
         
-        const { data, error } = await query;
+        const { data: tasksData, error: tasksError } = await query.order("created_at", { ascending: false });
         
-        if (error) {
-          console.error("Error fetching tasks:", error);
+        if (tasksError) {
+          console.error("Error fetching tasks:", tasksError);
           toast.error("Failed to fetch tasks");
-          throw error;
+          throw tasksError;
+        }
+
+        const folderIds = tasksData
+          .filter(task => task.folder_id)
+          .map(task => task.folder_id);
+
+        if (folderIds.length > 0) {
+          const { data: foldersData, error: foldersError } = await supabase
+            .from('task_folders')
+            .select("*")
+            .in("id", folderIds);
+
+          if (foldersError) {
+            console.error("Error fetching folders:", foldersError);
+            throw foldersError;
+          }
+
+          const tasksWithFolderNames = tasksData.map(task => {
+            if (task.folder_id) {
+              const folder = foldersData.find(f => f.id === task.folder_id);
+              return {
+                ...task,
+                folder_name: folder ? folder.name : null
+              };
+            }
+            return task;
+          });
+          
+          return tasksWithFolderNames as Task[];
         }
         
-        // Format the data to include folder name
-        const formattedData = data.map(task => ({
-          ...task,
-          folder_name: task.task_folders ? task.task_folders.name : null
-        }));
-        
-        return formattedData as Task[];
+        return tasksData as Task[];
       } catch (error) {
         console.error("Error in query function:", error);
         throw error;
@@ -319,7 +336,6 @@ export function TaskList() {
         </Card>
       </div>
       
-      {/* View Assignments Dialog */}
       <Dialog open={isViewAssignmentsOpen} onOpenChange={setIsViewAssignmentsOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -386,7 +402,6 @@ export function TaskList() {
         </DialogContent>
       </Dialog>
       
-      {/* Folder Dialogs */}
       <CreateFolderDialog
         open={isCreateFolderOpen}
         onOpenChange={setIsCreateFolderOpen}
@@ -411,7 +426,6 @@ export function TaskList() {
         </>
       )}
       
-      {/* Other Dialogs */}
       <CreateTaskDialog 
         open={isCreateDialogOpen} 
         onOpenChange={setIsCreateDialogOpen}

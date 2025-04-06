@@ -52,8 +52,9 @@ export function TaskFolders({
     queryKey: ["task-folders"],
     queryFn: async () => {
       try {
+        // Use the generic version to work around TypeScript issues
         const { data, error } = await supabase
-          .from("task_folders")
+          .from('task_folders')
           .select("*")
           .order("name");
           
@@ -63,7 +64,7 @@ export function TaskFolders({
           throw error;
         }
         
-        return (data as unknown) as TaskFolder[];
+        return data as TaskFolder[];
       } catch (error) {
         console.error("Error in query function:", error);
         throw error;
