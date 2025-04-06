@@ -97,14 +97,14 @@ export function MoveTaskDialog({
           <div className="space-y-2">
             <Label htmlFor="folder">Select Folder</Label>
             <Select
-              value={folderId || ""}
-              onValueChange={(value) => setFolderId(value || null)}
+              value={folderId || "none"}
+              onValueChange={(value) => setFolderId(value === "none" ? null : value)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a folder" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None (Remove from folder)</SelectItem>
+                <SelectItem value="none">None (Remove from folder)</SelectItem>
                 {folders?.map((folder) => (
                   <SelectItem key={folder.id} value={folder.id}>
                     {folder.name}
