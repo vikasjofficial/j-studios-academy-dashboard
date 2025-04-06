@@ -9,10 +9,14 @@ import { AssignTaskDialog } from "./assign-task-dialog";
 import { EditTaskStatusDialog } from "./edit-task-status-dialog";
 import { EditTaskDialog } from "./edit-task-dialog";
 import { UnassignTaskDialog } from "./unassign-task-dialog";
+import { TaskFolders, TaskFolder } from "./task-folders";
+import { CreateFolderDialog } from "./create-folder-dialog";
+import { RenameFolderDialog } from "./rename-folder-dialog";
+import { DeleteFolderDialog } from "./delete-folder-dialog";
 import { toast } from "sonner";
 import { 
   CheckCircle, Clock, CircleAlert, PencilLine, 
-  UserPlus, Edit, Users, UserMinus 
+  UserPlus, Edit, Users, UserMinus, Folder
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -23,6 +27,8 @@ export type Task = {
   created_at: string;
   created_by: string;
   is_active: boolean;
+  folder_id: string | null;
+  folder_name?: string | null;
 }
 
 type StudentAssignment = {
@@ -40,27 +46,48 @@ export function TaskList() {
   const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false);
   const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
   const [isViewAssignmentsOpen, setIsViewAssignmentsOpen] = useState(false);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [isRenameFolderOpen, setIsRenameFolderOpen] = useState(false);
+  const [isDeleteFolderOpen, setIsDeleteFolderOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedStudentTask, setSelectedStudentTask] = useState<{id: string, studentName: string} | null>(null);
   const [taskAssignments, setTaskAssignments] = useState<StudentAssignment[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<TaskFolder | null>(null);
+  const [folderToEdit, setFolderToEdit] = useState<TaskFolder | null>(null);
 
-  // Fetch all tasks
+  // Fetch all tasks, optionally filtered by folder
   const { data: tasks, isLoading, refetch } = useQuery({
-    queryKey: ["admin-tasks"],
+    queryKey: ["admin-tasks", selectedFolder?.id],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("tasks")
-          .select("*")
+          .select(`
+            *,
+            task_folders(name)
+          `)
           .order("created_at", { ascending: false });
           
+        // Apply folder filter if a folder is selected
+        if (selectedFolder) {
+          query = query.eq("folder_id", selectedFolder.id);
+        }
+        
+        const { data, error } = await query;
+        
         if (error) {
           console.error("Error fetching tasks:", error);
           toast.error("Failed to fetch tasks");
           throw error;
         }
         
-        return (data as unknown) as Task[];
+        // Format the data to include folder name
+        const formattedData = data.map(task => ({
+          ...task,
+          folder_name: task.task_folders ? task.task_folders.name : null
+        }));
+        
+        return formattedData as Task[];
       } catch (error) {
         console.error("Error in query function:", error);
         throw error;
@@ -115,6 +142,7 @@ export function TaskList() {
   };
 
   const handleTaskUpdated = () => {
+    setIsEditTaskDialogOpen(false);
     refetch();
     toast.success("Task updated successfully");
   };
@@ -124,6 +152,19 @@ export function TaskList() {
     if (selectedTask) {
       fetchTaskAssignments(selectedTask.id);
     }
+  };
+  
+  const handleFolderCreated = () => {
+    refetch();
+  };
+  
+  const handleFolderRenamed = () => {
+    refetch();
+  };
+  
+  const handleFolderDeleted = () => {
+    setSelectedFolder(null);
+    refetch();
   };
   
   const openAssignDialog = (task: Task) => {
@@ -152,92 +193,131 @@ export function TaskList() {
     setSelectedStudentTask({ id: studentTaskId, studentName });
     setIsUnassignDialogOpen(true);
   };
+  
+  const openCreateFolder = () => {
+    setIsCreateFolderOpen(true);
+  };
+  
+  const openRenameFolder = (folder: TaskFolder) => {
+    setFolderToEdit(folder);
+    setIsRenameFolderOpen(true);
+  };
+  
+  const openDeleteFolder = (folder: TaskFolder) => {
+    setFolderToEdit(folder);
+    setIsDeleteFolderOpen(true);
+  };
 
   return (
-    <div>
-      <div className="flex justify-between mb-4">
-        <h2 className="text-xl font-semibold">Task Management</h2>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>Create New Task</Button>
+    <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4">
+      <div>
+        <TaskFolders
+          selectedFolder={selectedFolder}
+          onSelectFolder={setSelectedFolder}
+          onCreateFolder={openCreateFolder}
+          onRenameFolder={openRenameFolder}
+          onDeleteFolder={openDeleteFolder}
+        />
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : !tasks || tasks.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              No tasks available. Create a new task to get started.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.title}</TableCell>
-                    <TableCell>{task.description || "—"}</TableCell>
-                    <TableCell>{new Date(task.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${task.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                        {task.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openEditTaskDialog(task)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openAssignDialog(task)}
-                        >
-                          <UserPlus className="h-4 w-4 mr-1" />
-                          Assign
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openViewAssignments(task)}
-                        >
-                          <Users className="h-4 w-4 mr-1" />
-                          View Assignments
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openEditStatusDialog(task)}
-                        >
-                          <PencilLine className="h-4 w-4 mr-1" />
-                          Status
-                        </Button>
-                      </div>
-                    </TableCell>
+      <div>
+        <div className="flex justify-between mb-4">
+          <h2 className="text-xl font-semibold">
+            {selectedFolder ? `Tasks: ${selectedFolder.name}` : 'All Tasks'}
+          </h2>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>Create New Task</Button>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center p-4">
+                <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : !tasks || tasks.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                No tasks available. Create a new task to get started.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Folder</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {tasks.map((task) => (
+                    <TableRow key={task.id}>
+                      <TableCell className="font-medium">{task.title}</TableCell>
+                      <TableCell>{task.description || "—"}</TableCell>
+                      <TableCell>
+                        {task.folder_name ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            <Folder className="h-3 w-3 mr-1" />
+                            {task.folder_name}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell>{new Date(task.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${task.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                          {task.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openEditTaskDialog(task)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openAssignDialog(task)}
+                          >
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Assign
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openViewAssignments(task)}
+                          >
+                            <Users className="h-4 w-4 mr-1" />
+                            View Assignments
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openEditStatusDialog(task)}
+                          >
+                            <PencilLine className="h-4 w-4 mr-1" />
+                            Status
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
       
       {/* View Assignments Dialog */}
       <Dialog open={isViewAssignmentsOpen} onOpenChange={setIsViewAssignmentsOpen}>
@@ -305,6 +385,31 @@ export function TaskList() {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Folder Dialogs */}
+      <CreateFolderDialog
+        open={isCreateFolderOpen}
+        onOpenChange={setIsCreateFolderOpen}
+        onFolderCreated={handleFolderCreated}
+      />
+      
+      {folderToEdit && (
+        <>
+          <RenameFolderDialog
+            open={isRenameFolderOpen}
+            onOpenChange={setIsRenameFolderOpen}
+            folder={folderToEdit}
+            onFolderRenamed={handleFolderRenamed}
+          />
+          
+          <DeleteFolderDialog
+            open={isDeleteFolderOpen}
+            onOpenChange={setIsDeleteFolderOpen}
+            folder={folderToEdit}
+            onFolderDeleted={handleFolderDeleted}
+          />
+        </>
+      )}
       
       {/* Other Dialogs */}
       <CreateTaskDialog 

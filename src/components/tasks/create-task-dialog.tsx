@@ -1,13 +1,23 @@
 
-import { useState } from "react";
-import { useAuth } from "@/context/auth-context";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import type { TaskFolder } from "./task-folders";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -15,53 +25,82 @@ interface CreateTaskDialogProps {
   onTaskCreated: () => void;
 }
 
-export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTaskDialogProps) {
-  const { user } = useAuth();
+export function CreateTaskDialog({
+  open,
+  onOpenChange,
+  onTaskCreated
+}: CreateTaskDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [folderId, setFolderId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+
+  // Fetch all folders for selection
+  const { data: folders } = useQuery({
+    queryKey: ["task-folders"],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from("task_folders")
+          .select("*")
+          .order("name");
+          
+        if (error) {
+          console.error("Error fetching folders:", error);
+          throw error;
+        }
+        
+        return (data as unknown) as TaskFolder[];
+      } catch (error) {
+        console.error("Error in query function:", error);
+        throw error;
+      }
+    },
+  });
+
+  // Reset the form when the dialog is opened
+  useEffect(() => {
+    if (open) {
+      setTitle("");
+      setDescription("");
+      setFolderId(null);
+    }
+  }, [open]);
+
+  const handleCreateTask = async () => {
     if (!title.trim()) {
       toast.error("Please enter a task title");
       return;
     }
-    
+
     setIsSubmitting(true);
     
     try {
-      console.log("Creating task with title:", title, "for user:", user?.id);
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("tasks")
-        .insert({
-          title,
-          description: description || null,
-          created_by: user?.name || user?.email || "Admin",
+        .insert([{ 
+          title: title.trim(),
+          description: description.trim() || null,
+          folder_id: folderId || null,
+          created_by: "Admin",
           is_active: true
-        })
-        .select();
+        }]);
         
       if (error) {
-        console.error("Supabase error creating task:", error);
         throw error;
       }
       
-      console.log("Task created successfully:", data);
       toast.success("Task created successfully");
-      setTitle("");
-      setDescription("");
       onOpenChange(false);
       onTaskCreated();
     } catch (error: any) {
       console.error("Error creating task:", error);
-      toast.error(error.message || "Failed to create task. Please try again.");
+      toast.error(error.message || "Failed to create task");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -69,47 +108,67 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
           <DialogTitle>Create New Task</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Task Title</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter task title"
-                required
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter task description"
-                rows={3}
-              />
-            </div>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              placeholder="Enter task title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1"></div>
-                  Creating...
-                </>
-              ) : (
-                "Create Task"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea
+              id="description"
+              placeholder="Enter task description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="folder">Folder (Optional)</Label>
+            <Select
+              value={folderId || ""}
+              onValueChange={(value) => setFolderId(value || null)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a folder" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {folders?.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateTask}
+            disabled={isSubmitting || !title.trim()}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1"></div>
+                Creating...
+              </>
+            ) : (
+              "Create Task"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -998,11 +998,33 @@ export type Database = {
         }
         Relationships: []
       }
+      task_folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           created_at: string
           created_by: string
           description: string | null
+          folder_id: string | null
           id: string
           is_active: boolean
           title: string
@@ -1011,6 +1033,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          folder_id?: string | null
           id?: string
           is_active?: boolean
           title: string
@@ -1019,11 +1042,20 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          folder_id?: string | null
           id?: string
           is_active?: boolean
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "task_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topics: {
         Row: {
