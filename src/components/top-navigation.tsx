@@ -39,6 +39,12 @@ export function TopNavigation() {
         </div>
         
         <div className="flex items-center gap-4 ml-auto">
+          <img 
+            src="https://www.image-line.com/static/assets/Frame-321316127788-1536x679.png.c2614ba.webp"
+            alt="Image Line"
+            className="h-12 w-auto mr-2"
+          />
+          
           <Button variant="ghost" size="icon" className="rounded-full hidden sm:flex">
             <Bell className="h-4 w-4" />
             <span className="sr-only">Notifications</span>
