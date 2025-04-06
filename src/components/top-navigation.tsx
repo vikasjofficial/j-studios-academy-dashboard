@@ -21,11 +21,6 @@ export function TopNavigation() {
       <div className="flex h-16 items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
           <Link to={user?.role === 'admin' ? '/admin' : '/student'} className="inline-flex items-center gap-2">
-            <img 
-              src="https://www.image-line.com/static/assets/Frame-321316127788-1536x679.png.c2614ba.webp" 
-              alt="J-Studios Logo" 
-              className="h-8 w-auto object-contain mix-blend-multiply"
-            />
             <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-500 to-primary/70">
               J-Studios
             </span>
@@ -44,6 +39,12 @@ export function TopNavigation() {
         </div>
         
         <div className="flex items-center gap-4 ml-auto">
+          <img 
+            src="https://www.image-line.com/static/assets/Frame-321316127788-1536x679.png.c2614ba.webp" 
+            alt="J-Studios Logo" 
+            className="h-8 w-auto object-contain"
+          />
+          
           <Button variant="ghost" size="icon" className="rounded-full hidden sm:flex">
             <Bell className="h-4 w-4" />
             <span className="sr-only">Notifications</span>
