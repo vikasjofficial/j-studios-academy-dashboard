@@ -62,15 +62,15 @@ function LeftSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex flex-col items-center px-2 py-3">
-          <img 
-            src="https://i.ibb.co/ccDKFZgD/logo.png" 
-            alt="J-Studios Logo" 
-            className="h-9 w-auto" 
-          />
-          <div className="flex flex-col items-center mt-2">
-            <div className="font-semibold">J Studios Academy</div>
-            <div className="text-xs text-muted-foreground">Pimpri-Pune</div>
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://www.image-line.com/static/assets/Frame-321316127788-1536x679.png.c2614ba.webp" 
+              alt="J-Studios Logo" 
+              className="h-8 w-auto object-contain mix-blend-multiply"
+            />
+            <span className="font-semibold">J Studios Academy</span>
           </div>
+          <div className="text-xs text-muted-foreground mt-1">Pimpri-Pune</div>
         </div>
       </SidebarHeader>
       
