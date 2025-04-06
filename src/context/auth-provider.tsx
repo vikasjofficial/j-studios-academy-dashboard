@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext, User, UserRole } from './auth-context';
+import { playSound, Sounds } from '@/lib/sound-utils';
 
 // Auth provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -96,6 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setUser(adminUser);
           localStorage.setItem('j-studios-user', JSON.stringify(adminUser));
+          
+          // Play login success sound
+          playSound(Sounds.loginSuccess, 0.3);
+          
           toast.success(`Welcome back, Admin!`);
           setIsLoading(false);
           return true;
@@ -161,6 +166,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set the user in state and localStorage
       setUser(studentUser);
       localStorage.setItem('j-studios-user', JSON.stringify(studentUser));
+      
+      // Play login success sound
+      playSound(Sounds.loginSuccess, 0.3);
+      
       toast.success(`Welcome, ${studentUser.name}!`);
       setIsLoading(false);
       return true;
