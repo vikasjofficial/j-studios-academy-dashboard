@@ -11,14 +11,16 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { Slider } from "@/components/ui/slider";
 import { 
   Check, X, UserCheck, Calendar, Loader2, ChevronDown, ChevronUp, 
   CalendarDays, Users, BookCheck 
 } from 'lucide-react';
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from 'date-fns';
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Student {
   id: string;
@@ -31,8 +33,9 @@ interface Attendance {
   id: string;
   student_id: string;
   course_id: string;
-  date: string;
-  status: 'present' | 'absent' | 'none';
+  present_count: number;
+  absent_count: number;
+  last_updated: string;
   note?: string;
 }
 
@@ -42,27 +45,20 @@ interface Course {
   code: string;
 }
 
-interface AttendanceRecord {
-  id: string;
-  date: string;
-  status: 'present' | 'absent' | 'none';
-  note?: string;
-}
-
 interface StudentAttendanceSummary {
   studentId: string;
   studentName: string;
   studentCode: string;
-  records: AttendanceRecord[];
-  present: number;
-  absent: number;
+  presentCount: number;
+  absentCount: number;
   percentage: number;
+  note?: string;
+  lastUpdated?: string;
 }
 
 const attendanceSchema = z.object({
-  status: z.enum(['present', 'absent', 'none'], {
-    required_error: "Please select an attendance status",
-  }),
+  presentCount: z.number().min(0, "Present count must be 0 or greater"),
+  absentCount: z.number().min(0, "Absent count must be 0 or greater"),
   note: z.string().optional(),
 });
 
@@ -70,12 +66,9 @@ export default function AttendanceManagement() {
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [formattedDate, setFormattedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, Attendance>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [summaries, setSummaries] = useState<StudentAttendanceSummary[]>([]);
   const [expandedStudents, setExpandedStudents] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
@@ -86,20 +79,12 @@ export default function AttendanceManagement() {
     fetchCourses();
   }, []);
   
-  // Update attendance records when date or course changes
+  // Update attendance records when course changes
   useEffect(() => {
-    if (selectedCourse && formattedDate) {
+    if (selectedCourse) {
       fetchAttendance();
     }
-  }, [selectedCourse, formattedDate]);
-
-  // Update formatted date when selected date changes
-  useEffect(() => {
-    if (selectedDate) {
-      const formatted = format(selectedDate, 'yyyy-MM-dd');
-      setFormattedDate(formatted);
-    }
-  }, [selectedDate]);
+  }, [selectedCourse]);
 
   // Fetch attendance summaries when course changes
   useEffect(() => {
@@ -150,16 +135,15 @@ export default function AttendanceManagement() {
   };
 
   const fetchAttendance = async () => {
-    if (!selectedCourse || !formattedDate) return;
+    if (!selectedCourse) return;
     
     setIsLoading(true);
     try {
-      console.log(`Fetching attendance for course ${selectedCourse} on date ${formattedDate}`);
+      console.log(`Fetching attendance for course ${selectedCourse}`);
       const { data, error } = await supabase
-        .from('attendance')
+        .from('attendance_counts')
         .select('*')
-        .eq('course_id', selectedCourse)
-        .eq('date', formattedDate);
+        .eq('course_id', selectedCourse);
         
       if (error) throw error;
       
@@ -168,14 +152,10 @@ export default function AttendanceManagement() {
       // Convert to a record for easier lookup
       const records: Record<string, Attendance> = {};
       data.forEach(record => {
-        // Ensure status is one of the allowed values
-        const status = ['present', 'absent', 'none'].includes(record.status) 
-          ? record.status as 'present' | 'absent' | 'none'
-          : 'none';
-          
         records[record.student_id] = {
           ...record,
-          status
+          present_count: record.present_count || 0,
+          absent_count: record.absent_count || 0
         };
       });
       
@@ -198,7 +178,7 @@ export default function AttendanceManagement() {
     try {
       // Get all attendance records for this course
       const { data: attendanceData, error: attendanceError } = await supabase
-        .from('attendance')
+        .from('attendance_counts')
         .select('*')
         .eq('course_id', selectedCourse);
         
@@ -213,9 +193,8 @@ export default function AttendanceManagement() {
           studentId: student.id,
           studentName: student.name,
           studentCode: student.student_id,
-          records: [],
-          present: 0,
-          absent: 0,
+          presentCount: 0,
+          absentCount: 0,
           percentage: 0
         };
       });
@@ -223,28 +202,17 @@ export default function AttendanceManagement() {
       // Add attendance records
       attendanceData.forEach(record => {
         if (studentRecords[record.student_id]) {
-          studentRecords[record.student_id].records.push({
-            id: record.id,
-            date: record.date,
-            status: record.status as 'present' | 'absent' | 'none',
-            note: record.note
-          });
-          
-          if (record.status === 'present') {
-            studentRecords[record.student_id].present += 1;
-          } else if (record.status === 'absent') {
-            studentRecords[record.student_id].absent += 1;
-          }
+          studentRecords[record.student_id].presentCount = record.present_count || 0;
+          studentRecords[record.student_id].absentCount = record.absent_count || 0;
+          studentRecords[record.student_id].note = record.note;
+          studentRecords[record.student_id].lastUpdated = record.last_updated;
         }
       });
       
       // Calculate percentages
       Object.values(studentRecords).forEach(summary => {
-        const total = summary.present + summary.absent;
-        summary.percentage = total > 0 ? Math.round((summary.present / total) * 100) : 0;
-        
-        // Sort records by date (newest first)
-        summary.records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const total = summary.presentCount + summary.absentCount;
+        summary.percentage = total > 0 ? Math.round((summary.presentCount / total) * 100) : 0;
       });
       
       setSummaries(Object.values(studentRecords));
@@ -258,19 +226,25 @@ export default function AttendanceManagement() {
     }
   };
 
-  const saveAttendance = async (studentId: string, status: 'present' | 'absent' | 'none', note?: string) => {
-    if (!selectedCourse || !formattedDate) return;
+  const saveAttendance = async (
+    studentId: string, 
+    presentCount: number, 
+    absentCount: number, 
+    note?: string
+  ) => {
+    if (!selectedCourse) return;
     
     setIsSaving(true);
     
     try {
       const existingRecord = attendanceRecords[studentId];
+      const timestamp = new Date().toISOString();
       
       console.log('Saving attendance:', {
         studentId,
         courseId: selectedCourse,
-        date: formattedDate,
-        status,
+        presentCount,
+        absentCount,
         note,
         existingRecord
       });
@@ -278,10 +252,12 @@ export default function AttendanceManagement() {
       if (existingRecord) {
         // Update existing record
         const { data, error } = await supabase
-          .from('attendance')
+          .from('attendance_counts')
           .update({ 
-            status, 
-            note: note || null
+            present_count: presentCount,
+            absent_count: absentCount,
+            note: note || null,
+            last_updated: timestamp
           })
           .eq('id', existingRecord.id);
           
@@ -291,13 +267,14 @@ export default function AttendanceManagement() {
       } else {
         // Create new record
         const { data, error } = await supabase
-          .from('attendance')
+          .from('attendance_counts')
           .insert({
             student_id: studentId,
             course_id: selectedCourse,
-            date: formattedDate,
-            status,
-            note: note || null
+            present_count: presentCount,
+            absent_count: absentCount,
+            note: note || null,
+            last_updated: timestamp
           });
           
         if (error) throw error;
@@ -337,58 +314,70 @@ export default function AttendanceManagement() {
     const form = useForm<z.infer<typeof attendanceSchema>>({
       resolver: zodResolver(attendanceSchema),
       defaultValues: {
-        status: record?.status || 'none',
+        presentCount: record?.present_count || 0,
+        absentCount: record?.absent_count || 0,
         note: record?.note || '',
       },
     });
 
     const onSubmit = async (data: z.infer<typeof attendanceSchema>) => {
-      await saveAttendance(studentId, data.status, data.note);
+      await saveAttendance(studentId, data.presentCount, data.absentCount, data.note);
     };
 
     return (
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem className="space-y-1">
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex space-x-2"
-                  >
-                    <FormItem className="flex items-center space-x-1 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="present" id={`present-${studentId}`} />
-                      </FormControl>
-                      <FormLabel htmlFor={`present-${studentId}`} className="cursor-pointer">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-1 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="absent" id={`absent-${studentId}`} />
-                      </FormControl>
-                      <FormLabel htmlFor={`absent-${studentId}`} className="cursor-pointer">
-                        <X className="h-4 w-4 text-red-500" />
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-1 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="none" id={`none-${studentId}`} />
-                      </FormControl>
-                      <FormLabel htmlFor={`none-${studentId}`} className="cursor-pointer">
-                        --
-                      </FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-              </FormItem>
-            )}
-          />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-1">
+              <FormLabel className="text-sm">Present: {form.watch('presentCount')}</FormLabel>
+              <span className="text-xs text-muted-foreground">
+                {form.watch('presentCount') + form.watch('absentCount')} total days
+              </span>
+            </div>
+            <FormField
+              control={form.control}
+              name="presentCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={(vals) => field.onChange(vals[0])}
+                      className="mb-4"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-1">
+              <FormLabel className="text-sm">Absent: {form.watch('absentCount')}</FormLabel>
+            </div>
+            <FormField
+              control={form.control}
+              name="absentCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Slider
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={[field.value]}
+                      onValueChange={(vals) => field.onChange(vals[0])}
+                      className="mb-4"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+          
           <FormField
             control={form.control}
             name="note"
@@ -403,6 +392,7 @@ export default function AttendanceManagement() {
               </FormItem>
             )}
           />
+          
           <Button type="submit" variant="outline" size="sm" className="w-full">
             {form.formState.isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -419,48 +409,42 @@ export default function AttendanceManagement() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
-        <p className="text-muted-foreground">Mark student attendance for courses</p>
+        <p className="text-muted-foreground">Manage student attendance counts for courses</p>
       </div>
       
       <div className="flex flex-col md:flex-row gap-4">
         <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              <span>Attendance Calendar</span>
+              <Users className="h-5 w-5 text-primary" />
+              <span>Attendance Records</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label htmlFor="course" className="block text-sm font-medium mb-1">Course</label>
-                <select
-                  id="course"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                  value={selectedCourse}
-                  onChange={(e) => setSelectedCourse(e.target.value)}
-                >
+            <div className="mb-4">
+              <label htmlFor="course" className="block text-sm font-medium mb-1">Course</label>
+              <Select 
+                value={selectedCourse} 
+                onValueChange={setSelectedCourse}
+              >
+                <SelectTrigger id="course" className="w-full">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
                   {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
+                    <SelectItem key={course.id} value={course.id}>
                       {course.name} ({course.code})
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-              </div>
-              
-              <div className="flex items-end">
-                <Button onClick={() => setDialogOpen(true)} className="w-full">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {formattedDate ? format(new Date(formattedDate), 'MMMM d, yyyy') : 'Select Date'}
-                </Button>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
             
             <Card className="bg-card/50 backdrop-blur-sm border border-white/10 mb-6">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  <span>Students for {formattedDate && format(new Date(formattedDate), 'MMMM d, yyyy')}</span>
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  <span>Student Attendance Counts</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -473,23 +457,25 @@ export default function AttendanceManagement() {
                     No students found
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {students.map((student) => (
-                      <Card key={student.id} className="bg-background/50">
-                        <CardContent className="p-4">
-                          <div className="flex flex-col sm:flex-row justify-between gap-4">
-                            <div>
-                              <h3 className="font-medium">{student.name}</h3>
-                              <p className="text-sm text-muted-foreground">{student.student_id} • {student.email}</p>
+                  <ScrollArea className="h-[500px] pr-4">
+                    <div className="space-y-4">
+                      {students.map((student) => (
+                        <Card key={student.id} className="bg-background/50">
+                          <CardContent className="p-4">
+                            <div className="flex flex-col gap-4">
+                              <div>
+                                <h3 className="font-medium">{student.name}</h3>
+                                <p className="text-sm text-muted-foreground">{student.student_id} • {student.email}</p>
+                              </div>
+                              <div>
+                                <AttendanceForm studentId={student.id} />
+                              </div>
                             </div>
-                            <div className="min-w-[200px]">
-                              <AttendanceForm studentId={student.id} />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 )}
               </CardContent>
             </Card>
@@ -501,7 +487,7 @@ export default function AttendanceManagement() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <BookCheck className="h-5 w-5 text-primary" />
-            <span>Attendance Records</span>
+            <span>Attendance Summary</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -522,8 +508,8 @@ export default function AttendanceManagement() {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className="text-sm">Present: <span className="font-medium text-green-500">{summary.present}</span></p>
-                            <p className="text-sm">Absent: <span className="font-medium text-red-500">{summary.absent}</span></p>
+                            <p className="text-sm">Present: <span className="font-medium text-green-500">{summary.presentCount}</span></p>
+                            <p className="text-sm">Absent: <span className="font-medium text-red-500">{summary.absentCount}</span></p>
                           </div>
                           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background border border-white/10">
                             <span className={`font-bold ${summary.percentage > 70 ? 'text-green-500' : summary.percentage > 50 ? 'text-yellow-500' : 'text-red-500'}`}>
@@ -542,29 +528,43 @@ export default function AttendanceManagement() {
                     </CardHeader>
                     <CollapsibleContent>
                       <CardContent className="pt-0 px-4 pb-4">
-                        {summary.records.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No records found</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {summary.records.map(record => (
-                              <div key={record.id} className="flex justify-between items-center p-2 rounded-md bg-background/50">
-                                <div className="flex items-center gap-2">
-                                  {record.status === 'present' ? (
-                                    <Check className="h-4 w-4 text-green-500" />
-                                  ) : record.status === 'absent' ? (
-                                    <X className="h-4 w-4 text-red-500" />
-                                  ) : (
-                                    <span className="h-4 w-4">--</span>
-                                  )}
-                                  <span>{format(new Date(record.date), 'MMMM d, yyyy')}</span>
+                        <div className="bg-background/50 p-3 rounded-md">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium">Attendance Rate</p>
+                              <p className="text-2xl font-bold">{summary.percentage}%</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {summary.presentCount + summary.absentCount} total days recorded
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Details</p>
+                              <div className="flex gap-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Present</p>
+                                  <p className="text-lg font-semibold text-green-500">{summary.presentCount}</p>
                                 </div>
-                                {record.note && (
-                                  <span className="text-sm text-muted-foreground">{record.note}</span>
-                                )}
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Absent</p>
+                                  <p className="text-lg font-semibold text-red-500">{summary.absentCount}</p>
+                                </div>
                               </div>
-                            ))}
+                            </div>
                           </div>
-                        )}
+                          
+                          {summary.note && (
+                            <div className="mt-4 p-3 border border-white/10 rounded-md bg-background/30">
+                              <p className="text-sm font-medium">Notes</p>
+                              <p className="text-sm mt-1">{summary.note}</p>
+                            </div>
+                          )}
+                          
+                          {summary.lastUpdated && (
+                            <p className="text-xs text-muted-foreground mt-4">
+                              Last updated: {format(new Date(summary.lastUpdated), 'MMMM d, yyyy')}
+                            </p>
+                          )}
+                        </div>
                       </CardContent>
                     </CollapsibleContent>
                   </Card>
@@ -574,28 +574,6 @@ export default function AttendanceManagement() {
           )}
         </CardContent>
       </Card>
-      
-      {/* Calendar Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Select a date</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => {
-                if (date) {
-                  setSelectedDate(date);
-                  setDialogOpen(false);
-                }
-              }}
-              className="rounded-md border"
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
