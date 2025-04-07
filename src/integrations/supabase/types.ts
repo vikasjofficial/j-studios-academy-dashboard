@@ -90,6 +90,54 @@ export type Database = {
           },
         ]
       }
+      attendance_counts: {
+        Row: {
+          absent_count: number
+          course_id: string
+          created_at: string
+          id: string
+          last_updated: string
+          note: string | null
+          present_count: number
+          student_id: string
+        }
+        Insert: {
+          absent_count?: number
+          course_id: string
+          created_at?: string
+          id?: string
+          last_updated?: string
+          note?: string | null
+          present_count?: number
+          student_id: string
+        }
+        Update: {
+          absent_count?: number
+          course_id?: string
+          created_at?: string
+          id?: string
+          last_updated?: string
+          note?: string | null
+          present_count?: number
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_counts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_counts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           course_id: string | null

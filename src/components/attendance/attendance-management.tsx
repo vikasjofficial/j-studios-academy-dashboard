@@ -29,7 +29,7 @@ interface Student {
   email: string;
 }
 
-interface Attendance {
+interface AttendanceCount {
   id: string;
   student_id: string;
   course_id: string;
@@ -37,6 +37,7 @@ interface Attendance {
   absent_count: number;
   last_updated: string;
   note?: string;
+  created_at?: string;
 }
 
 interface Course {
@@ -66,7 +67,7 @@ export default function AttendanceManagement() {
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, Attendance>>({});
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceCount>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [summaries, setSummaries] = useState<StudentAttendanceSummary[]>([]);
@@ -150,7 +151,7 @@ export default function AttendanceManagement() {
       console.log('Attendance data:', data);
       
       // Convert to a record for easier lookup
-      const records: Record<string, Attendance> = {};
+      const records: Record<string, AttendanceCount> = {};
       data.forEach(record => {
         records[record.student_id] = {
           ...record,
