@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -141,8 +140,9 @@ export default function AttendanceManagement() {
     setIsLoading(true);
     try {
       console.log(`Fetching attendance for course ${selectedCourse}`);
+      // Use explicit type casting to handle the Supabase client not recognizing the table
       const { data, error } = await supabase
-        .from('attendance_counts')
+        .from('attendance_counts' as any)
         .select('*')
         .eq('course_id', selectedCourse);
         
@@ -152,13 +152,20 @@ export default function AttendanceManagement() {
       
       // Convert to a record for easier lookup
       const records: Record<string, AttendanceCount> = {};
-      data.forEach(record => {
-        records[record.student_id] = {
-          ...record,
-          present_count: record.present_count || 0,
-          absent_count: record.absent_count || 0
-        };
-      });
+      if (data) {
+        data.forEach((record: any) => {
+          records[record.student_id] = {
+            id: record.id,
+            student_id: record.student_id,
+            course_id: record.course_id,
+            present_count: record.present_count || 0,
+            absent_count: record.absent_count || 0,
+            note: record.note,
+            last_updated: record.last_updated,
+            created_at: record.created_at
+          };
+        });
+      }
       
       setAttendanceRecords(records);
     } catch (error) {
@@ -178,8 +185,9 @@ export default function AttendanceManagement() {
     
     try {
       // Get all attendance records for this course
+      // Use explicit type casting to handle the Supabase client not recognizing the table
       const { data: attendanceData, error: attendanceError } = await supabase
-        .from('attendance_counts')
+        .from('attendance_counts' as any)
         .select('*')
         .eq('course_id', selectedCourse);
         
@@ -201,14 +209,16 @@ export default function AttendanceManagement() {
       });
       
       // Add attendance records
-      attendanceData.forEach(record => {
-        if (studentRecords[record.student_id]) {
-          studentRecords[record.student_id].presentCount = record.present_count || 0;
-          studentRecords[record.student_id].absentCount = record.absent_count || 0;
-          studentRecords[record.student_id].note = record.note;
-          studentRecords[record.student_id].lastUpdated = record.last_updated;
-        }
-      });
+      if (attendanceData) {
+        attendanceData.forEach((record: any) => {
+          if (studentRecords[record.student_id]) {
+            studentRecords[record.student_id].presentCount = record.present_count || 0;
+            studentRecords[record.student_id].absentCount = record.absent_count || 0;
+            studentRecords[record.student_id].note = record.note;
+            studentRecords[record.student_id].lastUpdated = record.last_updated;
+          }
+        });
+      }
       
       // Calculate percentages
       Object.values(studentRecords).forEach(summary => {
@@ -252,8 +262,9 @@ export default function AttendanceManagement() {
       
       if (existingRecord) {
         // Update existing record
+        // Use explicit type casting to handle the Supabase client not recognizing the table
         const { data, error } = await supabase
-          .from('attendance_counts')
+          .from('attendance_counts' as any)
           .update({ 
             present_count: presentCount,
             absent_count: absentCount,
@@ -267,8 +278,9 @@ export default function AttendanceManagement() {
         console.log('Updated attendance record:', data);
       } else {
         // Create new record
+        // Use explicit type casting to handle the Supabase client not recognizing the table
         const { data, error } = await supabase
-          .from('attendance_counts')
+          .from('attendance_counts' as any)
           .insert({
             student_id: studentId,
             course_id: selectedCourse,
