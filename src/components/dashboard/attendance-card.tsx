@@ -17,6 +17,7 @@ interface AttendanceCardProps {
 
 export function AttendanceCard({ title, percentage, present, total, className }: AttendanceCardProps) {
   const [hovered, setHovered] = useState(false);
+  const absent = total - present;
 
   return (
     <div 
@@ -75,7 +76,7 @@ export function AttendanceCard({ title, percentage, present, total, className }:
           </div>
           <div className={cn("flex flex-col items-center p-2 rounded-lg bg-black/20 border border-white/10 group-hover:border-white/30 transition-colors duration-300", attendanceStyles.attendanceSummaryCard, percentage < 75 ? "poor" : "warning")}>
             <span className="text-xs text-muted-foreground mb-0.5 group-hover:text-white/70 transition-colors duration-300">Absent</span>
-            <span className="text-sm font-medium group-hover:text-white transition-colors duration-300">{total - present}</span>
+            <span className="text-sm font-medium group-hover:text-white transition-colors duration-300">{absent}</span>
           </div>
           <div className="flex flex-col items-center p-2 rounded-lg bg-black/20 border border-white/10 group-hover:border-white/30 transition-colors duration-300">
             <span className="text-xs text-muted-foreground mb-0.5 group-hover:text-white/70 transition-colors duration-300">Total</span>

@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ExamsResultsCard } from "@/components/dashboard/exams-results-card";
 import { LecturesCard } from "@/components/dashboard/lectures-card";
 import { SemesterProgressChart } from "@/components/dashboard/semester-progress-chart";
+import { AttendanceSummaryWidget } from "@/components/dashboard/attendance-summary-widget";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -54,6 +55,37 @@ export default function StudentDashboard() {
             {/* Profile card now spans full width */}
             <div className="w-full">
               <StudentProfileCard />
+            </div>
+            
+            {/* Top row with attendance summary and semester progress */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-1">
+                <AttendanceSummaryWidget />
+              </div>
+              <div className="md:col-span-1">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-medium flex items-center">
+                      <GraduationCap className="mr-2 h-5 w-5 text-primary" />
+                      Academic Progress
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-4">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Current Semester</span>
+                          <span className="text-sm font-medium">Spring 2025</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Courses Enrolled</span>
+                          <span className="text-sm font-medium">4</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
             
             {/* Semester Progress Charts */}

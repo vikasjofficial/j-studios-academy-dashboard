@@ -16,6 +16,7 @@ interface AttendanceStats {
   courseName: string;
   courseCode: string;
   present: number;
+  absent: number;
   total: number;
   percentage: number;
 }
@@ -61,21 +62,27 @@ export default function StudentAttendanceDashboard() {
         
       if (coursesError) throw coursesError;
       
-      // For each course, get attendance stats
+      // For each course, get attendance stats from attendance_counts
       const stats: AttendanceStats[] = [];
       
       for (const course of courses) {
-        // Get total attendance records for this course/student
-        const { data: records, error: recordsError } = await supabase
-          .from('attendance')
-          .select('status')
+        // Get attendance counts for this course/student
+        const { data: record, error: recordsError } = await supabase
+          .from('attendance_counts' as any)
+          .select('*')
           .eq('student_id', user.id)
-          .eq('course_id', course.id);
+          .eq('course_id', course.id)
+          .single();
           
-        if (recordsError) throw recordsError;
+        if (recordsError && recordsError.code !== 'PGRST116') {
+          // Only throw if it's not the "no rows returned" error
+          throw recordsError;
+        }
         
-        const total = records.length;
-        const present = records.filter(r => r.status === 'present').length;
+        // If we don't have records, create a stats entry with zeros
+        const present = record?.present_count || 0;
+        const absent = record?.absent_count || 0;
+        const total = present + absent;
         const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
         
         stats.push({
@@ -83,6 +90,7 @@ export default function StudentAttendanceDashboard() {
           courseName: course.name,
           courseCode: course.code,
           present,
+          absent,
           total,
           percentage
         });
