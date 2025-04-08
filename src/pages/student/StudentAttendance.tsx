@@ -2,7 +2,6 @@
 import { useStudentAttendance } from "@/hooks/use-student-attendance";
 import { AttendanceOverview } from "@/components/dashboard/attendance-overview";
 import { CourseAttendanceSection } from "@/components/dashboard/course-attendance-section";
-import { PerformanceSection } from "@/components/dashboard/performance-section";
 
 export default function StudentAttendance() {
   const { summary, isLoading } = useStudentAttendance();
@@ -20,8 +19,6 @@ export default function StudentAttendance() {
         <AttendanceOverview summary={summary} isLoading={isLoading} />
         
         <CourseAttendanceSection />
-        
-        <PerformanceSection />
       </div>
     </div>
   );
