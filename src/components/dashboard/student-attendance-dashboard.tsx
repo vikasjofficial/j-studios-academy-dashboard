@@ -80,8 +80,10 @@ export default function StudentAttendanceDashboard() {
         }
         
         // If we don't have records, create a stats entry with zeros
-        const present = record?.present_count || 0;
-        const absent = record?.absent_count || 0;
+        // Use type assertion to safely access properties
+        const typedRecord = record as { present_count: number; absent_count: number } | null;
+        const present = typedRecord?.present_count || 0;
+        const absent = typedRecord?.absent_count || 0;
         const total = present + absent;
         const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
         

@@ -1,5 +1,5 @@
 
-import { UserCheck, Check, X, CalendarDays, BarChart4 } from "lucide-react";
+import { UserCheck, Check, X, CalendarDays, BarChart4, BookOpen } from "lucide-react";
 import StudentAttendanceDashboard from "@/components/dashboard/student-attendance-dashboard";
 import { StudentGradebookView } from "@/components/gradebook/student-gradebook-view";
 import { 
