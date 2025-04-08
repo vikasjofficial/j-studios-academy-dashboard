@@ -13,6 +13,7 @@ import { ExamsResultsCard } from "@/components/dashboard/exams-results-card";
 import { LecturesCard } from "@/components/dashboard/lectures-card";
 import { SemesterProgressChart } from "@/components/dashboard/semester-progress-chart";
 import { AttendanceSummaryWidget } from "@/components/dashboard/attendance-summary-widget";
+import { SocialProfilesCard } from "@/components/dashboard/social-profiles-card";
 import { Button } from "@/components/ui/button";
 
 export default function StudentDashboard() {
@@ -93,7 +94,12 @@ export default function StudentDashboard() {
               <StudentProfileCard />
             </div>
             
-            {/* Move TasksCard above AttendanceSummary */}
+            {/* Add Social Profiles Card above Tasks Card */}
+            <div className="w-full">
+              <SocialProfilesCard />
+            </div>
+            
+            {/* Tasks Card */}
             <div className="w-full">
               <TasksCard />
             </div>

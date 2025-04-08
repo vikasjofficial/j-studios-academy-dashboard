@@ -938,6 +938,41 @@ export type Database = {
           },
         ]
       }
+      student_social_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          student_id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform: string
+          student_id: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          student_id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_social_profiles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_tasks: {
         Row: {
           assigned_at: string
