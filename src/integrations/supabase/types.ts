@@ -320,6 +320,7 @@ export type Database = {
       }
       classes_topics: {
         Row: {
+          completed: boolean
           created_at: string | null
           id: string
           lecture_id: string | null
@@ -328,6 +329,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          completed?: boolean
           created_at?: string | null
           id?: string
           lecture_id?: string | null
@@ -336,6 +338,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          completed?: boolean
           created_at?: string | null
           id?: string
           lecture_id?: string | null
@@ -1181,6 +1184,10 @@ export type Database = {
       create_lecture_folder: {
         Args: { folder_name: string }
         Returns: string
+      }
+      update_topic_completion: {
+        Args: { topic_id: string; is_completed: boolean }
+        Returns: undefined
       }
     }
     Enums: {

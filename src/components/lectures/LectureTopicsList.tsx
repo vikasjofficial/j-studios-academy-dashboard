@@ -5,12 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lecture, LectureTopic } from "./types";
-import { Plus, Pencil, Trash2, GripVertical } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, CheckCircle, Circle } from "lucide-react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface LectureTopicsListProps {
   lecture: Lecture;
@@ -60,7 +61,8 @@ export function LectureTopicsList({
         .insert({
           name: newTopicName,
           lecture_id: lecture.id,
-          order_position: nextPosition
+          order_position: nextPosition,
+          completed: false
         });
       
       if (error) throw error;
@@ -72,6 +74,26 @@ export function LectureTopicsList({
     } catch (error) {
       console.error("Error adding topic:", error);
       toast.error("Failed to add topic");
+    }
+  };
+
+  // Toggle topic completion
+  const handleToggleCompletion = async (topic: LectureTopic) => {
+    try {
+      // Call the database function
+      const { error } = await supabase.rpc('update_topic_completion', {
+        topic_id: topic.id,
+        is_completed: !topic.completed
+      });
+      
+      if (error) throw error;
+      
+      toast.success(topic.completed ? "Topic marked as incomplete" : "Topic marked as complete");
+      refetch();
+      onTopicsUpdated();
+    } catch (error) {
+      console.error("Error toggling topic completion:", error);
+      toast.error("Failed to update topic status");
     }
   };
 
@@ -205,7 +227,7 @@ export function LectureTopicsList({
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                       >
-                        <Card className="overflow-hidden">
+                        <Card className={`overflow-hidden ${topic.completed ? 'border-green-500 bg-green-50/30' : ''}`}>
                           <CardContent className="p-3 flex items-center justify-between">
                             {editingTopic?.id === topic.id ? (
                               // Edit mode
@@ -245,8 +267,19 @@ export function LectureTopicsList({
                                       <GripVertical className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                   )}
-                                  <div className="flex items-center">
-                                    <div className="font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={`h-8 w-8 p-0 ${topic.completed ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}`}
+                                      onClick={() => handleToggleCompletion(topic)}
+                                    >
+                                      {topic.completed ? 
+                                        <CheckCircle className="h-5 w-5 fill-green-100" /> : 
+                                        <Circle className="h-5 w-5" />
+                                      }
+                                    </Button>
+                                    <div className={`font-medium ${topic.completed ? 'text-green-600' : ''}`}>
                                       {index + 1}. {topic.name}
                                     </div>
                                   </div>
