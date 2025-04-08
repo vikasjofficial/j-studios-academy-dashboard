@@ -79,7 +79,10 @@ export default function StudentAttendanceDashboard() {
           .eq('student_id', user.id)
           .eq('course_id', course.id);
           
-        if (attendanceError) throw attendanceError;
+        if (attendanceError) {
+          console.error('Error fetching attendance for course', course.id, attendanceError);
+          continue; // Skip this course but continue with others
+        }
         
         // Count present and absent based on status
         const present = attendanceRecords?.filter(record => record.status === 'present').length || 0;
@@ -96,6 +99,8 @@ export default function StudentAttendanceDashboard() {
           total,
           percentage
         });
+
+        console.log(`Attendance for course ${course.name}: present=${present}, absent=${absent}, total=${total}`);
       }
       
       setAttendanceStats(stats);

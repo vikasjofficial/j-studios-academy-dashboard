@@ -1,3 +1,4 @@
+
 import { UserCheck, Check, X, CalendarDays, BarChart4, BookOpen } from "lucide-react";
 import StudentAttendanceDashboard from "@/components/dashboard/student-attendance-dashboard";
 import { StudentGradebookView } from "@/components/gradebook/student-gradebook-view";
@@ -42,20 +43,27 @@ export default function StudentAttendance() {
     if (!user?.id) return;
     
     try {
+      console.log('Fetching attendance summary for student ID:', user.id);
+      
       // First get enrolled courses
       const { data: enrollments, error: enrollmentsError } = await supabase
         .from('enrollments')
         .select('course_id')
         .eq('student_id', user.id);
         
-      if (enrollmentsError) throw enrollmentsError;
+      if (enrollmentsError) {
+        console.error('Error fetching enrollments:', enrollmentsError);
+        throw enrollmentsError;
+      }
       
-      if (!enrollments.length) {
+      if (!enrollments || !enrollments.length) {
+        console.log('No enrollments found');
         setIsLoading(false);
         return;
       }
       
       const courseIds = enrollments.map(e => e.course_id);
+      console.log('Courses enrolled:', courseIds.length);
       
       // Get attendance records directly
       const { data: attendanceRecords, error: attendanceError } = await supabase
@@ -64,7 +72,12 @@ export default function StudentAttendance() {
         .eq('student_id', user.id)
         .in('course_id', courseIds);
         
-      if (attendanceError) throw attendanceError;
+      if (attendanceError) {
+        console.error('Error fetching attendance records:', attendanceError);
+        throw attendanceError;
+      }
+      
+      console.log('Attendance records found:', attendanceRecords?.length || 0);
       
       // Calculate totals
       const totalPresent = attendanceRecords?.filter(record => record.status === 'present').length || 0;
@@ -74,6 +87,8 @@ export default function StudentAttendance() {
       
       // Count unique courses with attendance records
       const coursesWithRecords = new Set(attendanceRecords?.map(record => record.course_id));
+      
+      console.log(`Calculated attendance: present=${totalPresent}, absent=${totalAbsent}, total=${totalDays}, percentage=${percentage}%, courses=${coursesWithRecords.size}`);
       
       setSummary({
         totalPresent,
