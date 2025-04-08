@@ -1,203 +1,82 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import { AuthProvider } from '@/context/auth-context';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import NotFound from '@/pages/NotFound';
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import StudentsManagement from '@/pages/admin/StudentsManagement';
-import CoursesManagement from '@/pages/admin/CoursesManagement';
-import GradebookManagement from '@/pages/admin/GradebookManagement';
-import AttendanceManagement from '@/pages/admin/AttendanceManagement';
-import AdminMessages from '@/pages/admin/AdminMessages';
-import LecturesManagement from '@/pages/admin/LecturesManagement';
-import TasksManagement from '@/pages/admin/TasksManagement';
-import Settings from '@/pages/admin/Settings';
-import StudentDashboard from '@/pages/student/StudentDashboard';
-import StudentCourses from '@/pages/student/StudentCourses';
-import StudentAttendance from '@/pages/student/StudentAttendance';
-import StudentMessages from '@/pages/student/StudentMessages';
-import StudentLectures from '@/pages/student/StudentLectures';
-import ExamsManagement from '@/pages/admin/ExamsManagement';
-import ExamDetail from '@/pages/admin/ExamDetail';
-import ExamAssignment from '@/pages/admin/ExamAssignment';
-import StudentExams from '@/pages/student/StudentExams';
-import ExamSession from '@/pages/student/ExamSession';
-import ProtectedRoute from '@/components/protected-route';
-import DashboardLayout from '@/components/dashboard-layout';
-import VideoClassroomPage from '@/pages/video-classroom';
-import './App.css';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import { Toaster } from "sonner";
+import { AuthProvider } from "./context/auth-provider";
+import ProtectedRoute from "./components/protected-route";
+import WebGLShowcase from "./components/webgl/WebGLShowcase";
 
-// Create a new QueryClient instance
-const queryClient = new QueryClient();
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import StudentsManagement from "./pages/admin/StudentsManagement";
+import CoursesManagement from "./pages/admin/CoursesManagement";
+import GradebookManagement from "./pages/admin/GradebookManagement";
+import AttendanceManagement from "./pages/admin/AttendanceManagement";
+import LecturesManagement from "./pages/admin/LecturesManagement";
+import ExamsManagement from "./pages/admin/ExamsManagement";
+import ExamDetail from "./pages/admin/ExamDetail";
+import ExamAssignment from "./pages/admin/ExamAssignment";
+import AdminMessages from "./pages/admin/AdminMessages";
+import Settings from "./pages/admin/Settings";
+import TasksManagement from "./pages/admin/TasksManagement";
+
+// Student Pages
+import StudentDashboard from "./pages/student/StudentDashboard";
+import StudentCourses from "./pages/student/StudentCourses";
+import StudentLectures from "./pages/student/StudentLectures";
+import StudentAttendance from "./pages/student/StudentAttendance";
+import StudentExams from "./pages/student/StudentExams";
+import ExamSession from "./pages/student/ExamSession";
+import StudentMessages from "./pages/student/StudentMessages";
+
+// Video Classroom
+import VideoClassroom from "./pages/video-classroom";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="/login" element={<Login />} />
-
-            {/* Admin Routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <AdminDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/students" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <StudentsManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/courses" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <CoursesManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/gradebook" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <GradebookManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/attendance" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <AttendanceManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/messages" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <AdminMessages />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/lectures" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <LecturesManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/tasks" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <TasksManagement />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            {/* New Video Classroom Route */}
-            <Route path="/admin/video-classroom" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <VideoClassroomPage />
-              </ProtectedRoute>
-            } />
-            {/* New Exams Routes */}
-            <Route path="/admin/exams" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ExamsManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/exams/:examId" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ExamDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/exams/:examId/assign" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ExamAssignment />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/settings" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <DashboardLayout>
-                  <Settings />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-
-            {/* Student Routes - Making sure ALL are wrapped in DashboardLayout */}
-            <Route path="/student" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <DashboardLayout>
-                  <StudentDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/student/courses" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <DashboardLayout>
-                  <StudentCourses />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/student/attendance" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <DashboardLayout>
-                  <StudentAttendance />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/student/messages" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <DashboardLayout>
-                  <StudentMessages />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/student/lectures" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <DashboardLayout>
-                  <StudentLectures />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            {/* New Video Classroom Route for students */}
-            <Route path="/student/video-classroom" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <VideoClassroomPage />
-              </ProtectedRoute>
-            } />
-            {/* New Student Exam Routes */}
-            <Route path="/student/exams" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <StudentExams />
-              </ProtectedRoute>
-            } />
-            <Route path="/student/exams/:assignmentId" element={
-              <ProtectedRoute allowedRoles={['student']}>
-                <ExamSession />
-              </ProtectedRoute>
-            } />
-            
-            {/* Common Settings Route */}
-            <Route path="/settings" element={
-              <ProtectedRoute allowedRoles={['admin', 'student']}>
-                <DashboardLayout>
-                  <Settings />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/webgl" element={<WebGLShowcase />} />
+          
+          {/* Admin routes */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="students" element={<StudentsManagement />} />
+            <Route path="courses" element={<CoursesManagement />} />
+            <Route path="gradebook" element={<GradebookManagement />} />
+            <Route path="attendance" element={<AttendanceManagement />} />
+            <Route path="lectures" element={<LecturesManagement />} />
+            <Route path="exams" element={<ExamsManagement />} />
+            <Route path="exams/:examId" element={<ExamDetail />} />
+            <Route path="exams/assign/:examId" element={<ExamAssignment />} />
+            <Route path="tasks" element={<TasksManagement />} />
+            <Route path="messages" element={<AdminMessages />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="video-classroom" element={<VideoClassroom />} />
+          </Route>
+          
+          {/* Student routes */}
+          <Route path="/student" element={<ProtectedRoute allowedRoles={["student"]} />}>
+            <Route index element={<StudentDashboard />} />
+            <Route path="courses" element={<StudentCourses />} />
+            <Route path="lectures" element={<StudentLectures />} />
+            <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="exams" element={<StudentExams />} />
+            <Route path="exams/session/:examId" element={<ExamSession />} />
+            <Route path="messages" element={<StudentMessages />} />
+            <Route path="video-classroom" element={<VideoClassroom />} />
+          </Route>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         <Toaster position="top-right" />
-      </AuthProvider>
-    </QueryClientProvider>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
