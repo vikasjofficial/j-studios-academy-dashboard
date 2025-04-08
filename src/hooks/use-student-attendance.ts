@@ -8,6 +8,7 @@ export interface AttendanceSummary {
   totalAbsent: number;
   totalDays: number;
   percentage: number;
+  courseCount: number; // Added the missing property
 }
 
 export function useStudentAttendance() {
@@ -16,7 +17,8 @@ export function useStudentAttendance() {
     totalPresent: 0,
     totalAbsent: 0,
     totalDays: 0,
-    percentage: 0
+    percentage: 0,
+    courseCount: 0  // Initialize the new property
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,7 +49,8 @@ export function useStudentAttendance() {
             totalPresent: 0,
             totalAbsent: 0,
             totalDays: 0,
-            percentage: 0
+            percentage: 0,
+            courseCount: 0  // Set default value for courseCount
           });
           setIsLoading(false);
           return;
@@ -63,13 +66,25 @@ export function useStudentAttendance() {
       const totalDays = totalPresent + totalAbsent;
       const percentage = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
       
-      console.log(`Calculated attendance: present=${totalPresent}, absent=${totalAbsent}, total=${totalDays}, percentage=${percentage}%`);
+      // Get enrolled courses count (if needed for the UI)
+      const { count: courseCount, error: coursesError } = await supabase
+        .from('enrollments')
+        .select('course_id', { count: 'exact', head: true })
+        .eq('student_id', user.id)
+        .eq('status', 'active');
+      
+      if (coursesError) {
+        console.error('Error fetching courses count:', coursesError);
+      }
+      
+      console.log(`Calculated attendance: present=${totalPresent}, absent=${totalAbsent}, total=${totalDays}, percentage=${percentage}%, courses=${courseCount || 0}`);
       
       setSummary({
         totalPresent,
         totalAbsent,
         totalDays,
-        percentage
+        percentage,
+        courseCount: courseCount || 0
       });
     } catch (error) {
       console.error('Error fetching attendance summary:', error);

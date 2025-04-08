@@ -1,4 +1,3 @@
-
 import { BarChart4, Check, X, CalendarDays, BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,6 @@ interface AttendanceOverviewProps {
 }
 
 export function AttendanceOverview({ summary, isLoading }: AttendanceOverviewProps) {
-  // Determine status and color based on attendance percentage
   const getStatusText = () => {
     if (summary.percentage >= 90) return "Excellent";
     if (summary.percentage >= 75) return "Good";
