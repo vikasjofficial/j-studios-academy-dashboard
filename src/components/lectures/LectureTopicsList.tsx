@@ -80,11 +80,14 @@ export function LectureTopicsList({
   // Toggle topic completion
   const handleToggleCompletion = async (topic: LectureTopic) => {
     try {
-      // Call the database function
-      const { error } = await supabase.rpc('update_topic_completion', {
-        topic_id: topic.id,
-        is_completed: !topic.completed
-      });
+      // Update the database directly instead of using rpc
+      const { error } = await supabase
+        .from('classes_topics')
+        .update({ 
+          completed: !topic.completed,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", topic.id);
       
       if (error) throw error;
       
