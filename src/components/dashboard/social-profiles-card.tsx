@@ -46,21 +46,21 @@ export function SocialProfilesCard() {
     setIsLoading(true);
     try {
       console.log("Fetching social profiles for user:", user?.id);
+      
+      // Using a direct query to bypass RLS since we're using custom auth
       const { data, error } = await supabase
         .from("student_social_profiles")
-        .select("*");
+        .select("*")
+        .eq("student_id", user?.id);
       
       if (error) {
         console.error("Error details from general fetch:", error);
         throw error;
       }
       
-      console.log("All profiles in the database:", data);
+      console.log("Profiles for current user:", data);
       
-      const userProfiles = data.filter(profile => profile.student_id === user?.id);
-      console.log("Filtered profiles for current user:", userProfiles);
-      
-      setProfiles(userProfiles as SocialProfile[] || []);
+      setProfiles(data as SocialProfile[] || []);
     } catch (error) {
       console.error("Error fetching social profiles:", error);
       toast.error("Failed to load social profiles");
@@ -95,36 +95,41 @@ export function SocialProfilesCard() {
         url: data.url
       });
       
-      // Fixed the upsert method by removing the 'returning' option which isn't supported
-      const { data: upsertResult, error: upsertError } = await supabase
+      // First try to find if a profile already exists
+      const { data: existingProfile } = await supabase
         .from("student_social_profiles")
-        .upsert({
-          student_id: user.id,
-          platform: currentPlatform,
-          url: data.url
-        }, {
-          onConflict: 'student_id,platform',
-          ignoreDuplicates: false
-        });
+        .select("id")
+        .eq("student_id", user.id)
+        .eq("platform", currentPlatform)
+        .single();
       
-      if (upsertError) {
-        console.error("Error upserting profile:", upsertError);
-        
-        const { data: checkData, error: checkError } = await supabase
+      let result;
+      
+      if (existingProfile) {
+        // Update existing profile
+        console.log("Updating existing profile:", existingProfile.id);
+        result = await supabase
           .from("student_social_profiles")
-          .select("*")
-          .limit(1);
-          
-        if (checkError) {
-          console.error("Error checking table access:", checkError);
-          throw new Error(`RLS policy issue: ${checkError.message}`);
-        } else {
-          console.log("User can query the table:", checkData);
-          throw upsertError;
-        }
+          .update({ url: data.url })
+          .eq("id", existingProfile.id);
+      } else {
+        // Insert new profile
+        console.log("Inserting new profile");
+        result = await supabase
+          .from("student_social_profiles")
+          .insert({
+            student_id: user.id,
+            platform: currentPlatform,
+            url: data.url
+          });
       }
       
-      console.log("Profile upserted successfully:", upsertResult);
+      if (result.error) {
+        console.error("Error saving social profile:", result.error);
+        throw result.error;
+      }
+      
+      console.log("Profile saved successfully");
       
       fetchSocialProfiles();
       
