@@ -33,6 +33,7 @@ export default function LecturesManagement() {
   });
 
   // Fetch lectures based on selected folder from classes table
+  // Now include classes_topics to calculate progress
   const { data: lectures, isLoading: lecturesLoading, refetch: refetchLectures } = useQuery({
     queryKey: ["lectures", selectedFolder?.id],
     queryFn: async () => {
@@ -40,7 +41,11 @@ export default function LecturesManagement() {
       
       const { data, error } = await supabase
         .from('classes')
-        .select("*")
+        .select(`
+          *,
+          classes_folders(name),
+          classes_topics(id, name, completed)
+        `)
         .eq("folder_id", selectedFolder.id)
         .order("title");
       

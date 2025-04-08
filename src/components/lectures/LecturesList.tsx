@@ -145,7 +145,8 @@ export function LecturesList({
             onClick={() => onSelectLecture(lecture)}
           >
             <CardContent className="p-4">
-              {showProgress && lecture.classes_topics && lecture.classes_topics.length > 0 && (
+              {/* Always show progress bar in admin view, regardless of showProgress prop */}
+              {lecture.classes_topics && lecture.classes_topics.length > 0 && (
                 <div className="mb-2">
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
                     <span>Progress</span>
