@@ -44,33 +44,113 @@ function App() {
           <Route path="/webgl" element={<WebGLShowcase />} />
           
           {/* Admin routes */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]} />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="students" element={<StudentsManagement />} />
-            <Route path="courses" element={<CoursesManagement />} />
-            <Route path="gradebook" element={<GradebookManagement />} />
-            <Route path="attendance" element={<AttendanceManagement />} />
-            <Route path="lectures" element={<LecturesManagement />} />
-            <Route path="exams" element={<ExamsManagement />} />
-            <Route path="exams/:examId" element={<ExamDetail />} />
-            <Route path="exams/assign/:examId" element={<ExamAssignment />} />
-            <Route path="tasks" element={<TasksManagement />} />
-            <Route path="messages" element={<AdminMessages />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="video-classroom" element={<VideoClassroom />} />
-          </Route>
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/students" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <StudentsManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/courses" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <CoursesManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/gradebook" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <GradebookManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/attendance" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AttendanceManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/lectures" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <LecturesManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/exams" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ExamsManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/exams/:examId" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ExamDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/exams/assign/:examId" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ExamAssignment />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/tasks" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TasksManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/messages" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminMessages />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Settings />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/video-classroom" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <VideoClassroom />
+            </ProtectedRoute>
+          } />
           
           {/* Student routes */}
-          <Route path="/student" element={<ProtectedRoute allowedRoles={["student"]} />}>
-            <Route index element={<StudentDashboard />} />
-            <Route path="courses" element={<StudentCourses />} />
-            <Route path="lectures" element={<StudentLectures />} />
-            <Route path="attendance" element={<StudentAttendance />} />
-            <Route path="exams" element={<StudentExams />} />
-            <Route path="exams/session/:examId" element={<ExamSession />} />
-            <Route path="messages" element={<StudentMessages />} />
-            <Route path="video-classroom" element={<VideoClassroom />} />
-          </Route>
+          <Route path="/student" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/courses" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentCourses />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/lectures" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentLectures />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/attendance" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentAttendance />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/exams" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentExams />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/exams/session/:examId" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <ExamSession />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/messages" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentMessages />
+            </ProtectedRoute>
+          } />
+          <Route path="/student/video-classroom" element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <VideoClassroom />
+            </ProtectedRoute>
+          } />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
