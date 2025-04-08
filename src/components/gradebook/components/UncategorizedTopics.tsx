@@ -24,13 +24,13 @@ export function UncategorizedTopics({
 
   return (
     <Card className="overflow-hidden border border-border/40">
-      <CardHeader className="p-4 pb-2 bg-muted/10">
-        <CardTitle className="text-base flex items-center gap-2">
-          <ListFilter className="h-4 w-4 text-primary" />
+      <CardHeader className="p-2 pb-1 bg-muted/10">
+        <CardTitle className="text-xs flex items-center gap-1">
+          <ListFilter className="h-3 w-3 text-primary" />
           <span>Uncategorized Topics</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
+      <CardContent className="p-2 pt-1">
         <GradesList 
           topics={topics} 
           getGrade={getGrade} 

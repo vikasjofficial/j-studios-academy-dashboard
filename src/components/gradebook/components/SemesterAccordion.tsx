@@ -28,8 +28,8 @@ export function SemesterAccordion({
   
   if (viewMode === 'grid') {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {semesters.map((semester, index) => (
             <motion.div
               key={semester.id}
@@ -38,13 +38,13 @@ export function SemesterAccordion({
               transition={{ duration: 0.3, delay: index * 0.1 }}
               className="bg-card/90 rounded-lg shadow-sm border border-border/50 overflow-hidden"
             >
-              <div className="bg-muted/20 p-3 flex justify-between items-center">
-                <h3 className="font-semibold text-primary-foreground">{semester.name}</h3>
-                <span className="text-sm font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
+              <div className="bg-muted/20 p-2 flex justify-between items-center">
+                <h3 className="font-medium text-xs text-primary-foreground">{semester.name}</h3>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                   {calculateSemesterAverage(semester.id)}
                 </span>
               </div>
-              <div className="p-3">
+              <div className="p-2">
                 <GradesList 
                   topics={semester.topics} 
                   getGrade={getGrade} 
@@ -73,10 +73,10 @@ export function SemesterAccordion({
           transition={{ duration: 0.3, delay: index * 0.1 }}
         >
           <AccordionItem value={`semester-${index}`} className="border-b overflow-hidden">
-            <AccordionTrigger className="py-3 transition-colors hover:bg-muted/30">
+            <AccordionTrigger className="py-2 transition-colors hover:bg-muted/30 text-sm">
               <div className="flex justify-between w-full pr-4">
-                <span className="font-semibold text-primary-foreground">{semester.name}</span>
-                <span className="text-sm font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
+                <span className="font-medium text-primary-foreground">{semester.name}</span>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                   Average: {calculateSemesterAverage(semester.id)}
                 </span>
               </div>

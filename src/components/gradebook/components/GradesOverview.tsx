@@ -45,13 +45,13 @@ export function GradesOverview({
       className={layoutStyles.gradebookInnerCard}
     >
       <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
-        <CardHeader className="pb-3 bg-muted/10">
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary" />
+        <CardHeader className="pb-2 bg-muted/10">
+          <CardTitle className="flex items-center gap-1 text-sm">
+            <GraduationCap className="h-4 w-4 text-primary" />
             <span className="text-gradient-primary">My Grades & Performance</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="pt-3">
           <CourseSelector 
             courses={courses} 
             selectedCourse={selectedCourse} 
@@ -59,11 +59,11 @@ export function GradesOverview({
           />
 
           {isLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
+            <div className="flex justify-center p-3">
+              <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full"></div>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <SemesterAccordion 
                 semesters={semesters || []} 
                 getGrade={getGrade} 
@@ -80,11 +80,11 @@ export function GradesOverview({
               />
               
               <div className={`${movingBorderStyles.movingBorderWrapper} rounded-md`}>
-                <div className="p-3 bg-muted/10 rounded-md">
+                <div className="p-2 bg-muted/10 rounded-md">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold">Overall Average</span>
+                    <span className="font-medium text-sm">Overall Average</span>
                     <motion.span 
-                      className="font-bold text-lg bg-primary/10 text-primary px-3 py-1 rounded-full"
+                      className="font-medium text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full"
                       initial={{ scale: 0.9 }}
                       animate={{ scale: 1 }}
                       transition={{ duration: 0.5, repeat: 1, repeatType: "reverse" }}
