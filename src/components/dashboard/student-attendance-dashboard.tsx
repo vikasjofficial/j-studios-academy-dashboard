@@ -79,11 +79,18 @@ export default function StudentAttendanceDashboard() {
           throw recordsError;
         }
         
-        // If we don't have records, create a stats entry with zeros
-        // Use type assertion to safely access properties
-        const typedRecord = record as { present_count: number; absent_count: number } | null;
-        const present = typedRecord?.present_count || 0;
-        const absent = typedRecord?.absent_count || 0;
+        // Safely extract attendance data, handling potential type issues
+        let present = 0;
+        let absent = 0;
+        
+        // First check if record exists and is not an error object
+        if (record && !('error' in record)) {
+          // Cast to unknown first, then to the expected type for safety
+          const safeRecord = record as unknown as { present_count?: number; absent_count?: number };
+          present = safeRecord.present_count || 0;
+          absent = safeRecord.absent_count || 0;
+        }
+        
         const total = present + absent;
         const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
         
