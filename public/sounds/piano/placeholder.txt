@@ -1,0 +1,10 @@
+
+This directory will contain piano note sound files.
+Expected naming format: [note][octave].mp3 or [note]s[octave].mp3 for sharps.
+
+Examples:
+- C3.mp3 (C in octave 3)
+- Cs3.mp3 (C# in octave 3)
+- D3.mp3 (D in octave 3)
+
+For 3 octaves (C3-B5), you'll need 36 sound files total.

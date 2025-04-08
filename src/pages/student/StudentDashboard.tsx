@@ -15,6 +15,7 @@ import { SemesterProgressChart } from "@/components/dashboard/semester-progress-
 import { AttendanceSummaryWidget } from "@/components/dashboard/attendance-summary-widget";
 import { SocialProfilesCard } from "@/components/dashboard/social-profiles-card";
 import { Button } from "@/components/ui/button";
+import { Piano } from "@/components/piano/Piano";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -153,6 +154,12 @@ export default function StudentDashboard() {
               <div className="md:col-span-2">
                 {/* Remove the TasksCard from here as we moved it above */}
               </div>
+            </div>
+            
+            {/* Add Piano at the bottom */}
+            <div className="w-full mt-8 mb-12">
+              <h2 className="text-xl font-bold tracking-tight mb-4">Practice Piano</h2>
+              <Piano />
             </div>
           </div>
         </div>
