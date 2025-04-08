@@ -179,7 +179,7 @@ export function SocialProfilesCard() {
 
   return (
     <Card className={`overflow-hidden shadow-lg mb-6 ${styles.glassMorphism}`}>
-      <CardHeader className="bg-gradient-to-r from-[#91B6E3] to-[#B6CEED] text-white pb-3">
+      <CardHeader className="bg-gradient-to-r from-[#022a6b] to-[#182e7d] text-white pb-3">
         <CardTitle className="text-lg font-medium flex items-center">
           <MoveUpRight className="mr-2 h-5 w-5 text-white" />
           Social Profiles
