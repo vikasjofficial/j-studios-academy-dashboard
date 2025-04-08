@@ -35,6 +35,10 @@ export interface Lecture {
   updated_at?: string;
   topics?: LectureTopic[];
   files?: LectureFile[];
+  classes_topics?: LectureTopic[];
+  classes_folders?: {
+    name: string;
+  };
 }
 
 export interface LectureAssignment {

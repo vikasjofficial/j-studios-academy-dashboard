@@ -8,6 +8,7 @@ import { BookOpen } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
 
 export function LecturesCard() {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ export function LecturesCard() {
       const lectureIds = assignments.map(a => a.lecture_id);
       if (lectureIds.length === 0) return [];
       
-      // Then fetch the lectures
+      // Then fetch the lectures with their topics for progress calculation
       const { data, error } = await supabase
         .from('classes')
         .select(`
@@ -41,6 +42,10 @@ export function LecturesCard() {
           created_at,
           classes_folders!inner (
             name
+          ),
+          classes_topics (
+            id,
+            completed
           )
         `)
         .in("id", lectureIds)
@@ -57,6 +62,16 @@ export function LecturesCard() {
   
   const navigateToLectures = () => {
     navigate("/student/lectures");
+  };
+
+  // Calculate progress percentage based on completed topics
+  const calculateProgress = (lecture: any) => {
+    if (!lecture.classes_topics || lecture.classes_topics.length === 0) {
+      return 0;
+    }
+    
+    const completedTopics = lecture.classes_topics.filter((topic: any) => topic.completed).length;
+    return Math.round((completedTopics / lecture.classes_topics.length) * 100);
   };
 
   return (
@@ -80,16 +95,31 @@ export function LecturesCard() {
           <>
             <div className="space-y-3">
               {displayedLectures?.map((lecture: any) => (
-                <div key={lecture.id} className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0">
-                  <div>
+                <div key={lecture.id} className="border-b pb-2 last:border-0 last:pb-0">
+                  <div className="flex justify-between items-center mb-1">
                     <div className="font-medium">{lecture.title}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Folder: {lecture.classes_folders.name}
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(lecture.created_at), "MMM d, yyyy")}
                     </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {format(new Date(lecture.created_at), "MMM d, yyyy")}
+                  
+                  <div className="text-sm text-muted-foreground mb-1">
+                    Folder: {lecture.classes_folders.name}
                   </div>
+                  
+                  {lecture.classes_topics && lecture.classes_topics.length > 0 && (
+                    <div className="mt-1">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                        <span>Progress</span>
+                        <span>{calculateProgress(lecture)}%</span>
+                      </div>
+                      <Progress 
+                        value={calculateProgress(lecture)} 
+                        className="h-2" 
+                        indicatorClassName={calculateProgress(lecture) === 100 ? "bg-green-500" : undefined}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

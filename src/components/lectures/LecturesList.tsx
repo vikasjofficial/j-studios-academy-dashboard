@@ -5,6 +5,7 @@ import { FileText, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lecture } from "./types";
+import { Progress } from "@/components/ui/progress";
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -24,6 +25,7 @@ interface LecturesListProps {
   onSelectLecture: (lecture: Lecture) => void;
   onLectureDeleted?: () => void;
   viewOnly?: boolean;
+  showProgress?: boolean;
 }
 
 export function LecturesList({
@@ -31,10 +33,21 @@ export function LecturesList({
   isLoading,
   onSelectLecture,
   onLectureDeleted,
-  viewOnly = false
+  viewOnly = false,
+  showProgress = false
 }: LecturesListProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lectureToDelete, setLectureToDelete] = useState<Lecture | null>(null);
+
+  // Calculate progress percentage based on completed topics
+  const calculateProgress = (lecture: Lecture) => {
+    if (!lecture.classes_topics || lecture.classes_topics.length === 0) {
+      return 0;
+    }
+    
+    const completedTopics = lecture.classes_topics.filter(topic => topic.completed).length;
+    return Math.round((completedTopics / lecture.classes_topics.length) * 100);
+  };
 
   // Handle lecture delete click
   const handleDeleteClick = (lecture: Lecture, e: React.MouseEvent) => {
@@ -109,7 +122,7 @@ export function LecturesList({
   if (lectures.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 space-y-2">
-        <p className="text-muted-foreground">No lectures found in this folder</p>
+        <p className="text-muted-foreground">No lectures found</p>
         {!viewOnly && (
           <p className="text-sm">Click "New Lecture" to create one</p>
         )}
@@ -131,39 +144,60 @@ export function LecturesList({
             className="h-full cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => onSelectLecture(lecture)}
           >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <FileText className="h-5 w-5 text-primary" />
-                <div>
-                  <h3 className="font-medium">{lecture.title}</h3>
-                </div>
-              </div>
-              
-              {!viewOnly && (
-                <div className="flex space-x-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectLecture(lecture);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-destructive"
-                    onClick={(e) => handleDeleteClick(lecture, e)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
+            <CardContent className="p-4">
+              {showProgress && lecture.classes_topics && lecture.classes_topics.length > 0 && (
+                <div className="mb-2">
+                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                    <span>Progress</span>
+                    <span>{calculateProgress(lecture)}%</span>
+                  </div>
+                  <Progress 
+                    value={calculateProgress(lecture)} 
+                    className="h-2" 
+                    indicatorClassName={calculateProgress(lecture) === 100 ? "bg-green-500" : undefined}
+                  />
                 </div>
               )}
+              
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <div>
+                    <h3 className="font-medium">{lecture.title}</h3>
+                    {lecture.classes_folders && (
+                      <p className="text-sm text-muted-foreground">
+                        Folder: {lecture.classes_folders.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                {!viewOnly && (
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectLecture(lecture);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 text-destructive"
+                      onClick={(e) => handleDeleteClick(lecture, e)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </motion.div>
