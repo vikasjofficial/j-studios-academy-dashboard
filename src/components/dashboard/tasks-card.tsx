@@ -119,7 +119,7 @@ export function TasksCard() {
 
   return (
     <Card className={`overflow-hidden shadow-lg ${styles.glassMorphism}`}>
-      <CardHeader className="bg-gradient-to-r from-[#0EA5E9] to-[#F97316] text-white pb-3">
+      <CardHeader className="bg-gradient-to-r from-[#F97316] to-[#FB923C] text-white pb-3">
         <CardTitle className="text-lg font-medium flex items-center">
           <ListTodo className="mr-2 h-5 w-5 text-white" />
           My Tasks
@@ -128,7 +128,7 @@ export function TasksCard() {
       <CardContent className="pt-5">
         {isLoading ? (
           <div className="flex justify-center items-center py-6">
-            <div className="h-5 w-5 border-2 border-[#0EA5E9] border-t-transparent rounded-full animate-spin"></div>
+            <div className="h-5 w-5 border-2 border-[#F97316] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : !tasks || tasks.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
@@ -162,7 +162,7 @@ export function TasksCard() {
             {tasks && tasks.length > 3 && (
               <div className="mt-5 flex justify-end">
                 <Button 
-                  className="bg-gradient-to-r from-[#0EA5E9] to-[#F97316] hover:from-[#0EA5E9]/90 hover:to-[#F97316]/90 text-white"
+                  className="bg-gradient-to-r from-[#F97316] to-[#FB923C] hover:from-[#F97316]/90 hover:to-[#FB923C]/90 text-white"
                   size="sm" 
                   onClick={() => setShowAll(!showAll)}
                 >
@@ -176,7 +176,7 @@ export function TasksCard() {
         {/* Task Detail Dialog */}
         <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
           <DialogContent className={styles.glassMorphism}>
-            <DialogHeader className="bg-gradient-to-r from-[#0EA5E9]/90 to-[#F97316]/90 text-white p-4 rounded-t-lg -mt-6 -mx-6 mb-4">
+            <DialogHeader className="bg-gradient-to-r from-[#F97316] to-[#FB923C] text-white p-4 rounded-t-lg -mt-6 -mx-6 mb-4">
               <DialogTitle className="text-xl font-bold">{selectedTask?.title}</DialogTitle>
               <DialogDescription className="text-white/80 flex items-center pt-2">
                 <span className="mr-2">Due Date: {selectedTask?.due_date}</span>
@@ -191,7 +191,7 @@ export function TasksCard() {
             </div>
             <DialogFooter>
               <Button 
-                className="bg-gradient-to-r from-[#0EA5E9] to-[#F97316] hover:from-[#0EA5E9]/90 hover:to-[#F97316]/90 text-white" 
+                className="bg-gradient-to-r from-[#F97316] to-[#FB923C] hover:from-[#F97316]/90 hover:to-[#FB923C]/90 text-white" 
                 onClick={() => setTaskDialogOpen(false)}
               >
                 Close
