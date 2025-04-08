@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import styles from "@/styles/card.module.css";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SocialProfile {
   id: string;
@@ -31,6 +32,7 @@ export function SocialProfilesCard() {
   const [isLoading, setIsLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentPlatform, setCurrentPlatform] = useState<string>("");
+  const isMobile = useIsMobile();
   
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
@@ -43,14 +45,18 @@ export function SocialProfilesCard() {
   const fetchSocialProfiles = async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching social profiles for user:", user?.id);
       const { data, error } = await supabase
         .from("student_social_profiles")
         .select("*")
         .eq("student_id", user?.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error details:", error);
+        throw error;
+      }
       
-      // Cast the data to the correct type
+      console.log("Profiles fetched successfully:", data);
       setProfiles(data as unknown as SocialProfile[] || []);
     } catch (error) {
       console.error("Error fetching social profiles:", error);
@@ -74,46 +80,70 @@ export function SocialProfilesCard() {
   };
 
   const onSubmit = async (data: any) => {
+    if (!user?.id) {
+      toast.error("User not authenticated");
+      return;
+    }
+    
     try {
+      console.log("Saving social profile:", {
+        student_id: user.id,
+        platform: currentPlatform,
+        url: data.url
+      });
+      
       const existingProfile = profiles.find(p => p.platform === currentPlatform);
       
       if (existingProfile) {
         // Update existing profile
-        const { error } = await supabase
+        console.log("Updating existing profile:", existingProfile.id);
+        const { data: updatedData, error } = await supabase
           .from("student_social_profiles")
           .update({ url: data.url })
-          .eq("id", existingProfile.id);
+          .eq("id", existingProfile.id)
+          .select("*")
+          .single();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating profile:", error);
+          throw error;
+        }
+        
+        console.log("Profile updated successfully:", updatedData);
         
         setProfiles(prev => 
-          prev.map(p => p.id === existingProfile.id ? { ...p, url: data.url } : p)
+          prev.map(p => p.id === existingProfile.id ? updatedData as unknown as SocialProfile : p)
         );
         
         toast.success(`${currentPlatform} profile updated successfully`);
       } else {
         // Insert new profile
+        console.log("Inserting new profile");
         const { data: newProfile, error } = await supabase
           .from("student_social_profiles")
           .insert({
-            student_id: user?.id,
+            student_id: user.id,
             platform: currentPlatform,
             url: data.url
           })
           .select("*")
           .single();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting profile:", error);
+          throw error;
+        }
         
+        console.log("New profile created successfully:", newProfile);
         setProfiles(prev => [...prev, newProfile as unknown as SocialProfile]);
         
         toast.success(`${currentPlatform} profile added successfully`);
       }
       
       setOpenDialog(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving social profile:", error);
-      toast.error("Failed to save social profile");
+      toast.error(`Failed to save social profile: ${error.message || "Unknown error"}`);
     }
   };
 
