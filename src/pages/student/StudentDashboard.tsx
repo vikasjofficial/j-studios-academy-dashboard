@@ -93,6 +93,11 @@ export default function StudentDashboard() {
               <StudentProfileCard />
             </div>
             
+            {/* Move TasksCard above AttendanceSummary */}
+            <div className="w-full">
+              <TasksCard />
+            </div>
+            
             {/* Top row with attendance summary and semester progress */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-1">
@@ -140,7 +145,7 @@ export default function StudentDashboard() {
                 <ExamsResultsCard />
               </div>
               <div className="md:col-span-2">
-                <TasksCard />
+                {/* Remove the TasksCard from here as we moved it above */}
               </div>
             </div>
           </div>

@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clock, CircleAlert } from "lucide-react";
+import { CheckSquare, Clock, AlertTriangle, SquarePen, ListTodo } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import styles from "@/styles/card.module.css";
 
 export interface Task {
   id: string;
@@ -70,22 +71,22 @@ export function TasksCard() {
     switch (status) {
       case 'completed':
         return (
-          <Badge variant="success" className="ml-2">
-            <CheckCircle className="h-3 w-3 mr-1" />
+          <Badge className="ml-2 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white">
+            <CheckSquare className="h-3 w-3 mr-1" />
             Completed
           </Badge>
         );
       case 'pending':
         return (
-          <Badge variant="warning" className="ml-2">
+          <Badge className="ml-2 bg-[#F59E0B] hover:bg-[#F59E0B]/90 text-white">
             <Clock className="h-3 w-3 mr-1" />
             Pending
           </Badge>
         );
       case 'overdue':
         return (
-          <Badge variant="destructive" className="ml-2">
-            <CircleAlert className="h-3 w-3 mr-1" />
+          <Badge className="ml-2 bg-[#EF4444] hover:bg-[#EF4444]/90 text-white">
+            <AlertTriangle className="h-3 w-3 mr-1" />
             Overdue
           </Badge>
         );
@@ -98,27 +99,41 @@ export function TasksCard() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-gradient-to-r from-blue-500 to-blue-600';
+      case 'pending':
+        return 'bg-gradient-to-r from-orange-400 to-orange-500';
+      case 'overdue':
+        return 'bg-gradient-to-r from-red-500 to-red-600';
+      default:
+        return 'bg-gradient-to-r from-gray-400 to-gray-500';
+    }
+  };
+
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setTaskDialogOpen(true);
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium flex items-center">
-          <CheckCircle className="mr-2 h-4 w-4 text-primary" />
+    <Card className={`overflow-hidden shadow-lg ${styles.glassMorphism}`}>
+      <CardHeader className="bg-gradient-to-r from-[#0EA5E9] to-[#F97316] text-white pb-3">
+        <CardTitle className="text-lg font-medium flex items-center">
+          <ListTodo className="mr-2 h-5 w-5 text-white" />
           My Tasks
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-5">
         {isLoading ? (
           <div className="flex justify-center items-center py-6">
-            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="h-5 w-5 border-2 border-[#0EA5E9] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : !tasks || tasks.length === 0 ? (
-          <div className="text-center py-3 text-sm text-muted-foreground">
-            No tasks due.
+          <div className="text-center py-6 text-muted-foreground">
+            <SquarePen className="mx-auto h-10 w-10 text-muted-foreground/50 mb-2" />
+            <p>No tasks due.</p>
           </div>
         ) : (
           <>
@@ -126,25 +141,28 @@ export function TasksCard() {
               {displayedTasks?.map(task => (
                 <div 
                   key={task.id} 
-                  className="flex justify-between items-center border-b pb-2 last:border-0 last:pb-0 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+                  className={`relative overflow-hidden rounded-lg transition-all duration-300 transform hover:translate-y-[-2px] hover:shadow-md cursor-pointer`}
                   onClick={() => handleTaskClick(task)}
                 >
-                  <div className="font-medium">
-                    {task.title}
-                    {getStatusBadge(task.status)}
-                  </div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Clock className="mr-1 h-3 w-3" />
-                    <span>Due: {task.due_date}</span>
+                  <div className={`${getStatusColor(task.status)} w-1.5 absolute left-0 top-0 h-full`}></div>
+                  <div className="pl-4 pr-3 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-gradient-to-r from-black/5 to-black/10 hover:from-black/10 hover:to-black/15">
+                    <div className="font-medium">
+                      {task.title}
+                      {getStatusBadge(task.status)}
+                    </div>
+                    <div className="flex items-center text-xs text-muted-foreground bg-black/20 px-2 py-1 rounded-full">
+                      <Clock className="mr-1 h-3 w-3" />
+                      <span>Due: {task.due_date}</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
             
             {tasks && tasks.length > 3 && (
-              <div className="mt-3 flex justify-end">
+              <div className="mt-5 flex justify-end">
                 <Button 
-                  variant="ghost" 
+                  className="bg-gradient-to-r from-[#0EA5E9] to-[#F97316] hover:from-[#0EA5E9]/90 hover:to-[#F97316]/90 text-white"
                   size="sm" 
                   onClick={() => setShowAll(!showAll)}
                 >
@@ -157,22 +175,27 @@ export function TasksCard() {
 
         {/* Task Detail Dialog */}
         <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{selectedTask?.title}</DialogTitle>
-              <DialogDescription className="flex items-center pt-2">
+          <DialogContent className={styles.glassMorphism}>
+            <DialogHeader className="bg-gradient-to-r from-[#0EA5E9]/90 to-[#F97316]/90 text-white p-4 rounded-t-lg -mt-6 -mx-6 mb-4">
+              <DialogTitle className="text-xl font-bold">{selectedTask?.title}</DialogTitle>
+              <DialogDescription className="text-white/80 flex items-center pt-2">
                 <span className="mr-2">Due Date: {selectedTask?.due_date}</span>
                 {selectedTask && getStatusBadge(selectedTask.status)}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <h4 className="text-sm font-medium mb-2">Description:</h4>
-              <div className="text-sm bg-muted/30 p-4 rounded-md">
+              <div className="text-sm bg-muted/30 p-4 rounded-md border border-muted">
                 {selectedTask?.description || "No description provided."}
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => setTaskDialogOpen(false)}>Close</Button>
+              <Button 
+                className="bg-gradient-to-r from-[#0EA5E9] to-[#F97316] hover:from-[#0EA5E9]/90 hover:to-[#F97316]/90 text-white" 
+                onClick={() => setTaskDialogOpen(false)}
+              >
+                Close
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
