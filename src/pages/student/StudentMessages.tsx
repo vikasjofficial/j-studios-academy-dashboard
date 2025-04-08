@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +27,25 @@ export default function StudentMessages() {
     isSending, 
     sendMessage 
   } = useStudentMessages(user?.id);
+  
+  // Mark all admin messages as checked when the page loads
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      const checkedMessages = JSON.parse(localStorage.getItem('checkedMessages') || '{}');
+      let updated = false;
+
+      messages.forEach(message => {
+        if (message.sender_role === 'admin' && !checkedMessages[message.id]) {
+          checkedMessages[message.id] = true;
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        localStorage.setItem('checkedMessages', JSON.stringify(checkedMessages));
+      }
+    }
+  }, [messages]);
   
   const handleSendMessage = async (data: z.infer<typeof messageSchema>) => {
     if (!user?.id || !user?.name) return;

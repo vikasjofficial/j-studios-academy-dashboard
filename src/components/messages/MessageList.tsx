@@ -1,7 +1,7 @@
 
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Bell } from 'lucide-react';
 import styles from '@/styles/layout.module.css';
 
 interface Message {
@@ -21,6 +21,33 @@ interface MessageListProps {
 
 export function MessageList({ messages, isLoading }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [checkedMessages, setCheckedMessages] = useState<Record<string, boolean>>({});
+  
+  // Load checked messages from localStorage
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('checkedMessages') || '{}');
+    setCheckedMessages(stored);
+  }, []);
+  
+  // Update checked messages when viewing the message list
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      const stored = JSON.parse(localStorage.getItem('checkedMessages') || '{}');
+      let updated = false;
+      
+      messages.forEach(message => {
+        if (message.sender_role === 'admin' && !stored[message.id]) {
+          stored[message.id] = true;
+          updated = true;
+        }
+      });
+      
+      if (updated) {
+        localStorage.setItem('checkedMessages', JSON.stringify(stored));
+        setCheckedMessages(stored);
+      }
+    }
+  }, [messages]);
 
   const getMessageTypeColor = (type?: string) => {
     switch (type) {
