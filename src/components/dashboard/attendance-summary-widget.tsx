@@ -44,26 +44,18 @@ export function AttendanceSummaryWidget() {
       
       const courseIds = enrollments.map(e => e.course_id);
       
-      // Get attendance counts for all courses
-      const { data: records, error: recordsError } = await supabase
-        .from('attendance_counts')
-        .select('*')
+      // Get attendance records directly from attendance table
+      const { data: attendanceRecords, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('status')
         .eq('student_id', user.id)
         .in('course_id', courseIds);
         
-      if (recordsError) throw recordsError;
+      if (attendanceError) throw attendanceError;
       
       // Calculate totals
-      let totalPresent = 0;
-      let totalAbsent = 0;
-      
-      if (records && records.length > 0) {
-        records.forEach((record: any) => {
-          totalPresent += record.present_count || 0;
-          totalAbsent += record.absent_count || 0;
-        });
-      }
-      
+      const totalPresent = attendanceRecords?.filter(record => record.status === 'present').length || 0;
+      const totalAbsent = attendanceRecords?.filter(record => record.status === 'absent').length || 0;
       const totalDays = totalPresent + totalAbsent;
       const percentage = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
       

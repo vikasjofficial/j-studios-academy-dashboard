@@ -1,4 +1,3 @@
-
 import { UserCheck, Check, X, CalendarDays, BarChart4, BookOpen } from "lucide-react";
 import StudentAttendanceDashboard from "@/components/dashboard/student-attendance-dashboard";
 import { StudentGradebookView } from "@/components/gradebook/student-gradebook-view";
@@ -58,35 +57,30 @@ export default function StudentAttendance() {
       
       const courseIds = enrollments.map(e => e.course_id);
       
-      // Get attendance counts for all courses
-      const { data: records, error: recordsError } = await supabase
-        .from('attendance_counts')
-        .select('*')
+      // Get attendance records directly
+      const { data: attendanceRecords, error: attendanceError } = await supabase
+        .from('attendance')
+        .select('status, course_id')
         .eq('student_id', user.id)
         .in('course_id', courseIds);
         
-      if (recordsError) throw recordsError;
+      if (attendanceError) throw attendanceError;
       
       // Calculate totals
-      let totalPresent = 0;
-      let totalAbsent = 0;
-      
-      if (records && records.length > 0) {
-        records.forEach((record: any) => {
-          totalPresent += record.present_count || 0;
-          totalAbsent += record.absent_count || 0;
-        });
-      }
-      
+      const totalPresent = attendanceRecords?.filter(record => record.status === 'present').length || 0;
+      const totalAbsent = attendanceRecords?.filter(record => record.status === 'absent').length || 0;
       const totalDays = totalPresent + totalAbsent;
       const percentage = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
+      
+      // Count unique courses with attendance records
+      const coursesWithRecords = new Set(attendanceRecords?.map(record => record.course_id));
       
       setSummary({
         totalPresent,
         totalAbsent,
         totalDays,
         percentage,
-        courseCount: records?.length || 0
+        courseCount: coursesWithRecords.size
       });
     } catch (error) {
       console.error('Error fetching attendance summary:', error);
@@ -112,7 +106,6 @@ export default function StudentAttendance() {
 
   return (
     <div className="flex w-full">
-      {/* Empty div on the left side */}
       <div className="hidden md:block w-16 md:w-24 lg:w-28 flex-shrink-0"></div>
       
       <div className="space-y-6 w-full">
@@ -121,7 +114,6 @@ export default function StudentAttendance() {
           <p className="text-muted-foreground">View your attendance records for all courses</p>
         </div>
         
-        {/* Overall attendance summary card */}
         <Card className="glass-morphism rounded-xl border border-white/10 w-full">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
@@ -216,7 +208,6 @@ export default function StudentAttendance() {
           </CardContent>
         </Card>
         
-        {/* Course-specific attendance cards */}
         <div className="glass-morphism rounded-xl p-6 border border-white/10 w-full">
           <div className="flex items-center gap-2 mb-4">
             <UserCheck className="h-5 w-5 text-primary" />

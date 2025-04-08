@@ -46,7 +46,7 @@ export default function StudentAttendanceDashboard() {
         
       if (enrollmentsError) throw enrollmentsError;
       
-      if (!enrollments.length) {
+      if (!enrollments?.length) {
         setAttendanceStats([]);
         setIsLoading(false);
         return;
@@ -62,35 +62,28 @@ export default function StudentAttendanceDashboard() {
         
       if (coursesError) throw coursesError;
       
-      // For each course, get attendance stats from attendance_counts
+      if (!courses?.length) {
+        setAttendanceStats([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // For each course, get attendance stats
       const stats: AttendanceStats[] = [];
       
       for (const course of courses) {
-        // Get attendance counts for this course/student
-        const { data: record, error: recordsError } = await supabase
-          .from('attendance_counts')
-          .select('*')
+        // Get attendance records for this course/student
+        const { data: attendanceRecords, error: attendanceError } = await supabase
+          .from('attendance')
+          .select('status')
           .eq('student_id', user.id)
-          .eq('course_id', course.id)
-          .single();
+          .eq('course_id', course.id);
           
-        if (recordsError && recordsError.code !== 'PGRST116') {
-          // Only throw if it's not the "no rows returned" error
-          throw recordsError;
-        }
+        if (attendanceError) throw attendanceError;
         
-        // Safely extract attendance data, handling potential type issues
-        let present = 0;
-        let absent = 0;
-        
-        // First check if record exists and is not an error object
-        if (record && !('error' in record)) {
-          // Cast to unknown first, then to the expected type for safety
-          const safeRecord = record as unknown as { present_count?: number; absent_count?: number };
-          present = safeRecord.present_count || 0;
-          absent = safeRecord.absent_count || 0;
-        }
-        
+        // Count present and absent based on status
+        const present = attendanceRecords?.filter(record => record.status === 'present').length || 0;
+        const absent = attendanceRecords?.filter(record => record.status === 'absent').length || 0;
         const total = present + absent;
         const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
         
