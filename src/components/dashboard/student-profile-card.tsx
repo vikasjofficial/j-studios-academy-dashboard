@@ -176,7 +176,7 @@ export function StudentProfileCard() {
     <Card className="mb-6 overflow-hidden">
       <div className="bg-primary/10 p-6">
         <div className="flex flex-col md:flex-row gap-4 items-center md:items-start">
-          <Avatar className="h-29 w-29 border-4 border-background">
+          <Avatar className="h-26 w-26 border-4 border-background">
             <AvatarImage src={studentDetails?.avatar_url} alt={user?.name || 'Student'} />
             <AvatarFallback className="text-xl">
               {user?.name ? getInitials(user.name) : 'S'}
