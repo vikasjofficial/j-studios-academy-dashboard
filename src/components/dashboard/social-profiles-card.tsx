@@ -50,7 +50,8 @@ export function SocialProfilesCard() {
       
       if (error) throw error;
       
-      setProfiles(data || []);
+      // Cast the data to the correct type
+      setProfiles(data as unknown as SocialProfile[] || []);
     } catch (error) {
       console.error("Error fetching social profiles:", error);
       toast.error("Failed to load social profiles");
@@ -104,7 +105,7 @@ export function SocialProfilesCard() {
         
         if (error) throw error;
         
-        setProfiles(prev => [...prev, newProfile]);
+        setProfiles(prev => [...prev, newProfile as unknown as SocialProfile]);
         
         toast.success(`${currentPlatform} profile added successfully`);
       }
