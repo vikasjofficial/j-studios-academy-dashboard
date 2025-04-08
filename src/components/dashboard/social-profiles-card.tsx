@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +46,6 @@ export function SocialProfilesCard() {
     try {
       console.log("Fetching social profiles for user:", user?.id);
       
-      // Using a direct query to bypass RLS since we're using custom auth
       const { data, error } = await supabase
         .from("student_social_profiles")
         .select("*")
@@ -95,7 +93,6 @@ export function SocialProfilesCard() {
         url: data.url
       });
       
-      // First try to find if a profile already exists
       const { data: existingProfile } = await supabase
         .from("student_social_profiles")
         .select("id")
@@ -106,14 +103,12 @@ export function SocialProfilesCard() {
       let result;
       
       if (existingProfile) {
-        // Update existing profile
         console.log("Updating existing profile:", existingProfile.id);
         result = await supabase
           .from("student_social_profiles")
           .update({ url: data.url })
           .eq("id", existingProfile.id);
       } else {
-        // Insert new profile
         console.log("Inserting new profile");
         result = await supabase
           .from("student_social_profiles")
