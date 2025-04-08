@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -140,6 +139,19 @@ export default {
 				shimmer: {
 					'0%': { backgroundPosition: '-200% 0' },
 					'100%': { backgroundPosition: '200% 0' }
+				},
+				vibrate: {
+					'0%': { transform: 'translate(0)' },
+					'10%': { transform: 'translate(-1px, -1px)' },
+					'20%': { transform: 'translate(1px, -1px)' },
+					'30%': { transform: 'translate(-1px, 1px)' },
+					'40%': { transform: 'translate(1px, 1px)' },
+					'50%': { transform: 'translate(-1px, -1px)' },
+					'60%': { transform: 'translate(1px, -1px)' },
+					'70%': { transform: 'translate(-1px, 1px)' },
+					'80%': { transform: 'translate(1px, 1px)' },
+					'90%': { transform: 'translate(-1px, -1px)' },
+					'100%': { transform: 'translate(0)' }
 				}
 			},
 			animation: {
@@ -159,7 +171,8 @@ export default {
 				'scale-out': 'scaleOut 0.3s ease-out',
 				'float': 'float 5s ease-in-out infinite',
 				'pulse': 'pulse 2s ease-in-out infinite',
-				'shimmer': 'shimmer 2s linear infinite'
+				'shimmer': 'shimmer 2s linear infinite',
+				'vibrate': 'vibrate 0.8s cubic-bezier(.36,.07,.19,.97) infinite'
 			},
 			backdropBlur: {
 				xs: '2px',
