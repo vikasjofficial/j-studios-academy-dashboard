@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,16 +47,19 @@ export function SocialProfilesCard() {
       console.log("Fetching social profiles for user:", user?.id);
       const { data, error } = await supabase
         .from("student_social_profiles")
-        .select("*")
-        .eq("student_id", user?.id);
+        .select("*");
       
       if (error) {
-        console.error("Error details:", error);
+        console.error("Error details from general fetch:", error);
         throw error;
       }
       
-      console.log("Profiles fetched successfully:", data);
-      setProfiles(data as unknown as SocialProfile[] || []);
+      console.log("All profiles in the database:", data);
+      
+      const userProfiles = data.filter(profile => profile.student_id === user?.id);
+      console.log("Filtered profiles for current user:", userProfiles);
+      
+      setProfiles(userProfiles as SocialProfile[] || []);
     } catch (error) {
       console.error("Error fetching social profiles:", error);
       toast.error("Failed to load social profiles");
@@ -92,54 +94,40 @@ export function SocialProfilesCard() {
         url: data.url
       });
       
-      const existingProfile = profiles.find(p => p.platform === currentPlatform);
+      const { data: upsertResult, error: upsertError } = await supabase
+        .from("student_social_profiles")
+        .upsert({
+          student_id: user.id,
+          platform: currentPlatform,
+          url: data.url
+        }, {
+          onConflict: 'student_id,platform',
+          ignoreDuplicates: false,
+          returning: 'representation'
+        });
       
-      if (existingProfile) {
-        // Update existing profile
-        console.log("Updating existing profile:", existingProfile.id);
-        const { data: updatedData, error } = await supabase
+      if (upsertError) {
+        console.error("Error upserting profile:", upsertError);
+        
+        const { data: checkData, error: checkError } = await supabase
           .from("student_social_profiles")
-          .update({ url: data.url })
-          .eq("id", existingProfile.id)
           .select("*")
-          .single();
-        
-        if (error) {
-          console.error("Error updating profile:", error);
-          throw error;
+          .limit(1);
+          
+        if (checkError) {
+          console.error("Error checking table access:", checkError);
+          throw new Error(`RLS policy issue: ${checkError.message}`);
+        } else {
+          console.log("User can query the table:", checkData);
+          throw upsertError;
         }
-        
-        console.log("Profile updated successfully:", updatedData);
-        
-        setProfiles(prev => 
-          prev.map(p => p.id === existingProfile.id ? updatedData as unknown as SocialProfile : p)
-        );
-        
-        toast.success(`${currentPlatform} profile updated successfully`);
-      } else {
-        // Insert new profile
-        console.log("Inserting new profile");
-        const { data: newProfile, error } = await supabase
-          .from("student_social_profiles")
-          .insert({
-            student_id: user.id,
-            platform: currentPlatform,
-            url: data.url
-          })
-          .select("*")
-          .single();
-        
-        if (error) {
-          console.error("Error inserting profile:", error);
-          throw error;
-        }
-        
-        console.log("New profile created successfully:", newProfile);
-        setProfiles(prev => [...prev, newProfile as unknown as SocialProfile]);
-        
-        toast.success(`${currentPlatform} profile added successfully`);
       }
       
+      console.log("Profile upserted successfully:", upsertResult);
+      
+      fetchSocialProfiles();
+      
+      toast.success(`${currentPlatform} profile saved successfully`);
       setOpenDialog(false);
     } catch (error: any) {
       console.error("Error saving social profile:", error);
@@ -264,6 +252,10 @@ export function SocialProfilesCard() {
                     </p>
                   )}
                 </div>
+                
+                <p className="text-xs text-gray-500">
+                  Make sure to include https:// for external links
+                </p>
               </div>
               
               <DialogFooter className="mt-6">
