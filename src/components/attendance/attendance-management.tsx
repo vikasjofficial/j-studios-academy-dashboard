@@ -18,8 +18,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from 'date-fns';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Student {
   id: string;
@@ -31,18 +29,11 @@ interface Student {
 interface AttendanceCount {
   id: string;
   student_id: string;
-  course_id: string;
   present_count: number;
   absent_count: number;
   last_updated: string;
   note?: string;
   created_at?: string;
-}
-
-interface Course {
-  id: string;
-  name: string;
-  code: string;
 }
 
 interface StudentAttendanceSummary {
@@ -64,8 +55,6 @@ const attendanceSchema = z.object({
 
 export default function AttendanceManagement() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceCount>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,22 +65,13 @@ export default function AttendanceManagement() {
   // Fetch initial data
   useEffect(() => {
     fetchStudents();
-    fetchCourses();
+    fetchAttendance();
   }, []);
   
-  // Update attendance records when course changes
+  // Fetch attendance summaries
   useEffect(() => {
-    if (selectedCourse) {
-      fetchAttendance();
-    }
-  }, [selectedCourse]);
-
-  // Fetch attendance summaries when course changes
-  useEffect(() => {
-    if (selectedCourse) {
-      fetchAttendanceSummaries();
-    }
-  }, [selectedCourse]);
+    fetchAttendanceSummaries();
+  }, [students]);
 
   const fetchStudents = async () => {
     try {
@@ -112,39 +92,14 @@ export default function AttendanceManagement() {
     }
   };
 
-  const fetchCourses = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('id, name, code')
-        .order('name');
-        
-      if (error) throw error;
-      setCourses(data || []);
-      if (data.length > 0 && !selectedCourse) {
-        setSelectedCourse(data[0].id);
-      }
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load courses",
-        variant: "destructive"
-      });
-    }
-  };
-
   const fetchAttendance = async () => {
-    if (!selectedCourse) return;
-    
     setIsLoading(true);
     try {
-      console.log(`Fetching attendance for course ${selectedCourse}`);
+      console.log('Fetching global attendance');
       // Use explicit type casting to handle the Supabase client not recognizing the table
       const { data, error } = await supabase
         .from('attendance_counts' as any)
-        .select('*')
-        .eq('course_id', selectedCourse);
+        .select('*');
         
       if (error) throw error;
       
@@ -157,7 +112,6 @@ export default function AttendanceManagement() {
           records[record.student_id] = {
             id: record.id,
             student_id: record.student_id,
-            course_id: record.course_id,
             present_count: record.present_count || 0,
             absent_count: record.absent_count || 0,
             note: record.note,
@@ -181,15 +135,12 @@ export default function AttendanceManagement() {
   };
 
   const fetchAttendanceSummaries = async () => {
-    if (!selectedCourse) return;
-    
     try {
-      // Get all attendance records for this course
+      // Get all attendance records
       // Use explicit type casting to handle the Supabase client not recognizing the table
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('attendance_counts' as any)
-        .select('*')
-        .eq('course_id', selectedCourse);
+        .select('*');
         
       if (attendanceError) throw attendanceError;
       
@@ -243,8 +194,6 @@ export default function AttendanceManagement() {
     absentCount: number, 
     note?: string
   ) => {
-    if (!selectedCourse) return;
-    
     setIsSaving(true);
     
     try {
@@ -253,7 +202,6 @@ export default function AttendanceManagement() {
       
       console.log('Saving attendance:', {
         studentId,
-        courseId: selectedCourse,
         presentCount,
         absentCount,
         note,
@@ -283,7 +231,6 @@ export default function AttendanceManagement() {
           .from('attendance_counts' as any)
           .insert({
             student_id: studentId,
-            course_id: selectedCourse,
             present_count: presentCount,
             absent_count: absentCount,
             note: note || null,
@@ -422,7 +369,7 @@ export default function AttendanceManagement() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
-        <p className="text-muted-foreground">Manage student attendance counts for courses</p>
+        <p className="text-muted-foreground">Manage global student attendance records</p>
       </div>
       
       <div className="flex flex-col md:flex-row gap-4">
@@ -430,29 +377,10 @@ export default function AttendanceManagement() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              <span>Attendance Records</span>
+              <span>Global Attendance Records</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-4">
-              <label htmlFor="course" className="block text-sm font-medium mb-1">Course</label>
-              <Select 
-                value={selectedCourse} 
-                onValueChange={setSelectedCourse}
-              >
-                <SelectTrigger id="course" className="w-full">
-                  <SelectValue placeholder="Select a course" />
-                </SelectTrigger>
-                <SelectContent>
-                  {courses.map((course) => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {course.name} ({course.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
             <Card className="bg-card/50 backdrop-blur-sm border border-white/10 mb-6">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">

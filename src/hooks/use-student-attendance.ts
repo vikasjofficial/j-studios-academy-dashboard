@@ -8,7 +8,6 @@ export interface AttendanceSummary {
   totalAbsent: number;
   totalDays: number;
   percentage: number;
-  courseCount: number;
 }
 
 export function useStudentAttendance() {
@@ -17,8 +16,7 @@ export function useStudentAttendance() {
     totalPresent: 0,
     totalAbsent: 0,
     totalDays: 0,
-    percentage: 0,
-    courseCount: 0
+    percentage: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,57 +32,44 @@ export function useStudentAttendance() {
     try {
       console.log('Fetching attendance summary for student ID:', user.id);
       
-      // First get enrolled courses
-      const { data: enrollments, error: enrollmentsError } = await supabase
-        .from('enrollments')
-        .select('course_id')
-        .eq('student_id', user.id);
-        
-      if (enrollmentsError) {
-        console.error('Error fetching enrollments:', enrollmentsError);
-        throw enrollmentsError;
-      }
-      
-      if (!enrollments || !enrollments.length) {
-        console.log('No enrollments found');
-        setIsLoading(false);
-        return;
-      }
-      
-      const courseIds = enrollments.map(e => e.course_id);
-      console.log('Courses enrolled:', courseIds.length);
-      
-      // Get attendance records directly
-      const { data: attendanceRecords, error: attendanceError } = await supabase
-        .from('attendance')
-        .select('status, course_id')
+      // Get attendance record directly from attendance_counts
+      const { data, error } = await supabase
+        .from('attendance_counts')
+        .select('*')
         .eq('student_id', user.id)
-        .in('course_id', courseIds);
+        .single();
         
-      if (attendanceError) {
-        console.error('Error fetching attendance records:', attendanceError);
-        throw attendanceError;
+      if (error) {
+        console.error('Error fetching attendance record:', error);
+        // If no record exists yet, set zeros
+        if (error.code === 'PGRST116') {
+          setSummary({
+            totalPresent: 0,
+            totalAbsent: 0,
+            totalDays: 0,
+            percentage: 0
+          });
+          setIsLoading(false);
+          return;
+        }
+        throw error;
       }
       
-      console.log('Attendance records found:', attendanceRecords?.length || 0);
+      console.log('Attendance record found:', data);
       
       // Calculate totals
-      const totalPresent = attendanceRecords?.filter(record => record.status === 'present').length || 0;
-      const totalAbsent = attendanceRecords?.filter(record => record.status === 'absent').length || 0;
+      const totalPresent = data?.present_count || 0;
+      const totalAbsent = data?.absent_count || 0;
       const totalDays = totalPresent + totalAbsent;
       const percentage = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
       
-      // Count unique courses with attendance records
-      const coursesWithRecords = new Set(attendanceRecords?.map(record => record.course_id));
-      
-      console.log(`Calculated attendance: present=${totalPresent}, absent=${totalAbsent}, total=${totalDays}, percentage=${percentage}%, courses=${coursesWithRecords.size}`);
+      console.log(`Calculated attendance: present=${totalPresent}, absent=${totalAbsent}, total=${totalDays}, percentage=${percentage}%`);
       
       setSummary({
         totalPresent,
         totalAbsent,
         totalDays,
-        percentage,
-        courseCount: coursesWithRecords.size
+        percentage
       });
     } catch (error) {
       console.error('Error fetching attendance summary:', error);

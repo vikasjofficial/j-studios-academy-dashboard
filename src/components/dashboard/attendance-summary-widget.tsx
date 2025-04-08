@@ -31,52 +31,42 @@ export function AttendanceSummaryWidget() {
     try {
       console.log('Fetching attendance for student ID:', user.id);
       
-      // First get enrolled courses
-      const { data: enrollments, error: enrollmentsError } = await supabase
-        .from('enrollments')
-        .select('course_id')
-        .eq('student_id', user.id);
-        
-      if (enrollmentsError) {
-        console.error('Error fetching enrollments:', enrollmentsError);
-        throw enrollmentsError;
-      }
-      
-      if (!enrollments || enrollments.length === 0) {
-        console.log('No enrollments found for student:', user.id);
-        setIsLoading(false);
-        return;
-      }
-      
-      const courseIds = enrollments.map(e => e.course_id);
-      console.log('Courses enrolled:', courseIds);
-      
-      // Get attendance records directly from attendance table
-      const { data: attendanceRecords, error: attendanceError } = await supabase
-        .from('attendance')
-        .select('status, course_id')
+      // Get global attendance record
+      const { data, error } = await supabase
+        .from('attendance_counts')
+        .select('*')
         .eq('student_id', user.id)
-        .in('course_id', courseIds);
+        .single();
         
-      if (attendanceError) {
-        console.error('Error fetching attendance records:', attendanceError);
-        throw attendanceError;
+      if (error) {
+        // If no record exists yet, show empty state
+        if (error.code === 'PGRST116') {
+          setAttendanceData({
+            present: 0,
+            absent: 0,
+            total: 0,
+            percentage: 0
+          });
+          setIsLoading(false);
+          return;
+        }
+        throw error;
       }
       
-      console.log('Attendance records fetched:', attendanceRecords?.length || 0);
+      console.log('Attendance record found:', data);
       
       // Calculate totals
-      const totalPresent = attendanceRecords?.filter(record => record.status === 'present').length || 0;
-      const totalAbsent = attendanceRecords?.filter(record => record.status === 'absent').length || 0;
-      const totalDays = totalPresent + totalAbsent;
-      const percentage = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
+      const present = data?.present_count || 0;
+      const absent = data?.absent_count || 0;
+      const total = present + absent;
+      const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
       
-      console.log(`Calculated attendance: present=${totalPresent}, absent=${totalAbsent}, total=${totalDays}, percentage=${percentage}%`);
+      console.log(`Calculated attendance: present=${present}, absent=${absent}, total=${total}, percentage=${percentage}%`);
       
       setAttendanceData({
-        present: totalPresent,
-        absent: totalAbsent,
-        total: totalDays,
+        present,
+        absent,
+        total,
         percentage
       });
     } catch (error) {
