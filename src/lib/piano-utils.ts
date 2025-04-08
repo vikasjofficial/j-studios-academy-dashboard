@@ -6,12 +6,77 @@ interface Note {
   octave: number;
 }
 
+// Generate a tone using the Web Audio API as a fallback when sound files aren't available
+const generateTone = (frequency: number, volume: number, duration = 500): void => {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = 'sine'; // sine, square, sawtooth, triangle
+    oscillator.frequency.value = frequency;
+    
+    gainNode.gain.value = volume;
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    
+    // Stop the tone after the specified duration
+    setTimeout(() => {
+      oscillator.stop();
+      audioContext.close();
+    }, duration);
+  } catch (error) {
+    console.error('Error generating tone:', error);
+  }
+};
+
+// Map note names to frequencies (Hz)
+const getNoteFrequency = (note: string, octave: number): number => {
+  const noteMap: Record<string, number> = {
+    'C': 0,
+    'C#': 1,
+    'D': 2,
+    'D#': 3,
+    'E': 4,
+    'F': 5,
+    'F#': 6,
+    'G': 7,
+    'G#': 8,
+    'A': 9,
+    'A#': 10,
+    'B': 11
+  };
+  
+  // A4 is 440Hz, each octave is a doubling/halving of frequency
+  // Each semitone is the 12th root of 2 (about 1.059463) times the previous semitone
+  const semitoneFromA4 = (octave - 4) * 12 + noteMap[note] - noteMap['A'];
+  return 440 * Math.pow(2, semitoneFromA4 / 12);
+};
+
 // Play a piano note with the given parameters
 export const playPianoNote = (note: string, octave: number, volume = 0.5): void => {
   const noteId = `${note}${octave}`;
   const audioSrc = `/sounds/piano/${noteId.replace('#', 's')}.mp3`;
   
-  playSound(audioSrc, volume);
+  // Try to play the sound file
+  const audio = new Audio(audioSrc);
+  audio.volume = volume;
+  
+  // If the sound file fails to load, generate a tone instead
+  audio.onerror = () => {
+    const frequency = getNoteFrequency(note, octave);
+    generateTone(frequency, volume);
+  };
+  
+  // Attempt to play the sound file
+  audio.play().catch(error => {
+    console.log('Falling back to generated tone');
+    const frequency = getNoteFrequency(note, octave);
+    generateTone(frequency, volume);
+  });
 };
 
 // Get mapping of keyboard keys to piano notes

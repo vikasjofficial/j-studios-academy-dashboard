@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { playSound } from "@/lib/sound-utils";
 import { Slider } from "@/components/ui/slider";
+import { playPianoNote, getPianoKeyboardMap } from "@/lib/piano-utils";
+import { toast } from "sonner";
 
 interface PianoKey {
   note: string;
@@ -17,6 +18,7 @@ export function Piano() {
   const [isMuted, setIsMuted] = useState(false);
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
   const pianoRef = useRef<HTMLDivElement>(null);
+  const [showInstructions, setShowInstructions] = useState(true);
   
   // Generate piano keys for 3 octaves (C3 to B5)
   const generatePianoKeys = (): PianoKey[] => {
@@ -38,18 +40,27 @@ export function Piano() {
   
   const pianoKeys = generatePianoKeys();
   
+  useEffect(() => {
+    // Show welcome message with instructions the first time
+    if (showInstructions) {
+      toast.info("Piano is using Web Audio API for sound generation. Use your keyboard or click the keys to play.", {
+        duration: 5000,
+      });
+      setShowInstructions(false);
+    }
+  }, [showInstructions]);
+  
   // Play a note when a key is clicked
   const playNote = (key: PianoKey) => {
     if (isMuted) return;
     
     const noteId = `${key.note}${key.octave}`;
-    const audioSrc = `/sounds/piano/${noteId.replace('#', 's')}.mp3`;
     
     // Add to active keys
     setActiveKeys(prev => [...prev, noteId]);
     
-    // Play the sound
-    playSound(audioSrc, volume);
+    // Play the note using our updated utility
+    playPianoNote(key.note, key.octave, volume);
     
     // Remove from active keys after animation
     setTimeout(() => {
@@ -64,43 +75,7 @@ export function Piano() {
   
   // Keyboard controls
   useEffect(() => {
-    const keyMap: Record<string, PianoKey> = {
-      'z': { note: 'C', octave: 3, isSharp: false },
-      's': { note: 'C#', octave: 3, isSharp: true },
-      'x': { note: 'D', octave: 3, isSharp: false },
-      'd': { note: 'D#', octave: 3, isSharp: true },
-      'c': { note: 'E', octave: 3, isSharp: false },
-      'v': { note: 'F', octave: 3, isSharp: false },
-      'g': { note: 'F#', octave: 3, isSharp: true },
-      'b': { note: 'G', octave: 3, isSharp: false },
-      'h': { note: 'G#', octave: 3, isSharp: true },
-      'n': { note: 'A', octave: 3, isSharp: false },
-      'j': { note: 'A#', octave: 3, isSharp: true },
-      'm': { note: 'B', octave: 3, isSharp: false },
-      
-      'q': { note: 'C', octave: 4, isSharp: false },
-      '2': { note: 'C#', octave: 4, isSharp: true },
-      'w': { note: 'D', octave: 4, isSharp: false },
-      '3': { note: 'D#', octave: 4, isSharp: true },
-      'e': { note: 'E', octave: 4, isSharp: false },
-      'r': { note: 'F', octave: 4, isSharp: false },
-      '5': { note: 'F#', octave: 4, isSharp: true },
-      't': { note: 'G', octave: 4, isSharp: false },
-      '6': { note: 'G#', octave: 4, isSharp: true },
-      'y': { note: 'A', octave: 4, isSharp: false },
-      '7': { note: 'A#', octave: 4, isSharp: true },
-      'u': { note: 'B', octave: 4, isSharp: false },
-      
-      'i': { note: 'C', octave: 5, isSharp: false },
-      '9': { note: 'C#', octave: 5, isSharp: true },
-      'o': { note: 'D', octave: 5, isSharp: false },
-      '0': { note: 'D#', octave: 5, isSharp: true },
-      'p': { note: 'E', octave: 5, isSharp: false },
-      '[': { note: 'F', octave: 5, isSharp: false },
-      '=': { note: 'F#', octave: 5, isSharp: true },
-      ']': { note: 'G', octave: 5, isSharp: false },
-      // Remaining octave 5 keys skipped for simplicity
-    };
+    const keyMap = getPianoKeyboardMap();
     
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
@@ -109,7 +84,11 @@ export function Piano() {
       
       const key = e.key.toLowerCase();
       if (keyMap[key]) {
-        playNote(keyMap[key]);
+        const pianoKey = keyMap[key];
+        const keyInfo = pianoKeys.find(k => k.note === pianoKey.note && k.octave === pianoKey.octave);
+        if (keyInfo) {
+          playNote(keyInfo);
+        }
       }
     };
     
@@ -117,7 +96,7 @@ export function Piano() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [volume, isMuted]);
+  }, [volume, isMuted, pianoKeys]);
   
   return (
     <div className="rounded-lg overflow-hidden border shadow-lg bg-card/90 backdrop-blur-sm p-4">
