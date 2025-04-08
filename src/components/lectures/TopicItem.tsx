@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, GripVertical, CheckCircle, Circle } from "lucide-react";
+import { Pencil, Trash2, GripVertical, CheckCircle, Circle, Check } from "lucide-react";
 import { Draggable } from "react-beautiful-dnd";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ interface TopicItemProps {
   onDeleteTopic: (topicId: string) => void;
   onToggleCompletion: (topic: LectureTopic) => void;
   onEditNameChange: (name: string) => void;
+  isStudent?: boolean;
 }
 
 export function TopicItem({
@@ -33,7 +34,8 @@ export function TopicItem({
   onCancelEdit,
   onDeleteTopic,
   onToggleCompletion,
-  onEditNameChange
+  onEditNameChange,
+  isStudent = false
 }: TopicItemProps) {
   return (
     <Draggable 
@@ -47,7 +49,7 @@ export function TopicItem({
           ref={provided.innerRef}
           {...provided.draggableProps}
         >
-          <Card className={`overflow-hidden ${topic.completed ? 'border-green-500 bg-green-50/30' : ''}`}>
+          <Card className={`overflow-hidden ${topic.completed ? (isStudent ? 'bg-gray-800' : 'border-green-500 bg-green-50/30') : ''}`}>
             <CardContent className="p-3 flex items-center justify-between">
               {editingTopic?.id === topic.id ? (
                 // Edit mode
@@ -88,18 +90,26 @@ export function TopicItem({
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`h-8 w-8 p-0 ${topic.completed ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}`}
-                        onClick={() => onToggleCompletion(topic)}
-                      >
-                        {topic.completed ? 
-                          <CheckCircle className="h-5 w-5 fill-green-100" /> : 
-                          <Circle className="h-5 w-5" />
-                        }
-                      </Button>
-                      <div className={`font-medium ${topic.completed ? 'text-green-600' : ''}`}>
+                      {!isStudent ? (
+                        // Admin/Teacher view with clickable checkbox
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`h-8 w-8 p-0 ${topic.completed ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}`}
+                          onClick={() => onToggleCompletion(topic)}
+                        >
+                          {topic.completed ? 
+                            <CheckCircle className="h-5 w-5 fill-green-100" /> : 
+                            <Circle className="h-5 w-5" />
+                          }
+                        </Button>
+                      ) : (
+                        // Student view with non-clickable indicator
+                        <div className="h-8 w-8 flex items-center justify-center">
+                          {topic.completed && <Check className="h-5 w-5 text-green-500" />}
+                        </div>
+                      )}
+                      <div className={`font-medium ${topic.completed ? (isStudent ? 'text-green-500' : 'text-green-600') : ''}`}>
                         {index + 1}. {topic.name}
                       </div>
                     </div>

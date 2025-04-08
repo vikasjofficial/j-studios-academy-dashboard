@@ -3,6 +3,7 @@ import { Lecture } from "./types";
 import { AddTopicForm } from "./AddTopicForm";
 import { TopicsList } from "./TopicsList";
 import { useTopics } from "./hooks/useTopics";
+import { useAuth } from "@/context/auth-context";
 
 interface LectureTopicsListProps {
   lecture: Lecture;
@@ -15,6 +16,9 @@ export function LectureTopicsList({
   onTopicsUpdated,
   readOnly = false
 }: LectureTopicsListProps) {
+  const { user } = useAuth();
+  const isStudent = user?.role === 'student';
+  
   const {
     topics,
     isLoading,
@@ -36,11 +40,14 @@ export function LectureTopicsList({
     return <div className="text-center py-4">Loading topics...</div>;
   }
 
+  // If the user is a student, force readOnly to true
+  const finalReadOnly = isStudent ? true : readOnly;
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium mb-2">Topics</h3>
       
-      {!readOnly && (
+      {!finalReadOnly && (
         <AddTopicForm
           newTopicName={newTopicName}
           onNewTopicNameChange={setNewTopicName}
@@ -51,7 +58,7 @@ export function LectureTopicsList({
       {topics && topics.length > 0 ? (
         <TopicsList
           topics={topics}
-          readOnly={readOnly}
+          readOnly={finalReadOnly}
           editingTopic={editingTopic}
           editedTopicName={editedTopicName}
           onEditTopic={handleEditTopic}
@@ -61,10 +68,11 @@ export function LectureTopicsList({
           onToggleCompletion={handleToggleCompletion}
           onEditNameChange={setEditedTopicName}
           onDragEnd={handleDragEnd}
+          isStudent={isStudent}
         />
       ) : (
         <div className="text-center py-4 text-muted-foreground">
-          {readOnly ? "No topics available for this lecture." : "Add topics to create a lecture outline."}
+          {finalReadOnly ? "No topics available for this lecture." : "Add topics to create a lecture outline."}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
-import { LectureTopic } from "./types";
 import { TopicItem } from "./TopicItem";
+import { LectureTopic } from "./types";
 
 interface TopicsListProps {
   topics: LectureTopic[];
@@ -15,6 +15,7 @@ interface TopicsListProps {
   onToggleCompletion: (topic: LectureTopic) => void;
   onEditNameChange: (name: string) => void;
   onDragEnd: (result: DropResult) => void;
+  isStudent?: boolean;
 }
 
 export function TopicsList({
@@ -28,11 +29,12 @@ export function TopicsList({
   onDeleteTopic,
   onToggleCompletion,
   onEditNameChange,
-  onDragEnd
+  onDragEnd,
+  isStudent = false
 }: TopicsListProps) {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="topics" isDropDisabled={readOnly}>
+      <Droppable droppableId="topics">
         {(provided) => (
           <div
             {...provided.droppableProps}
@@ -40,7 +42,7 @@ export function TopicsList({
             className="space-y-2"
           >
             {topics.map((topic, index) => (
-              <TopicItem 
+              <TopicItem
                 key={topic.id}
                 topic={topic}
                 index={index}
@@ -53,6 +55,7 @@ export function TopicsList({
                 onDeleteTopic={onDeleteTopic}
                 onToggleCompletion={onToggleCompletion}
                 onEditNameChange={onEditNameChange}
+                isStudent={isStudent}
               />
             ))}
             {provided.placeholder}
