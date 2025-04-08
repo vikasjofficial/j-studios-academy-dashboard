@@ -60,7 +60,7 @@ export default function StudentAttendance() {
       
       // Get attendance counts for all courses
       const { data: records, error: recordsError } = await supabase
-        .from('attendance_counts' as any)
+        .from('attendance_counts')
         .select('*')
         .eq('student_id', user.id)
         .in('course_id', courseIds);
@@ -71,7 +71,7 @@ export default function StudentAttendance() {
       let totalPresent = 0;
       let totalAbsent = 0;
       
-      if (records) {
+      if (records && records.length > 0) {
         records.forEach((record: any) => {
           totalPresent += record.present_count || 0;
           totalAbsent += record.absent_count || 0;

@@ -1,32 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/auth-context';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CalendarCheck, Calendar, CalendarX } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
-import animationStyles from '@/styles/animations.module.css';
-
-interface AttendanceSummary {
-  totalPresent: number;
-  totalAbsent: number;
-  totalDays: number;
-  percentage: number;
-  courseCount: number;
-}
+import { useAuth } from "@/context/auth-context";
+import { supabase } from "@/integrations/supabase/client"; 
+import { UserCheck } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export function AttendanceSummaryWidget() {
-  const [summary, setSummary] = useState<AttendanceSummary>({
-    totalPresent: 0,
-    totalAbsent: 0,
-    totalDays: 0,
-    percentage: 0,
-    courseCount: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [attendanceData, setAttendanceData] = useState({
+    present: 0,
+    absent: 0,
+    total: 0,
+    percentage: 0
+  });
 
   useEffect(() => {
     if (user?.id) {
@@ -46,7 +37,7 @@ export function AttendanceSummaryWidget() {
         
       if (enrollmentsError) throw enrollmentsError;
       
-      if (!enrollments.length) {
+      if (!enrollments || enrollments.length === 0) {
         setIsLoading(false);
         return;
       }
@@ -55,7 +46,7 @@ export function AttendanceSummaryWidget() {
       
       // Get attendance counts for all courses
       const { data: records, error: recordsError } = await supabase
-        .from('attendance_counts' as any)
+        .from('attendance_counts')
         .select('*')
         .eq('student_id', user.id)
         .in('course_id', courseIds);
@@ -66,7 +57,7 @@ export function AttendanceSummaryWidget() {
       let totalPresent = 0;
       let totalAbsent = 0;
       
-      if (records) {
+      if (records && records.length > 0) {
         records.forEach((record: any) => {
           totalPresent += record.present_count || 0;
           totalAbsent += record.absent_count || 0;
@@ -76,120 +67,89 @@ export function AttendanceSummaryWidget() {
       const totalDays = totalPresent + totalAbsent;
       const percentage = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
       
-      setSummary({
-        totalPresent,
-        totalAbsent,
-        totalDays,
-        percentage,
-        courseCount: records?.length || 0
+      setAttendanceData({
+        present: totalPresent,
+        absent: totalAbsent,
+        total: totalDays,
+        percentage
       });
     } catch (error) {
       console.error('Error fetching attendance summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load attendance data",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-primary" />
-            Attendance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center py-4">
-            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (summary.totalDays === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-primary" />
-            Attendance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-3 text-muted-foreground text-sm">
-            No attendance records found
-          </div>
-          <Link 
-            to="/student/attendance" 
-            className="block w-full text-center text-xs text-primary hover:underline mt-2"
-          >
-            View details
-          </Link>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Determine status color based on percentage
-  const getStatusColor = () => {
-    if (summary.percentage >= 90) return "text-green-500";
-    if (summary.percentage >= 75) return "text-yellow-500";
+  // Helper function to determine color based on percentage
+  const getAttendanceColor = (percentage: number) => {
+    if (percentage >= 90) return "text-green-500";
+    if (percentage >= 75) return "text-blue-500";
+    if (percentage >= 60) return "text-yellow-500";
     return "text-red-500";
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium flex items-center justify-between">
-          <div className="flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-primary" />
-            Attendance Overview
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-lg font-medium">
+          <div className="flex items-center gap-2">
+            <UserCheck className="h-5 w-5 text-primary" />
+            Attendance Summary
           </div>
-          <span className={cn("text-xl font-bold", getStatusColor(), animationStyles.animateFloat)}>
-            {summary.percentage}%
-          </span>
         </CardTitle>
+        <Link
+          to="/student/attendance"
+          className="text-xs text-primary hover:text-primary/80 transition-colors"
+        >
+          View Details
+        </Link>
       </CardHeader>
       <CardContent>
-        <Progress 
-          value={summary.percentage} 
-          className="h-2" 
-        />
-        
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 mb-1">
-              <CalendarCheck className="h-4 w-4" />
-            </div>
-            <span className="text-xs text-muted-foreground">Present</span>
-            <span className="text-lg font-semibold">{summary.totalPresent}</span>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-24">
+            <div className="animate-spin h-6 w-6 border-2 border-current border-t-transparent rounded-full"></div>
           </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 mb-1">
-              <CalendarX className="h-4 w-4" />
-            </div>
-            <span className="text-xs text-muted-foreground">Absent</span>
-            <span className="text-lg font-semibold">{summary.totalAbsent}</span>
+        ) : attendanceData.total === 0 ? (
+          <div className="text-center py-6 text-muted-foreground">
+            No attendance records found
           </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 mb-1">
-              <Calendar className="h-4 w-4" />
+        ) : (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className={`text-2xl font-bold ${getAttendanceColor(attendanceData.percentage)}`}>
+                {attendanceData.percentage}%
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {attendanceData.present} of {attendanceData.total} days present
+              </span>
             </div>
-            <span className="text-xs text-muted-foreground">Total</span>
-            <span className="text-lg font-semibold">{summary.totalDays}</span>
+            
+            <Progress 
+              value={attendanceData.percentage} 
+              className="h-2" 
+            />
+            
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              <div className="flex flex-col items-center p-2 rounded-lg bg-black/10">
+                <span className="text-xs text-muted-foreground mb-1">Present</span>
+                <span className="text-sm font-medium text-green-500">{attendanceData.present}</span>
+              </div>
+              <div className="flex flex-col items-center p-2 rounded-lg bg-black/10">
+                <span className="text-xs text-muted-foreground mb-1">Absent</span>
+                <span className="text-sm font-medium text-red-500">{attendanceData.absent}</span>
+              </div>
+              <div className="flex flex-col items-center p-2 rounded-lg bg-black/10">
+                <span className="text-xs text-muted-foreground mb-1">Total</span>
+                <span className="text-sm font-medium">{attendanceData.total}</span>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <Link 
-          to="/student/attendance" 
-          className="block w-full text-center text-sm text-primary hover:underline mt-4"
-        >
-          View detailed attendance
-        </Link>
+        )}
       </CardContent>
     </Card>
   );

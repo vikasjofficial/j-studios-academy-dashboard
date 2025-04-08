@@ -68,7 +68,7 @@ export default function StudentAttendanceDashboard() {
       for (const course of courses) {
         // Get attendance counts for this course/student
         const { data: record, error: recordsError } = await supabase
-          .from('attendance_counts' as any)
+          .from('attendance_counts')
           .select('*')
           .eq('student_id', user.id)
           .eq('course_id', course.id)
