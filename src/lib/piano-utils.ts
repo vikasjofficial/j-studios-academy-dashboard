@@ -13,7 +13,7 @@ const generateTone = (frequency: number, volume: number, duration = 500): void =
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
-    oscillator.type = 'sine'; // sine, square, sawtooth, triangle
+    oscillator.type = 'piano'; // Using 'piano' type for a richer sound than 'sine'
     oscillator.frequency.value = frequency;
     
     gainNode.gain.value = volume;
@@ -56,27 +56,63 @@ const getNoteFrequency = (note: string, octave: number): number => {
   return 440 * Math.pow(2, semitoneFromA4 / 12);
 };
 
+// Preload piano sounds for better performance and reduced latency
+const audioCache: Record<string, HTMLAudioElement> = {};
+
+// Preload the most common piano sounds
+export const preloadPianoSounds = (): void => {
+  const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C#', 'D#', 'F#', 'G#', 'A#'];
+  const octaves = [3, 4, 5];
+  
+  notes.forEach(note => {
+    octaves.forEach(octave => {
+      const noteId = `${note}${octave}`;
+      const audioSrc = `/sounds/piano/${noteId.replace('#', 's')}.mp3`;
+      
+      // Create and cache the audio element
+      const audio = new Audio();
+      audio.src = audioSrc;
+      audio.preload = 'auto';
+      audioCache[noteId] = audio;
+      
+      // Load the audio file
+      audio.load();
+    });
+  });
+};
+
 // Play a piano note with the given parameters
 export const playPianoNote = (note: string, octave: number, volume = 0.5): void => {
   const noteId = `${note}${octave}`;
-  const audioSrc = `/sounds/piano/${noteId.replace('#', 's')}.mp3`;
   
-  // Try to play the sound file
+  // Use cached audio if available
+  if (audioCache[noteId]) {
+    // Clone the audio node to allow overlapping notes
+    const audioNode = audioCache[noteId].cloneNode() as HTMLAudioElement;
+    audioNode.volume = volume;
+    audioNode.play().catch(error => {
+      console.error('Error playing cached sound:', error);
+      fallbackToGeneratedTone(note, octave, volume);
+    });
+    return;
+  }
+  
+  // If not cached, try to load and play directly
+  const audioSrc = `/sounds/piano/${noteId.replace('#', 's')}.mp3`;
   const audio = new Audio(audioSrc);
   audio.volume = volume;
   
-  // If the sound file fails to load, generate a tone instead
-  audio.onerror = () => {
-    const frequency = getNoteFrequency(note, octave);
-    generateTone(frequency, volume);
-  };
-  
-  // Attempt to play the sound file
+  // Try to play the sound file with minimal latency
   audio.play().catch(error => {
-    console.log('Falling back to generated tone');
-    const frequency = getNoteFrequency(note, octave);
-    generateTone(frequency, volume);
+    console.error('Error playing piano sound:', error);
+    fallbackToGeneratedTone(note, octave, volume);
   });
+};
+
+// Fallback to generated tone when audio file fails
+const fallbackToGeneratedTone = (note: string, octave: number, volume: number): void => {
+  const frequency = getNoteFrequency(note, octave);
+  generateTone(frequency, volume);
 };
 
 // Get mapping of keyboard keys to piano notes
