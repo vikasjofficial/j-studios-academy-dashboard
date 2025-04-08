@@ -1,81 +1,25 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Card } from "@/components/ui/card";
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/auth-context';
 import { StudentAvatar } from './profile/student-avatar';
 import { EnrolledCourses } from './profile/enrolled-courses';
 import { RecentMessage } from './profile/recent-message';
 import { FeeSummary } from './profile/fee-summary';
 import { useFeeData } from './profile/use-fee-data';
+import { useStudentCourses } from '@/hooks/use-student-courses';
+import { useStudentDetails } from '@/hooks/use-student-details';
+import { useRecentMessage } from '@/hooks/use-recent-message';
 
 export function StudentProfileCard() {
   const { user } = useAuth();
-
-  // Fetch student's enrolled courses
-  const { data: courses } = useQuery({
-    queryKey: ["student-courses", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from("enrollments")
-        .select(`
-          course_id,
-          courses:course_id(id, name, code)
-        `)
-        .eq("student_id", user.id)
-        .eq("status", "active");
-        
-      if (error) throw error;
-      
-      return data.map(item => item.courses);
-    },
-    enabled: !!user?.id,
-  });
-
-  // Fetch recent message from admin
-  const { data: recentMessage } = useQuery({
-    queryKey: ["recent-message", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("student_id", user.id)
-        .eq("sender_role", "admin")
-        .order("created_at", { ascending: false })
-        .limit(1);
-        
-      if (error) throw error;
-      
-      return data.length > 0 ? data[0] : null;
-    },
-    enabled: !!user?.id,
-  });
-
-  // Get student details (including student_id)
-  const { data: studentDetails } = useQuery({
-    queryKey: ["student-details", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      const { data, error } = await supabase
-        .from("students")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-        
-      if (error) throw error;
-      
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  // Use the custom hook to get fee data and summary
+  
+  // Use the custom hooks
+  const { courses } = useStudentCourses(user?.id);
+  const { studentDetails } = useStudentDetails(user?.id);
+  const { recentMessage } = useRecentMessage(user?.id);
+  
+  // Use the fee data hook
   const { feeSummary } = useFeeData(user?.id);
 
   return (
