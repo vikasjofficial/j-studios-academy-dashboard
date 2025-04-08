@@ -4,7 +4,7 @@ import { Lecture } from "../types";
 /**
  * Calculate progress percentage based on completed topics
  */
-export const calculateProgress = (lecture: Lecture) => {
+export const calculateProgress = (lecture: Lecture | Partial<Lecture>) => {
   if (!lecture.classes_topics || lecture.classes_topics.length === 0) {
     return 0;
   }
@@ -15,8 +15,9 @@ export const calculateProgress = (lecture: Lecture) => {
 
 /**
  * Calculate average progress for a list of lectures
+ * Now accepts either full Lecture objects or partial objects with just the classes_topics field
  */
-export const calculateAverageProgress = (lectures: Lecture[]) => {
+export const calculateAverageProgress = (lectures: (Lecture | Partial<Lecture>)[]) => {
   if (!lectures || lectures.length === 0) {
     return 0;
   }
@@ -27,4 +28,3 @@ export const calculateAverageProgress = (lectures: Lecture[]) => {
   
   return Math.round(totalProgress / lectures.length);
 };
-
