@@ -1,3 +1,4 @@
+
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
@@ -51,8 +52,8 @@ export function TopNavigation() {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-10 w-10 rounded-full overflow-hidden" size="icon">
-                <Avatar className="h-10 w-10">
+              <Button variant="ghost" className="h-14 w-14 rounded-full overflow-hidden" size="icon">
+                <Avatar className="h-14 w-14">
                   <AvatarImage src={user?.avatarUrl} alt={user?.name || 'User'} />
                   <AvatarFallback className="bg-primary/80 text-primary-foreground">
                     {user?.name?.charAt(0) || 'U'}
@@ -62,7 +63,7 @@ export function TopNavigation() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-10 w-10">
+                <Avatar className="h-14 w-14">
                   <AvatarImage src={user?.avatarUrl} alt={user?.name || 'User'} />
                   <AvatarFallback className="bg-primary/80 text-primary-foreground">
                     {user?.name?.charAt(0) || 'U'}
