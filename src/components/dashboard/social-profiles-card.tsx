@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,6 +95,7 @@ export function SocialProfilesCard() {
         url: data.url
       });
       
+      // Fixed the upsert method by removing the 'returning' option which isn't supported
       const { data: upsertResult, error: upsertError } = await supabase
         .from("student_social_profiles")
         .upsert({
@@ -102,8 +104,7 @@ export function SocialProfilesCard() {
           url: data.url
         }, {
           onConflict: 'student_id,platform',
-          ignoreDuplicates: false,
-          returning: 'representation'
+          ignoreDuplicates: false
         });
       
       if (upsertError) {
