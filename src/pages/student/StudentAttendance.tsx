@@ -4,7 +4,7 @@ import { AttendanceOverview } from "@/components/dashboard/attendance-overview";
 import { CourseAttendanceSection } from "@/components/dashboard/course-attendance-section";
 import { PerformanceSection } from "@/components/dashboard/performance-section";
 import { SemesterProgressChart } from "@/components/dashboard/semester-progress-chart"; 
-import { Table, TableLayout } from "lucide-react";
+import { Table, LayoutGrid } from "lucide-react";
 import { useState } from "react";
 
 export default function StudentAttendance() {
@@ -33,7 +33,7 @@ export default function StudentAttendance() {
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/50'}`}
               >
-                <TableLayout size={18} />
+                <LayoutGrid size={18} />
               </button>
               <button 
                 onClick={() => setViewMode('table')}
