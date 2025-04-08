@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen } from "lucide-react";
+import { BookOpen, CircleCheck } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { calculateAverageProgress } from "@/components/lectures/utils/lectureUtils";
 
 export function LecturesCard() {
   const { user } = useAuth();
@@ -64,6 +65,9 @@ export function LecturesCard() {
     navigate("/student/lectures");
   };
 
+  // Calculate overall average progress
+  const averageProgress = calculateAverageProgress(lectures || []);
+
   // Calculate progress percentage based on completed topics
   const calculateProgress = (lecture: any) => {
     if (!lecture.classes_topics || lecture.classes_topics.length === 0) {
@@ -77,10 +81,18 @@ export function LecturesCard() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-medium flex items-center">
-          <BookOpen className="mr-2 h-4 w-4 text-primary" />
-          My Lectures
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-base font-medium flex items-center">
+            <BookOpen className="mr-2 h-4 w-4 text-primary" />
+            My Lectures
+          </CardTitle>
+          {!isLoading && lectures && lectures.length > 0 && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <CircleCheck className={`mr-1 h-4 w-4 ${averageProgress === 100 ? "text-green-500" : "text-primary"}`} />
+              <span>{averageProgress}% completed</span>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -93,6 +105,15 @@ export function LecturesCard() {
           </div>
         ) : (
           <>
+            {/* Add overall progress bar at the top */}
+            <div className="mb-4">
+              <Progress 
+                value={averageProgress} 
+                className="h-2" 
+                indicatorClassName={averageProgress === 100 ? "bg-green-500" : undefined}
+              />
+            </div>
+            
             <div className="space-y-3">
               {displayedLectures?.map((lecture: any) => (
                 <div key={lecture.id} className="border-b pb-2 last:border-0 last:pb-0">

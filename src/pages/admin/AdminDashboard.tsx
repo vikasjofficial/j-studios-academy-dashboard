@@ -1,8 +1,10 @@
+
 import DashboardLayout from '@/components/dashboard-layout';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { StatsAccordion, StatsData } from '@/components/dashboard/stats-accordion';
 import { AttendanceCard } from '@/components/dashboard/attendance-card';
 import { ProgressChartCard } from '@/components/dashboard/progress-chart-card';
+import { AdminLecturesCard } from '@/components/dashboard/admin-lectures-card'; // Add this import
 import { Users, BookOpen, MessageSquare } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -286,6 +288,17 @@ export default function AdminDashboard() {
             textColor="text-white"
           />
         </div>
+        
+        {/* Add Lectures Card here */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <AdminLecturesCard />
+          <AttendanceCard
+            title="Overall Attendance"
+            percentage={88}
+            present={22}
+            total={25}
+          />
+        </div>
 
         {/* Performance Overview Cards with moving border animation */}
         <div className="grid gap-6 md:grid-cols-2">
@@ -433,12 +446,6 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <AttendanceCard
-            title="Overall Attendance"
-            percentage={88}
-            present={22}
-            total={25}
-          />
           <ProgressChartCard
             title="Student Progress"
             data={progressData}

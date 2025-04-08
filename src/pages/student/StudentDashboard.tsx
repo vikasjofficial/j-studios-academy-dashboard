@@ -88,6 +88,11 @@ export default function StudentDashboard() {
               </div>
             </div>
             
+            {/* Move LecturesCard to the top section for better visibility */}
+            <div className="w-full">
+              <LecturesCard />
+            </div>
+            
             {/* Semester Progress Charts */}
             <div className="w-full">
               <SemesterProgressChart />
@@ -100,9 +105,6 @@ export default function StudentDashboard() {
               </div>
               <div className="md:col-span-2">
                 <TasksCard />
-              </div>
-              <div className="md:col-span-3">
-                <LecturesCard />
               </div>
             </div>
           </div>
