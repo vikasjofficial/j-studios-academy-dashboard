@@ -16,6 +16,12 @@ export interface LectureTopic {
   completed: boolean;
 }
 
+// Add a minimal topic interface that can be used for progress calculation
+export interface MinimalTopic {
+  id: string;
+  completed: boolean;
+}
+
 export interface LectureFile {
   id: string;
   lecture_id: string;
@@ -35,7 +41,8 @@ export interface Lecture {
   updated_at?: string;
   topics?: LectureTopic[];
   files?: LectureFile[];
-  classes_topics?: LectureTopic[];
+  // Allow either full LectureTopic objects or minimal topics with just id and completed
+  classes_topics?: (LectureTopic | MinimalTopic)[];
   classes_folders?: {
     name: string;
   };
