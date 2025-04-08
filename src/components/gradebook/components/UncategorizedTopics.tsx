@@ -1,60 +1,43 @@
 
-import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
-} from "@/components/ui/collapsible";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Topic, Grade } from "../types";
 import { GradesList } from "./GradesList";
-import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { ListFilter } from "lucide-react";
 
 interface UncategorizedTopicsProps {
   topics: Topic[];
   getGrade: (topicId: string) => Grade | null;
   getScoreColor: (score: number) => string;
+  viewMode?: 'table' | 'grid';
 }
 
-export function UncategorizedTopics({ topics, getGrade, getScoreColor }: UncategorizedTopicsProps) {
-  const [isOpen, setIsOpen] = useState(true);
-  
-  if (!topics || topics.length === 0) return null;
-  
+export function UncategorizedTopics({ 
+  topics, 
+  getGrade, 
+  getScoreColor,
+  viewMode = 'grid' 
+}: UncategorizedTopicsProps) {
+  if (!topics || topics.length === 0) {
+    return null;
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.1 }}
-      className="w-full"
-    >
-      <Collapsible 
-        open={isOpen} 
-        onOpenChange={setIsOpen} 
-        className="w-full border rounded-md overflow-hidden shadow-sm"
-      >
-        <div className="bg-muted/30 p-3 border-b flex justify-between items-center cursor-pointer hover:bg-muted/40 transition-colors"
-            onClick={() => setIsOpen(!isOpen)}>
-          <h3 className="font-semibold text-primary-foreground">Uncategorized Topics</h3>
-          <CollapsibleTrigger className="hover:bg-muted/50 p-1 rounded transition-colors">
-            <motion.div
-              animate={{ rotate: isOpen ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDown className="h-4 w-4" />
-              <span className="sr-only">Toggle</span>
-            </motion.div>
-          </CollapsibleTrigger>
-        </div>
-        
-        <CollapsibleContent className="transition-all duration-300 ease-in-out">
-          <GradesList 
-            topics={topics} 
-            getGrade={getGrade} 
-            getScoreColor={getScoreColor} 
-          />
-        </CollapsibleContent>
-      </Collapsible>
-    </motion.div>
+    <Card className="overflow-hidden border border-border/40">
+      <CardHeader className="p-4 pb-2 bg-muted/10">
+        <CardTitle className="text-base flex items-center gap-2">
+          <ListFilter className="h-4 w-4 text-primary" />
+          <span>Uncategorized Topics</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-2">
+        <GradesList 
+          topics={topics} 
+          getGrade={getGrade} 
+          getScoreColor={getScoreColor}
+          viewMode={viewMode}
+        />
+      </CardContent>
+    </Card>
   );
 }

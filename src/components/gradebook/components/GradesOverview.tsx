@@ -21,6 +21,7 @@ interface GradesOverviewProps {
   calculateSemesterAverage: (semesterId: string) => string;
   calculateOverallAverage: () => string;
   isLoading: boolean;
+  viewMode?: 'table' | 'grid';
 }
 
 export function GradesOverview({
@@ -33,7 +34,8 @@ export function GradesOverview({
   getScoreColor,
   calculateSemesterAverage,
   calculateOverallAverage,
-  isLoading
+  isLoading,
+  viewMode = 'grid'
 }: GradesOverviewProps) {
   return (
     <motion.div
@@ -67,12 +69,14 @@ export function GradesOverview({
                 getGrade={getGrade} 
                 getScoreColor={getScoreColor}
                 calculateSemesterAverage={calculateSemesterAverage}
+                viewMode={viewMode}
               />
               
               <UncategorizedTopics 
                 topics={topicsWithoutSemester || []} 
                 getGrade={getGrade} 
                 getScoreColor={getScoreColor} 
+                viewMode={viewMode}
               />
               
               <div className={`${movingBorderStyles.movingBorderWrapper} rounded-md`}>

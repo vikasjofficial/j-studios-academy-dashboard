@@ -13,9 +13,10 @@ import { Grade } from "./types";
 
 interface StudentGradebookViewProps {
   courseId?: string;
+  viewMode?: 'table' | 'grid';
 }
 
-export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {}) {
+export function StudentGradebookView({ courseId, viewMode = 'grid' }: StudentGradebookViewProps) {
   const { user } = useAuth();
   const [selectedCourse, setSelectedCourse] = useState<string | null>(courseId || null);
   const [selectedNotesCourse, setSelectedNotesCourse] = useState<string | null>(courseId || null);
@@ -79,6 +80,7 @@ export function StudentGradebookView({ courseId }: StudentGradebookViewProps = {
         calculateSemesterAverage={getSemesterAverage}
         calculateOverallAverage={getOverallAverage}
         isLoading={isLoadingGrades || isLoadingSemesters}
+        viewMode={viewMode}
       />
 
       <TeacherNotes
