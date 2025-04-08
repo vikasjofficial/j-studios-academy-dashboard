@@ -205,8 +205,12 @@ export function SocialProfilesCard() {
                     variant="outline"
                     className={`w-full h-12 mb-1 ${profileExists ? 'border-green-500 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30' : 'border-muted-foreground/20'}`}
                   >
-                    {platform.icon}
-                    <span className="ml-2 hidden md:inline">{platform.name}</span>
+                    {React.cloneElement(platform.icon, { 
+                      className: profileExists ? 'text-black' : '' 
+                    })}
+                    <span className={`ml-2 hidden md:inline ${profileExists ? 'text-black' : ''}`}>
+                      {platform.name}
+                    </span>
                   </Button>
                   
                   {profileExists && (
