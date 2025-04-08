@@ -8,6 +8,8 @@ export function useStudentCourses(userId: string | undefined) {
     queryFn: async () => {
       if (!userId) return [];
       
+      console.log("Fetching enrolled courses for student:", userId);
+      
       const { data, error } = await supabase
         .from("enrollments")
         .select(`
@@ -17,7 +19,12 @@ export function useStudentCourses(userId: string | undefined) {
         .eq("student_id", userId)
         .eq("status", "active");
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching enrolled courses:", error);
+        throw error;
+      }
+      
+      console.log("Fetched enrolled courses:", data.length);
       
       return data.map(item => item.courses);
     },

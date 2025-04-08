@@ -97,6 +97,7 @@ export function TopicItem({
                           size="sm"
                           className={`h-8 w-8 p-0 ${topic.completed ? 'text-green-600 hover:text-green-700' : 'text-muted-foreground hover:text-foreground'}`}
                           onClick={() => onToggleCompletion(topic)}
+                          disabled={isStudent}
                         >
                           {topic.completed ? 
                             <CheckCircle className="h-5 w-5 fill-green-100" /> : 

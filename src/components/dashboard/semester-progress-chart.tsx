@@ -8,6 +8,7 @@ import { useAuth } from "@/context/auth-context";
 import { TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import cardStyles from '@/styles/card.module.css';
+import { useStudentCourses } from "@/hooks/use-student-courses";
 
 interface SemesterTopicData {
   semesterId: string;
@@ -24,30 +25,27 @@ interface SemesterTopicData {
 export function SemesterProgressChart() {
   const { user } = useAuth();
   const [semesterData, setSemesterData] = useState<SemesterTopicData[]>([]);
+  const { courses, isLoading: coursesLoading } = useStudentCourses(user?.id);
   
   // Fetch grades grouped by topic within semesters
   const { data: gradesData, isLoading } = useQuery({
-    queryKey: ["student-topic-grades", user?.id],
+    queryKey: ["student-topic-grades", user?.id, courses],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id || !courses || courses.length === 0) return [];
       
-      // First, get student's course
-      const { data: enrollments } = await supabase
-        .from("enrollments")
-        .select("course_id")
-        .eq("student_id", user.id)
-        .single();
+      console.log("Fetching semester progress for student:", user.id);
+      console.log("Enrolled courses:", courses);
       
-      if (!enrollments) return [];
+      // Get all course IDs
+      const courseIds = courses.map(course => course.id);
       
-      const courseId = enrollments.course_id;
-      
-      // Get all grades for this student in this course with topic info
-      const { data: grades } = await supabase
+      // Get all grades for this student across all enrolled courses
+      const { data: grades, error } = await supabase
         .from("grades")
         .select(`
           score,
           topic_id,
+          course_id,
           topics:topic_id (
             name,
             semester_id,
@@ -55,15 +53,26 @@ export function SemesterProgressChart() {
             semesters:semester_id (
               id,
               name,
-              start_date
+              start_date,
+              course_id
             )
           )
         `)
         .eq("student_id", user.id)
-        .eq("course_id", courseId)
+        .in("course_id", courseIds)
         .order("created_at", { ascending: true });
       
-      if (!grades || grades.length === 0) return [];
+      if (error) {
+        console.error("Error fetching grades for semester progress:", error);
+        return [];
+      }
+      
+      if (!grades || grades.length === 0) {
+        console.log("No grades found for student:", user.id);
+        return [];
+      }
+      
+      console.log("Fetched grades for semester progress:", grades.length);
       
       // Group grades by semester and topic
       const semesterTopics: Record<string, SemesterTopicData> = {};
@@ -99,16 +108,19 @@ export function SemesterProgressChart() {
       return Object.values(semesterTopics)
         .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!courses && courses.length > 0,
   });
   
   useEffect(() => {
     if (gradesData && gradesData.length > 0) {
       setSemesterData(gradesData);
+      console.log("Set semester data:", gradesData);
     }
   }, [gradesData]);
   
-  if (isLoading) {
+  const isLoading1 = isLoading || coursesLoading;
+  
+  if (isLoading1) {
     return (
       <Card className={cn("overflow-hidden backdrop-blur-md bg-card/80", cardStyles.card)}>
         <CardHeader className="p-4">
