@@ -4,7 +4,7 @@ import { Lecture } from "./types";
 import { calculateProgress } from "./utils/lectureUtils";
 
 interface LectureProgressProps {
-  lecture: Lecture;
+  lecture: Lecture | Partial<Lecture>;
 }
 
 export function LectureProgress({ lecture }: LectureProgressProps) {

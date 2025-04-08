@@ -1,16 +1,25 @@
 
-import { Lecture } from "../types";
+import { Lecture, LectureTopic } from "../types";
+
+// Define a minimal topic interface for progress calculation
+interface MinimalTopic {
+  id: string;
+  completed: boolean;
+}
 
 /**
  * Calculate progress percentage based on completed topics
  */
 export const calculateProgress = (lecture: Lecture | Partial<Lecture>) => {
+  // Check if classes_topics exists and is not empty
   if (!lecture.classes_topics || lecture.classes_topics.length === 0) {
     return 0;
   }
   
-  const completedTopics = lecture.classes_topics.filter(topic => topic.completed).length;
-  return Math.round((completedTopics / lecture.classes_topics.length) * 100);
+  // Using type assertion to handle both full LectureTopics and minimal topics
+  const topics = lecture.classes_topics as (LectureTopic | MinimalTopic)[];
+  const completedTopics = topics.filter(topic => topic.completed).length;
+  return Math.round((completedTopics / topics.length) * 100);
 };
 
 /**
