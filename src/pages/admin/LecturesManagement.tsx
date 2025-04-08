@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,6 +155,7 @@ export default function LecturesManagement() {
                 isLoading={lecturesLoading}
                 onSelectLecture={handleLectureSelect}
                 onLectureDeleted={refetchLectures}
+                folderName={selectedFolder.name}
               />
             </div>
           )}

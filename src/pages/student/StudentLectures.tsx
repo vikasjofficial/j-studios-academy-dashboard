@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,6 +95,7 @@ export default function StudentLectures() {
                 onSelectLecture={handleLectureSelect}
                 viewOnly={true}
                 showProgress={true}
+                folderName="My Lectures"
               />
             </TabsContent>
 
