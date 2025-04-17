@@ -34,14 +34,18 @@ export const fetchPlans = async (type?: 'music' | 'content'): Promise<Plan[]> =>
 
 export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> => {
   try {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get the current user session
+    const { data: sessionData } = await supabase.auth.getSession();
     
-    if (!user) {
-      console.error("No user found");
+    // Check if we have a valid session
+    if (!sessionData.session?.user) {
+      console.error("No authenticated session found");
       toast.error("You must be logged in to create a plan");
       return null;
     }
+
+    const userId = sessionData.session.user.id;
+    console.log("Creating plan with user ID:", userId);
 
     // Convert Date object to ISO string for Supabase
     const dateString = plan.date instanceof Date 
@@ -57,7 +61,7 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
         platform: plan.platform,
         type: plan.type,
         status: plan.status || 'planned',
-        user_id: user.id // Add the user_id
+        user_id: userId // Add the user_id from session
       })
       .select()
       .single();
@@ -82,14 +86,17 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
 
 export const updatePlan = async (plan: Plan): Promise<Plan | null> => {
   try {
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get the current user session
+    const { data: sessionData } = await supabase.auth.getSession();
     
-    if (!user) {
-      console.error("No user found");
+    // Check if we have a valid session
+    if (!sessionData.session?.user) {
+      console.error("No authenticated session found");
       toast.error("You must be logged in to update a plan");
       return null;
     }
+
+    const userId = sessionData.session.user.id;
 
     // Convert Date object to ISO string for Supabase
     const dateString = plan.date instanceof Date 
@@ -104,7 +111,7 @@ export const updatePlan = async (plan: Plan): Promise<Plan | null> => {
         date: dateString,
         platform: plan.platform,
         status: plan.status,
-        user_id: user.id // Ensure user_id is set for updates too
+        user_id: userId // Ensure user_id is set for updates too
       })
       .eq('id', plan.id)
       .select()
