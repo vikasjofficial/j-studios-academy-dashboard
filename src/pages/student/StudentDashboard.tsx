@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +17,8 @@ import { SocialProfilesCard } from "@/components/dashboard/social-profiles-card"
 import { Button } from "@/components/ui/button";
 // Remove Piano import
 // import { Piano } from "@/components/piano/Piano";
+import { useFeeData } from "@/components/dashboard/profile/use-fee-data";
+import { FeeReminderPopup } from "@/components/dashboard/profile/fee-reminder-popup";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -37,9 +40,15 @@ export default function StudentDashboard() {
     },
     enabled: !!user?.id,
   });
+  
+  // Get fee data
+  const { feeSummary } = useFeeData(user?.id);
 
   return (
     <DashboardLayout>
+      {/* Fee Reminder Popup */}
+      <FeeReminderPopup feeSummary={feeSummary} />
+      
       <div className="flex flex-col w-full">
         <div className="space-y-8 p-4 md:p-6 flex-1">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
