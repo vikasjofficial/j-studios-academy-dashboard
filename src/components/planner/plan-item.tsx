@@ -21,7 +21,8 @@ const PlanItem = ({ plan, compact = false, onUpdatePlan, onDeletePlan }: PlanIte
     });
   };
 
-  const typeIcon = plan.type === "music" ? Music : Megaphone;
+  // Get the appropriate icon component based on plan type
+  const TypeIcon = plan.type === "music" ? Music : Megaphone;
 
   if (compact) {
     return (
@@ -55,7 +56,7 @@ const PlanItem = ({ plan, compact = false, onUpdatePlan, onDeletePlan }: PlanIte
           </Tooltip>
         </TooltipProvider>
         
-        <typeIcon className="h-3 w-3 shrink-0" />
+        <TypeIcon className="h-3 w-3 shrink-0" />
         <span className="truncate">{plan.title}</span>
       </div>
     );
@@ -85,7 +86,7 @@ const PlanItem = ({ plan, compact = false, onUpdatePlan, onDeletePlan }: PlanIte
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <typeIcon className="h-4 w-4 shrink-0" />
+          <TypeIcon className="h-4 w-4 shrink-0" />
           <h3 className={cn(
             "font-medium",
             plan.status === "completed" && "line-through"
