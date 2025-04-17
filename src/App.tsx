@@ -28,6 +28,7 @@ import ExamSession from '@/pages/student/ExamSession';
 import ProtectedRoute from '@/components/protected-route';
 import DashboardLayout from '@/components/dashboard-layout';
 import VideoClassroomPage from '@/pages/video-classroom';
+import PlannerPage from '@/pages/planner/PlannerPage';
 import './App.css';
 
 // Create a new QueryClient instance
@@ -165,13 +166,20 @@ function App() {
                 </DashboardLayout>
               </ProtectedRoute>
             } />
-            {/* New Video Classroom Route for students */}
+            {/* New Planner Route */}
+            <Route path="/student/planner" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <DashboardLayout>
+                  <PlannerPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            {/* Video Classroom and Exam Routes */}
             <Route path="/student/video-classroom" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <VideoClassroomPage />
               </ProtectedRoute>
             } />
-            {/* New Student Exam Routes */}
             <Route path="/student/exams" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentExams />
