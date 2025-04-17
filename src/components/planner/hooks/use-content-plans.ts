@@ -1,85 +1,64 @@
 
 import { useState, useEffect } from "react";
 import { Plan } from "../types";
-
-// Sample content plan data
-const sampleContentPlans: Plan[] = [
-  {
-    id: "1",
-    type: "content",
-    title: "FL Studio Tutorial Series",
-    description: "Part 1: Getting Started with FL Studio",
-    date: new Date(new Date().setDate(new Date().getDate() + 2)),
-    platform: "YouTube",
-    status: "planned",
-  },
-  {
-    id: "2",
-    type: "content",
-    title: "Behind the Scenes - Studio Session",
-    description: "Short video of the production process",
-    date: new Date(new Date().setDate(new Date().getDate() - 5)),
-    platform: "Instagram",
-    status: "completed",
-  },
-  {
-    id: "3",
-    type: "content",
-    title: "Music Production Tips Blog Post",
-    description: "5 Tips for Better Electronic Music Production",
-    date: new Date(new Date().setDate(new Date().getDate() + 7)),
-    platform: "Blog",
-    status: "planned",
-  },
-];
+import { fetchPlans, createPlan, updatePlan, deletePlan } from "../services/plans-service";
+import { useAuth } from "@/context/auth-context";
 
 export const useContentPlans = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Simulate loading data from an API
-    const loadPlans = () => {
-      setTimeout(() => {
-        const storedPlans = localStorage.getItem("contentPlans");
-        if (storedPlans) {
-          setPlans(JSON.parse(storedPlans));
-        } else {
-          setPlans(sampleContentPlans);
-          localStorage.setItem("contentPlans", JSON.stringify(sampleContentPlans));
-        }
+    const loadPlans = async () => {
+      if (!user) {
         setIsLoading(false);
-      }, 500);
+        return;
+      }
+      
+      setIsLoading(true);
+      const loadedPlans = await fetchPlans('content');
+      setPlans(loadedPlans);
+      setIsLoading(false);
     };
 
     loadPlans();
-  }, []);
+  }, [user]);
 
-  const addPlan = (plan: Plan) => {
-    const newPlans = [...plans, plan];
-    setPlans(newPlans);
-    localStorage.setItem("contentPlans", JSON.stringify(newPlans));
+  const addPlan = async (plan: Omit<Plan, 'id'>) => {
+    const newPlan = await createPlan({
+      ...plan,
+      type: 'content'
+    });
+    
+    if (newPlan) {
+      setPlans(prev => [...prev, newPlan]);
+    }
   };
 
-  const updatePlan = (updatedPlan: Plan) => {
-    const newPlans = plans.map(plan => 
-      plan.id === updatedPlan.id ? updatedPlan : plan
-    );
-    setPlans(newPlans);
-    localStorage.setItem("contentPlans", JSON.stringify(newPlans));
+  const handleUpdatePlan = async (updatedPlan: Plan) => {
+    const result = await updatePlan(updatedPlan);
+    
+    if (result) {
+      setPlans(prev => 
+        prev.map(plan => plan.id === updatedPlan.id ? result : plan)
+      );
+    }
   };
 
-  const deletePlan = (id: string) => {
-    const newPlans = plans.filter(plan => plan.id !== id);
-    setPlans(newPlans);
-    localStorage.setItem("contentPlans", JSON.stringify(newPlans));
+  const handleDeletePlan = async (id: string) => {
+    const success = await deletePlan(id);
+    
+    if (success) {
+      setPlans(prev => prev.filter(plan => plan.id !== id));
+    }
   };
 
   return {
     plans,
     isLoading,
     addPlan,
-    updatePlan,
-    deletePlan,
+    updatePlan: handleUpdatePlan,
+    deletePlan: handleDeletePlan,
   };
 };

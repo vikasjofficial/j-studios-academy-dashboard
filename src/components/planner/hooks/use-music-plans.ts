@@ -1,84 +1,64 @@
 
 import { useState, useEffect } from "react";
 import { Plan } from "../types";
-
-// Sample music plan data
-const sampleMusicPlans: Plan[] = [
-  {
-    id: "1",
-    type: "music",
-    title: "Release New Single 'Midnight Dreams'",
-    description: "Electronic/Dance track produced with FL Studio",
-    date: new Date(new Date().setDate(new Date().getDate() + 5)),
-    platform: "Spotify",
-    status: "planned",
-  },
-  {
-    id: "2",
-    type: "music",
-    title: "EP Pre-save Campaign",
-    description: "Create pre-save links and promote on social media",
-    date: new Date(new Date().setDate(new Date().getDate() - 2)),
-    platform: "All Platforms",
-    status: "completed",
-  },
-  {
-    id: "3",
-    type: "music",
-    title: "Studio Session - Vocal Recording",
-    description: "Record vocal tracks for upcoming EP",
-    date: new Date(new Date().setDate(new Date().getDate() + 10)),
-    status: "planned",
-  },
-];
+import { fetchPlans, createPlan, updatePlan, deletePlan } from "../services/plans-service";
+import { useAuth } from "@/context/auth-context";
 
 export const useMusicPlans = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Simulate loading data from an API
-    const loadPlans = () => {
-      setTimeout(() => {
-        const storedPlans = localStorage.getItem("musicPlans");
-        if (storedPlans) {
-          setPlans(JSON.parse(storedPlans));
-        } else {
-          setPlans(sampleMusicPlans);
-          localStorage.setItem("musicPlans", JSON.stringify(sampleMusicPlans));
-        }
+    const loadPlans = async () => {
+      if (!user) {
         setIsLoading(false);
-      }, 500);
+        return;
+      }
+      
+      setIsLoading(true);
+      const loadedPlans = await fetchPlans('music');
+      setPlans(loadedPlans);
+      setIsLoading(false);
     };
 
     loadPlans();
-  }, []);
+  }, [user]);
 
-  const addPlan = (plan: Plan) => {
-    const newPlans = [...plans, plan];
-    setPlans(newPlans);
-    localStorage.setItem("musicPlans", JSON.stringify(newPlans));
+  const addPlan = async (plan: Omit<Plan, 'id'>) => {
+    const newPlan = await createPlan({
+      ...plan,
+      type: 'music'
+    });
+    
+    if (newPlan) {
+      setPlans(prev => [...prev, newPlan]);
+    }
   };
 
-  const updatePlan = (updatedPlan: Plan) => {
-    const newPlans = plans.map(plan => 
-      plan.id === updatedPlan.id ? updatedPlan : plan
-    );
-    setPlans(newPlans);
-    localStorage.setItem("musicPlans", JSON.stringify(newPlans));
+  const handleUpdatePlan = async (updatedPlan: Plan) => {
+    const result = await updatePlan(updatedPlan);
+    
+    if (result) {
+      setPlans(prev => 
+        prev.map(plan => plan.id === updatedPlan.id ? result : plan)
+      );
+    }
   };
 
-  const deletePlan = (id: string) => {
-    const newPlans = plans.filter(plan => plan.id !== id);
-    setPlans(newPlans);
-    localStorage.setItem("musicPlans", JSON.stringify(newPlans));
+  const handleDeletePlan = async (id: string) => {
+    const success = await deletePlan(id);
+    
+    if (success) {
+      setPlans(prev => prev.filter(plan => plan.id !== id));
+    }
   };
 
   return {
     plans,
     isLoading,
     addPlan,
-    updatePlan,
-    deletePlan,
+    updatePlan: handleUpdatePlan,
+    deletePlan: handleDeletePlan,
   };
 };

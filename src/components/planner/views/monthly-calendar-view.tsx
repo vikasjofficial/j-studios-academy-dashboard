@@ -52,7 +52,8 @@ const MonthlyCalendarView = ({ plans, currentMonth, onUpdatePlan }: MonthlyCalen
         {/* Render each day of the month */}
         {monthDays.map(day => {
           const dayPlans = plans.filter(plan => {
-            const planDate = typeof plan.date === 'string' ? parseISO(plan.date) : plan.date;
+            // Handle both Date objects and ISO strings
+            const planDate = plan.date instanceof Date ? plan.date : new Date(plan.date);
             return isSameDay(planDate, day);
           });
           

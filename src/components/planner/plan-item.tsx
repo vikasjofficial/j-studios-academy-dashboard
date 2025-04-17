@@ -24,6 +24,19 @@ const PlanItem = ({ plan, compact = false, onUpdatePlan, onDeletePlan }: PlanIte
   // Get the appropriate icon component based on plan type
   const TypeIcon = plan.type === "music" ? Music : Megaphone;
 
+  // Make sure we handle both Date objects and string dates
+  const displayDate = () => {
+    if (!plan.date) return "";
+    
+    try {
+      const dateObj = plan.date instanceof Date ? plan.date : new Date(plan.date);
+      return format(dateObj, "PPP");
+    } catch (err) {
+      console.error("Error formatting date:", err);
+      return String(plan.date);
+    }
+  };
+
   if (compact) {
     return (
       <div 
@@ -98,9 +111,7 @@ const PlanItem = ({ plan, compact = false, onUpdatePlan, onDeletePlan }: PlanIte
         </div>
         
         <p className="text-sm text-slate-400 mt-1">
-          {typeof plan.date === 'string' 
-            ? format(new Date(plan.date), "PPP") 
-            : format(plan.date, "PPP")}
+          {displayDate()}
         </p>
         
         {plan.description && (

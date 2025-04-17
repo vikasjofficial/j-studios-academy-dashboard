@@ -16,6 +16,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { useMusicPlans } from "./hooks/use-music-plans";
 import { useContentPlans } from "./hooks/use-content-plans";
+import { toast } from "sonner";
+import { useAuth } from "@/context/auth-context";
 
 // Platforms for content creation
 const contentPlatforms = [
@@ -63,6 +65,7 @@ export interface CreatePlanDialogProps {
 export function CreatePlanDialog({ isOpen, onClose, type }: CreatePlanDialogProps) {
   const { addPlan: addMusicPlan } = useMusicPlans();
   const { addPlan: addContentPlan } = useContentPlans();
+  const { user } = useAuth();
   
   const form = useForm<z.infer<typeof planFormSchema>>({
     resolver: zodResolver(planFormSchema),
@@ -73,21 +76,25 @@ export function CreatePlanDialog({ isOpen, onClose, type }: CreatePlanDialogProp
     },
   });
   
-  const onSubmit = (values: z.infer<typeof planFormSchema>) => {
+  const onSubmit = async (values: z.infer<typeof planFormSchema>) => {
+    if (!user) {
+      toast.error("You must be logged in to create a plan");
+      return;
+    }
+
     const newPlan = {
-      id: Date.now().toString(),
-      type,
       title: values.title,
       description: values.description || "",
       date: values.date,
       platform: values.platform,
       status: "planned" as const,
+      type: type
     };
     
     if (type === "music") {
-      addMusicPlan(newPlan);
+      await addMusicPlan(newPlan);
     } else {
-      addContentPlan(newPlan);
+      await addContentPlan(newPlan);
     }
     
     form.reset();
