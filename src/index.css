@@ -52,39 +52,15 @@
     --scrollbar-thumb-hover: rgba(128, 128, 128, 0.7);
   }
  
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
- 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
- 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
- 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    
-    /* Dark theme scrollbar variables */
-    --scrollbar-track: rgba(0, 0, 0, 0.2);
-    --scrollbar-thumb: rgba(100, 100, 100, 0.6);
-    --scrollbar-thumb-hover: rgba(100, 100, 100, 0.8);
+  /* Set forced dark mode across the entire app */
+  html {
+    color-scheme: dark;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    background-color: hsl(220 20% 15%);
+    color: hsl(210 10% 90%);
   }
   
   /* Global scrollbar styling */
@@ -111,15 +87,7 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  }
-}
- 
-@layer base {
-  * {
     @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
@@ -134,5 +102,30 @@
   .bg-sidebar {
     background-color: hsl(var(--sidebar-background));
     color: hsl(var(--sidebar-foreground));
+  }
+  
+  /* New utility classes for consistent design system */
+  .bg-glass {
+    @apply bg-slate-800/60 backdrop-blur-lg border border-slate-700/30;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50;
+  }
+  
+  .interactive-hover {
+    @apply transition-all duration-200 hover:bg-slate-700/50;
+  }
+  
+  .button-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+  }
+  
+  .button-secondary {
+    @apply border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-br from-slate-100 to-slate-400 bg-clip-text text-transparent;
   }
 }

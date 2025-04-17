@@ -13,6 +13,7 @@
   overflow-x: hidden;
   display: flex;
   position: relative;
+  background-color: hsl(220 20% 15%);
 }
 
 /* Content container - ensures content stays properly contained within sidebar */
@@ -23,6 +24,7 @@
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  background-color: hsl(220 20% 15%);
 }
 
 /* Add a class for the sidebar inset content to control its positioning */
@@ -39,6 +41,40 @@
   position: relative;
   transition: padding-left 0.3s ease, margin-left 0.3s ease;
   min-height: 100vh;
+  background-color: hsl(220 20% 15%);
+}
+
+/* Header styling */
+.appHeader {
+  background-color: hsl(220 20% 17%);
+  border-bottom: 1px solid hsl(215 20% 30% / 0.4);
+  padding: 1rem;
+}
+
+/* Main navigation items */
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  background-color: hsl(220 20% 23%);
+}
+
+.navItem.active {
+  background-color: hsl(210 100% 55% / 0.15);
+  color: hsl(210 100% 55%);
+}
+
+/* Card layout utilities */
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 /* Table adjustments for proper width */
@@ -78,19 +114,6 @@ main > .space-y-8 {
 
 .customScrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(128, 128, 128, 0.7);
-}
-
-/* Dark theme variant for scrollbars */
-.darkScrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.darkScrollbar::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.6);
-}
-
-.darkScrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.8);
 }
 
 /* Responsive adjustments for small screens */
