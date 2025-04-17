@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Clock } from "lucide-react";
+import { AlertTriangle, Clock, Calendar } from "lucide-react";
+import { format } from 'date-fns';
 
 interface FeeReminderPopupProps {
   feeSummary: {
@@ -86,6 +87,12 @@ export function FeeReminderPopup({ feeSummary }: FeeReminderPopupProps) {
     }).format(amount);
   };
   
+  // Format date
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return format(new Date(dateString), 'dd MMM, yyyy');
+  };
+  
   const overdueAmount = feeSummary.overdueFees 
     ? feeSummary.overdueFees.reduce((sum, fee) => sum + Number(fee.amount), 0)
     : 0;
@@ -148,6 +155,27 @@ export function FeeReminderPopup({ feeSummary }: FeeReminderPopupProps) {
               <p className="text-base font-medium">
                 You have {feeSummary.overdueFees?.length} overdue payment{feeSummary.overdueFees && feeSummary.overdueFees.length > 1 ? 's' : ''} totaling {formatCurrency(overdueAmount)}.
               </p>
+              
+              {/* Add overdue payments list with due dates */}
+              {feeSummary.overdueFees && feeSummary.overdueFees.length > 0 && (
+                <div className="bg-red-50 border border-red-200 p-3 rounded space-y-2">
+                  <p className="text-sm font-medium text-red-800">Missed payment deadlines:</p>
+                  <ul className="space-y-2">
+                    {feeSummary.overdueFees.map((fee, index) => (
+                      <li key={index} className="flex items-center gap-2 text-sm text-red-700">
+                        <Calendar className="h-4 w-4 shrink-0" />
+                        <div>
+                          <span className="font-medium">{formatDate(fee.due_date)}</span>
+                          <span className="mx-1">-</span>
+                          <span>{fee.description}</span>
+                          <span className="ml-1 font-semibold">{formatCurrency(Number(fee.amount))}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <div className="bg-amber-50 border border-amber-200 p-3 rounded text-amber-800 text-sm">
                 <p>Please make the payment at your earliest convenience to avoid any interruption in your education. Continued non-payment may result in a temporary pause of your classes.</p>
               </div>
