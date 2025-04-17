@@ -65,7 +65,7 @@ export interface CreatePlanDialogProps {
 export function CreatePlanDialog({ isOpen, onClose, type }: CreatePlanDialogProps) {
   const { addPlan: addMusicPlan } = useMusicPlans();
   const { addPlan: addContentPlan } = useContentPlans();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   const form = useForm<z.infer<typeof planFormSchema>>({
     resolver: zodResolver(planFormSchema),
@@ -77,10 +77,12 @@ export function CreatePlanDialog({ isOpen, onClose, type }: CreatePlanDialogProp
   });
   
   const onSubmit = async (values: z.infer<typeof planFormSchema>) => {
-    if (!user) {
+    if (!isAuthenticated || !user) {
       toast.error("You must be logged in to create a plan");
       return;
     }
+
+    console.log("Creating plan as authenticated user:", user.id);
 
     const newPlan = {
       title: values.title,

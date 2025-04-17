@@ -34,17 +34,24 @@ export const fetchPlans = async (type?: 'music' | 'content'): Promise<Plan[]> =>
 
 export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> => {
   try {
-    // Get the current user session
-    const { data: sessionData } = await supabase.auth.getSession();
+    // Get the user directly from localStorage
+    const storedUser = localStorage.getItem('j-studios-user');
     
-    // Check if we have a valid session
-    if (!sessionData.session?.user) {
-      console.error("No authenticated session found");
+    if (!storedUser) {
+      console.error("No user found in localStorage");
       toast.error("You must be logged in to create a plan");
       return null;
     }
 
-    const userId = sessionData.session.user.id;
+    const user = JSON.parse(storedUser);
+    const userId = user.id;
+    
+    if (!userId) {
+      console.error("User ID not found in stored user data");
+      toast.error("User identification issue. Please log out and log in again.");
+      return null;
+    }
+
     console.log("Creating plan with user ID:", userId);
 
     // Convert Date object to ISO string for Supabase
@@ -61,7 +68,7 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
         platform: plan.platform,
         type: plan.type,
         status: plan.status || 'planned',
-        user_id: userId // Add the user_id from session
+        user_id: userId // Use the user ID from localStorage
       })
       .select()
       .single();
@@ -86,17 +93,17 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
 
 export const updatePlan = async (plan: Plan): Promise<Plan | null> => {
   try {
-    // Get the current user session
-    const { data: sessionData } = await supabase.auth.getSession();
+    // Get the user directly from localStorage for consistency
+    const storedUser = localStorage.getItem('j-studios-user');
     
-    // Check if we have a valid session
-    if (!sessionData.session?.user) {
-      console.error("No authenticated session found");
+    if (!storedUser) {
+      console.error("No user found in localStorage");
       toast.error("You must be logged in to update a plan");
       return null;
     }
 
-    const userId = sessionData.session.user.id;
+    const user = JSON.parse(storedUser);
+    const userId = user.id;
 
     // Convert Date object to ISO string for Supabase
     const dateString = plan.date instanceof Date 
