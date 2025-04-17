@@ -35,7 +35,7 @@ const ContentCreationPlanner = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-lg text-muted-foreground">Loading your content plans...</div>
+        <div className="animate-pulse text-lg text-slate-400">Loading your content plans...</div>
       </div>
     );
   }
@@ -44,34 +44,53 @@ const ContentCreationPlanner = () => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handlePrevMonth}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrevMonth}
+            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
+          >
             Previous
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleToday}
-            className="min-w-28"
+            className="min-w-28 border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Today
           </Button>
-          <Button variant="outline" size="sm" onClick={handleNextMonth}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleNextMonth}
+            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300"
+          >
             Next
           </Button>
         </div>
         
         <Tabs defaultValue="calendar" value={viewMode} onValueChange={(value) => setViewMode(value as any)} className="w-auto">
-          <TabsList className="grid grid-cols-3 h-8">
-            <TabsTrigger value="calendar" className="flex items-center gap-1 px-2 text-xs">
+          <TabsList className="grid grid-cols-3 h-8 bg-slate-800 border border-slate-700">
+            <TabsTrigger 
+              value="calendar" 
+              className="flex items-center gap-1 px-2 text-xs data-[state=active]:bg-indigo-700 data-[state=active]:text-white"
+            >
               <CalendarDays className="h-3 w-3" />
               <span className="hidden sm:inline">Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-1 px-2 text-xs">
+            <TabsTrigger 
+              value="list" 
+              className="flex items-center gap-1 px-2 text-xs data-[state=active]:bg-indigo-700 data-[state=active]:text-white"
+            >
               <ListMusic className="h-3 w-3" />
               <span className="hidden sm:inline">List</span>
             </TabsTrigger>
-            <TabsTrigger value="grid" className="flex items-center gap-1 px-2 text-xs">
+            <TabsTrigger 
+              value="grid" 
+              className="flex items-center gap-1 px-2 text-xs data-[state=active]:bg-indigo-700 data-[state=active]:text-white"
+            >
               <Grid3X3 className="h-3 w-3" />
               <span className="hidden sm:inline">Grid</span>
             </TabsTrigger>

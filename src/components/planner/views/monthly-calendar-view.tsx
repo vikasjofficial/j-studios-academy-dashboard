@@ -24,28 +24,28 @@ const MonthlyCalendarView = ({ plans, currentMonth, onUpdatePlan }: MonthlyCalen
   const dayHeaders = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-md shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-      <div className="text-center p-4 border-b border-slate-200 dark:border-slate-700 font-semibold text-lg bg-slate-50 dark:bg-slate-800">
+    <div className="bg-slate-800 dark:bg-slate-900 rounded-md shadow-sm border border-slate-700 dark:border-slate-700 overflow-hidden">
+      <div className="text-center p-4 border-b border-slate-700 dark:border-slate-700 font-semibold text-lg bg-slate-800 dark:bg-slate-800 text-white">
         {format(currentMonth, "MMMM yyyy")}
       </div>
       
-      <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700">
+      <div className="grid grid-cols-7 border-b border-slate-700 dark:border-slate-700">
         {dayHeaders.map((day, i) => (
           <div 
             key={i} 
-            className="py-2 text-center text-sm font-medium text-slate-600 dark:text-slate-400"
+            className="py-2 text-center text-sm font-medium text-slate-300 dark:text-slate-400"
           >
             {day}
           </div>
         ))}
       </div>
       
-      <div className="grid grid-cols-7 min-h-[600px]">
+      <div className="grid grid-cols-7 min-h-[650px]">
         {/* Add empty cells for days before the first day of the month */}
         {Array.from({ length: firstDayOfMonth }).map((_, index) => (
           <div 
             key={`empty-start-${index}`} 
-            className="border-r border-b border-slate-200 dark:border-slate-700 p-1 bg-slate-50/50 dark:bg-slate-900/50"
+            className="border-r border-b border-slate-700 dark:border-slate-700 p-1 bg-slate-850/50 dark:bg-slate-900/50"
           />
         ))}
         
@@ -60,28 +60,28 @@ const MonthlyCalendarView = ({ plans, currentMonth, onUpdatePlan }: MonthlyCalen
             <div 
               key={day.toString()} 
               className={cn(
-                "border-r border-b border-slate-200 dark:border-slate-700 p-1 min-h-24",
-                !isSameMonth(day, currentMonth) && "bg-slate-50/50 dark:bg-slate-900/50",
-                isToday(day) && "bg-blue-50/50 dark:bg-blue-900/10"
+                "border-r border-b border-slate-700 dark:border-slate-700 p-2 min-h-24",
+                !isSameMonth(day, currentMonth) && "bg-slate-850/50 dark:bg-slate-900/50",
+                isToday(day) && "bg-indigo-900/20 dark:bg-indigo-900/10"
               )}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between mb-1">
                 <div 
                   className={cn(
                     "h-6 w-6 text-center text-sm rounded-full flex items-center justify-center",
-                    isToday(day) && "bg-primary text-primary-foreground font-medium"
+                    isToday(day) && "bg-indigo-600 text-white font-medium"
                   )}
                 >
                   {format(day, "d")}
                 </div>
                 {dayPlans.length > 0 && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs bg-indigo-600/20 text-indigo-300 border-indigo-600/30">
                     {dayPlans.length}
                   </Badge>
                 )}
               </div>
               
-              <div className="mt-1 space-y-1 max-h-[100px] overflow-y-auto">
+              <div className="space-y-1 max-h-[120px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent pr-1">
                 {dayPlans.map(plan => (
                   <PlanItem 
                     key={plan.id} 
@@ -99,7 +99,7 @@ const MonthlyCalendarView = ({ plans, currentMonth, onUpdatePlan }: MonthlyCalen
         {Array.from({ length: (daysInWeek - ((firstDayOfMonth + monthDays.length) % daysInWeek)) % daysInWeek }).map((_, index) => (
           <div 
             key={`empty-end-${index}`} 
-            className="border-r border-b border-slate-200 dark:border-slate-700 p-1 bg-slate-50/50 dark:bg-slate-900/50"
+            className="border-r border-b border-slate-700 dark:border-slate-700 p-1 bg-slate-850/50 dark:bg-slate-900/50"
           />
         ))}
       </div>
