@@ -34,6 +34,15 @@ export const fetchPlans = async (type?: 'music' | 'content'): Promise<Plan[]> =>
 
 export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> => {
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("No user found");
+      toast.error("You must be logged in to create a plan");
+      return null;
+    }
+
     // Convert Date object to ISO string for Supabase
     const dateString = plan.date instanceof Date 
       ? plan.date.toISOString() 
@@ -47,7 +56,8 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
         date: dateString,
         platform: plan.platform,
         type: plan.type,
-        status: plan.status || 'planned'
+        status: plan.status || 'planned',
+        user_id: user.id // Add the user_id
       })
       .select()
       .single();
@@ -72,6 +82,15 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
 
 export const updatePlan = async (plan: Plan): Promise<Plan | null> => {
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error("No user found");
+      toast.error("You must be logged in to update a plan");
+      return null;
+    }
+
     // Convert Date object to ISO string for Supabase
     const dateString = plan.date instanceof Date 
       ? plan.date.toISOString() 
@@ -84,7 +103,8 @@ export const updatePlan = async (plan: Plan): Promise<Plan | null> => {
         description: plan.description || '',
         date: dateString,
         platform: plan.platform,
-        status: plan.status
+        status: plan.status,
+        user_id: user.id // Ensure user_id is set for updates too
       })
       .eq('id', plan.id)
       .select()
