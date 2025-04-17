@@ -34,12 +34,17 @@ export const fetchPlans = async (type?: 'music' | 'content'): Promise<Plan[]> =>
 
 export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> => {
   try {
+    // Convert Date object to ISO string for Supabase
+    const dateString = plan.date instanceof Date 
+      ? plan.date.toISOString() 
+      : String(plan.date);
+
     const { data, error } = await supabase
       .from('plans')
       .insert({
         title: plan.title,
         description: plan.description || '',
-        date: plan.date,
+        date: dateString,
         platform: plan.platform,
         type: plan.type,
         status: plan.status || 'planned'
@@ -67,12 +72,17 @@ export const createPlan = async (plan: Omit<Plan, 'id'>): Promise<Plan | null> =
 
 export const updatePlan = async (plan: Plan): Promise<Plan | null> => {
   try {
+    // Convert Date object to ISO string for Supabase
+    const dateString = plan.date instanceof Date 
+      ? plan.date.toISOString() 
+      : String(plan.date);
+
     const { data, error } = await supabase
       .from('plans')
       .update({
         title: plan.title,
         description: plan.description || '',
-        date: plan.date,
+        date: dateString,
         platform: plan.platform,
         status: plan.status
       })
