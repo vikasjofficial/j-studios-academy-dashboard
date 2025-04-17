@@ -20,8 +20,8 @@ const PlannerPage = () => {
 
   return (
     <div className="flex h-full">
-      {/* Empty left sidebar div */}
-      <div className="w-64 bg-gray-50 dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 p-4">
+      {/* Transparent left sidebar div */}
+      <div className="w-64 bg-transparent dark:bg-transparent border-r border-gray-200/20 dark:border-slate-700/20 p-4">
         {/* Placeholder for future sidebar content */}
       </div>
 
