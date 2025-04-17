@@ -98,8 +98,15 @@ export function FeeReminderPopup({ feeSummary }: FeeReminderPopupProps) {
   const handleRemindLater = () => {
     setOpen(false); // Hide the popup immediately
     setIsReminding(true);
-    setRemindCountdown(10);
+    setRemindCountdown(300); // Changed from 10 to 300 seconds (5 minutes)
     // The popup will reappear after the countdown finishes in the useEffect
+  };
+  
+  // Format time in minutes and seconds
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
   };
   
   return (
@@ -111,7 +118,7 @@ export function FeeReminderPopup({ feeSummary }: FeeReminderPopupProps) {
             <Clock className="h-5 w-5 text-amber-600" />
             <div>
               <p className="text-sm font-medium text-amber-800">Payment reminder in</p>
-              <p className="text-lg font-bold text-amber-600">{remindCountdown}s</p>
+              <p className="text-lg font-bold text-amber-600">{formatTime(remindCountdown)}</p>
             </div>
           </div>
         </div>
