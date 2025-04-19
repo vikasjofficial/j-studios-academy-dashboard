@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateTaskDialog } from "./create-task-dialog";
 import { AssignTaskDialog } from "./assign-task-dialog";
+import { BulkAssignTasksDialog } from "./bulk-assign-tasks-dialog";
 import { EditTaskStatusDialog } from "./edit-task-status-dialog";
 import { EditTaskDialog } from "./edit-task-dialog";
 import { UnassignTaskDialog } from "./unassign-task-dialog";
@@ -14,12 +15,12 @@ import { TaskFolders, TaskFolder } from "./task-folders";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { RenameFolderDialog } from "./rename-folder-dialog";
 import { DeleteFolderDialog } from "./delete-folder-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { 
   CheckCircle, Clock, CircleAlert, PencilLine, 
   UserPlus, Edit, Users, UserMinus, Folder, FolderOpen
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export type Task = {
   id: string;
@@ -56,6 +57,8 @@ export function TaskList() {
   const [taskAssignments, setTaskAssignments] = useState<StudentAssignment[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<TaskFolder | null>(null);
   const [folderToEdit, setFolderToEdit] = useState<TaskFolder | null>(null);
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [isBulkAssignDialogOpen, setIsBulkAssignDialogOpen] = useState(false);
 
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ["admin-tasks", selectedFolder?.id],
@@ -238,6 +241,38 @@ export function TaskList() {
     setIsMoveTaskDialogOpen(true);
   };
 
+  const toggleTaskSelection = (taskId: string) => {
+    const newSelected = new Set(selectedTasks);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    setSelectedTasks(newSelected);
+  };
+
+  const toggleAllTasks = () => {
+    if (tasks) {
+      if (selectedTasks.size === tasks.length) {
+        setSelectedTasks(new Set());
+      } else {
+        setSelectedTasks(new Set(tasks.map(t => t.id)));
+      }
+    }
+  };
+
+  const handleBulkAssign = () => {
+    if (selectedTasks.size === 0) {
+      toast.error("Please select at least one task");
+      return;
+    }
+    setIsBulkAssignDialogOpen(true);
+  };
+
+  useEffect(() => {
+    setSelectedTasks(new Set());
+  }, [selectedFolder]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-4">
       <div>
@@ -251,11 +286,19 @@ export function TaskList() {
       </div>
       
       <div>
-        <div className="flex justify-between mb-4">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">
             {selectedFolder ? `Tasks: ${selectedFolder.name}` : 'All Tasks'}
           </h2>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>Create New Task</Button>
+          <div className="flex gap-2">
+            {selectedTasks.size > 0 && (
+              <Button onClick={handleBulkAssign}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Assign {selectedTasks.size} Task{selectedTasks.size > 1 ? 's' : ''}
+              </Button>
+            )}
+            <Button onClick={() => setIsCreateDialogOpen(true)}>Create New Task</Button>
+          </div>
         </div>
         
         <Card>
@@ -275,6 +318,12 @@ export function TaskList() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[50px]">
+                      <Checkbox
+                        checked={tasks.length > 0 && selectedTasks.size === tasks.length}
+                        onCheckedChange={toggleAllTasks}
+                      />
+                    </TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Folder</TableHead>
                     <TableHead>Status</TableHead>
@@ -284,6 +333,12 @@ export function TaskList() {
                 <TableBody>
                   {tasks.map((task) => (
                     <TableRow key={task.id} className="h-12">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedTasks.has(task.id)}
+                          onCheckedChange={() => toggleTaskSelection(task.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{task.title}</TableCell>
                       <TableCell>
                         {task.folder_name ? (
@@ -495,6 +550,18 @@ export function TaskList() {
             />
           )}
         </>
+      )}
+      
+      {selectedTasks.size > 0 && (
+        <BulkAssignTasksDialog 
+          open={isBulkAssignDialogOpen}
+          onOpenChange={setIsBulkAssignDialogOpen}
+          selectedTasks={tasks?.filter(task => selectedTasks.has(task.id)) || []}
+          onTasksAssigned={() => {
+            setSelectedTasks(new Set());
+            toast.success("Tasks assigned successfully");
+          }}
+        />
       )}
     </div>
   );
