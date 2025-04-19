@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { CreateTaskDialog } from "./create-task-dialog";
 import { AssignTaskDialog } from "./assign-task-dialog";
 import { BulkAssignTasksDialog } from "./bulk-assign-tasks-dialog";
