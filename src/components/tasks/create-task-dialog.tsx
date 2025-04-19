@@ -134,14 +134,14 @@ export function CreateTaskDialog({
           <div className="space-y-2">
             <Label htmlFor="folder">Folder (Optional)</Label>
             <Select
-              value={folderId || ""}
-              onValueChange={(value) => setFolderId(value || null)}
+              value={folderId || "none"}
+              onValueChange={(value) => setFolderId(value === "none" ? null : value)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a folder" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {folders?.map((folder) => (
                   <SelectItem key={folder.id} value={folder.id}>
                     {folder.name}

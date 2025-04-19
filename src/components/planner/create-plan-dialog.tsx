@@ -73,6 +73,7 @@ export function CreatePlanDialog({ isOpen, onClose, type }: CreatePlanDialogProp
       title: "",
       description: "",
       date: new Date(),
+      platform: undefined,
     },
   });
   
