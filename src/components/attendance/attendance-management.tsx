@@ -65,18 +65,6 @@ export default function AttendanceManagement() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const { toast } = useToast();
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchStudents();
-    fetchCourses();
-    fetchAttendance();
-  }, []);
-  
-  // Fetch attendance summaries
-  useEffect(() => {
-    fetchAttendanceSummaries();
-  }, [students]);
-
   const fetchStudents = async () => {
     try {
       const { data, error } = await supabase
@@ -120,6 +108,18 @@ export default function AttendanceManagement() {
       });
     }
   };
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchStudents();
+    fetchCourses();
+    fetchAttendance();
+  }, []);
+  
+  // Fetch attendance summaries
+  useEffect(() => {
+    fetchAttendanceSummaries();
+  }, [students]);
 
   const fetchAttendance = async () => {
     setIsLoading(true);
