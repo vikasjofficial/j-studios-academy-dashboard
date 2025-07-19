@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Check, X, UserCheck, Calendar, Loader2, ChevronDown, ChevronUp, 
   CalendarDays, Users, BookCheck 
@@ -60,11 +61,14 @@ export default function AttendanceManagement() {
   const [isSaving, setIsSaving] = useState(false);
   const [summaries, setSummaries] = useState<StudentAttendanceSummary[]>([]);
   const [expandedStudents, setExpandedStudents] = useState<Record<string, boolean>>({});
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const { toast } = useToast();
 
   // Fetch initial data
   useEffect(() => {
     fetchStudents();
+    fetchCourses();
     fetchAttendance();
   }, []);
   
@@ -87,6 +91,31 @@ export default function AttendanceManagement() {
       toast({
         title: "Error",
         description: "Failed to load students",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('id, name, code')
+        .eq('status', 'active')
+        .order('name');
+        
+      if (error) throw error;
+      setCourses(data || []);
+      
+      // Set the first course as default if no course is selected
+      if (data && data.length > 0 && !selectedCourseId) {
+        setSelectedCourseId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load courses",
         variant: "destructive"
       });
     }
@@ -194,6 +223,15 @@ export default function AttendanceManagement() {
     absentCount: number, 
     note?: string
   ) => {
+    if (!selectedCourseId) {
+      toast({
+        title: "Error",
+        description: "Please select a course before saving attendance",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     
     try {
@@ -231,6 +269,7 @@ export default function AttendanceManagement() {
           .from('attendance_counts' as any)
           .insert({
             student_id: studentId,
+            course_id: selectedCourseId,
             present_count: presentCount,
             absent_count: absentCount,
             note: note || null,
@@ -371,6 +410,31 @@ export default function AttendanceManagement() {
         <h1 className="text-3xl font-bold tracking-tight">Attendance Management</h1>
         <p className="text-muted-foreground">Manage global student attendance records</p>
       </div>
+      
+      {courses.length > 0 && (
+        <Card className="mb-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Course Selection</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Course for Attendance</label>
+              <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.name} ({course.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="flex flex-col md:flex-row gap-4">
         <Card className="flex-1">
