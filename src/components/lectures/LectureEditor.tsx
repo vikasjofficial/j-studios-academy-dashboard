@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LectureTopicsList } from "./LectureTopicsList";
-import { LectureFileUploader } from "./LectureFileUploader";
+import { LectureLinkManager } from "./LectureLinkManager";
 import { StudentAssignmentManager } from "./StudentAssignmentManager";
 
 interface LectureEditorProps {
@@ -115,7 +115,7 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
             className={`rounded-md whitespace-nowrap ${activeTab === "files" ? "bg-gray-900 text-white" : "bg-transparent text-gray-400 hover:text-white"}`}
             onClick={() => setActiveTab("files")}
           >
-            Files
+            Resource Links
           </Button>
           <Button
             variant={activeTab === "assignments" ? "default" : "ghost"}
@@ -138,7 +138,7 @@ export function LectureEditor({ lecture, onLectureUpdated }: LectureEditorProps)
       
       {activeTab === "files" && (
         <div className="p-4 border rounded-md w-full overflow-x-auto">
-          <LectureFileUploader lecture={lecture} />
+          <LectureLinkManager lecture={lecture} />
         </div>
       )}
       
