@@ -323,60 +323,107 @@ export default function AttendanceManagement() {
       await saveAttendance(studentId, data.presentCount, data.absentCount, data.note);
     };
 
+    const adjustCount = (field: 'presentCount' | 'absentCount', delta: number) => {
+      const currentValue = form.getValues(field);
+      const newValue = Math.max(0, currentValue + delta);
+      form.setValue(field, newValue);
+    };
+
     return (
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between mb-1">
-              <FormLabel className="text-sm">Present: {form.watch('presentCount')}</FormLabel>
-              <span className="text-xs text-muted-foreground">
-                {form.watch('presentCount') + form.watch('absentCount')} total days
-              </span>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Present Count */}
+            <div className="space-y-2">
+              <FormLabel className="text-sm font-medium">Present Days</FormLabel>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustCount('presentCount', -1)}
+                  className="h-8 w-8 p-0"
+                >
+                  -
+                </Button>
+                <FormField
+                  control={form.control}
+                  name="presentCount"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          className="text-center h-8"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustCount('presentCount', 1)}
+                  className="h-8 w-8 p-0"
+                >
+                  +
+                </Button>
+              </div>
             </div>
-            <FormField
-              control={form.control}
-              name="presentCount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(vals) => field.onChange(vals[0])}
-                      className="mb-4"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+
+            {/* Absent Count */}
+            <div className="space-y-2">
+              <FormLabel className="text-sm font-medium">Absent Days</FormLabel>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustCount('absentCount', -1)}
+                  className="h-8 w-8 p-0"
+                >
+                  -
+                </Button>
+                <FormField
+                  control={form.control}
+                  name="absentCount"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          className="text-center h-8"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => adjustCount('absentCount', 1)}
+                  className="h-8 w-8 p-0"
+                >
+                  +
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Days Display */}
+          <div className="text-center text-sm text-muted-foreground">
+            Total: {form.watch('presentCount') + form.watch('absentCount')} days
           </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center justify-between mb-1">
-              <FormLabel className="text-sm">Absent: {form.watch('absentCount')}</FormLabel>
-            </div>
-            <FormField
-              control={form.control}
-              name="absentCount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(vals) => field.onChange(vals[0])}
-                      className="mb-4"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
-          
+          {/* Note Field */}
           <FormField
             control={form.control}
             name="note"
@@ -385,6 +432,7 @@ export default function AttendanceManagement() {
                 <FormControl>
                   <Input 
                     placeholder="Note (optional)" 
+                    className="h-8"
                     {...field} 
                   />
                 </FormControl>
@@ -392,11 +440,12 @@ export default function AttendanceManagement() {
             )}
           />
           
-          <Button type="submit" variant="outline" size="sm" className="w-full">
+          {/* Save Button */}
+          <Button type="submit" size="sm" className="w-full h-8">
             {form.formState.isSubmitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              "Save"
+              "Save Attendance"
             )}
           </Button>
         </form>
@@ -436,54 +485,42 @@ export default function AttendanceManagement() {
         </Card>
       )}
       
-      <div className="flex flex-col md:flex-row gap-4">
-        <Card className="flex-1">
+      <div className="max-w-4xl mx-auto">
+        <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <span>Global Attendance Records</span>
+              <UserCheck className="h-5 w-5 text-primary" />
+              <span>Student Attendance Records</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Card className="bg-card/50 backdrop-blur-sm border border-white/10 mb-6">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-primary" />
-                  <span>Student Attendance Counts</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
-                  </div>
-                ) : students.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No students found
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[500px] pr-4">
-                    <div className="space-y-4">
-                      {students.map((student) => (
-                        <Card key={student.id} className="bg-background/50">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col gap-4">
-                              <div>
-                                <h3 className="font-medium">{student.name}</h3>
-                                <p className="text-sm text-muted-foreground">{student.student_id} • {student.email}</p>
-                              </div>
-                              <div>
-                                <AttendanceForm studentId={student.id} />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin h-8 w-8 border-2 border-current border-t-transparent rounded-full"></div>
+              </div>
+            ) : students.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No students found
+              </div>
+            ) : (
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {students.map((student) => (
+                    <Card key={student.id} className="bg-background/50 border border-white/10">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="text-center">
+                            <h3 className="font-medium text-sm">{student.name}</h3>
+                            <p className="text-xs text-muted-foreground">{student.student_id}</p>
+                          </div>
+                          <AttendanceForm studentId={student.id} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </CardContent>
         </Card>
       </div>
