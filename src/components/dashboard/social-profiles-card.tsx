@@ -191,20 +191,20 @@ export function SocialProfilesCard() {
             <div className="h-5 w-5 border-2 border-[#F97316] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex flex-col gap-2">
             {platformButtons.map((platform) => {
               const profileExists = getProfileLink(platform.name);
               return (
-                <div key={platform.name} className="flex flex-col items-center">
+                <div key={platform.name} className="flex flex-col">
                   <Button
                     onClick={() => handleOpenDialog(platform.name)}
                     variant="outline"
-                    className={`w-full h-12 mb-1 ${profileExists ? 'border-green-500 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30' : 'border-muted-foreground/20'}`}
+                    className={`w-full h-10 justify-start ${profileExists ? 'border-green-500 bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30' : 'border-muted-foreground/20'}`}
                   >
                     {React.cloneElement(platform.icon, { 
-                      className: profileExists ? 'text-black' : '' 
+                      className: `${profileExists ? 'text-black' : ''} flex-shrink-0` 
                     })}
-                    <span className={`ml-2 hidden md:inline ${profileExists ? 'text-black' : ''}`}>
+                    <span className={`ml-2 text-sm truncate ${profileExists ? 'text-black' : ''}`}>
                       {platform.name}
                     </span>
                   </Button>
@@ -214,7 +214,7 @@ export function SocialProfilesCard() {
                       href={profileExists}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline truncate max-w-full"
+                      className="text-xs text-primary hover:underline truncate mt-1 pl-2"
                     >
                       View Profile
                     </a>
