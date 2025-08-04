@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, Folder } from "lucide-react";
+import { Pencil, Trash2, Folder, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LectureFolder } from "./types";
@@ -52,6 +52,120 @@ export function LecturesFoldersList({
     e.stopPropagation();
     setFolderToEdit(folder);
     setIsDeleteDialogOpen(true);
+  };
+
+  // Handle folder duplicate
+  const handleDuplicateClick = async (folder: LectureFolder, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      // Create new folder with "(Copy)" suffix
+      const { data: newFolder, error: folderError } = await supabase
+        .from("classes_folders")
+        .insert({ name: `${folder.name} (Copy)` })
+        .select()
+        .single();
+      
+      if (folderError) throw folderError;
+      
+      // Get all lectures in the original folder
+      const { data: lectures, error: lecturesError } = await supabase
+        .from("classes")
+        .select("*")
+        .eq("folder_id", folder.id);
+      
+      if (lecturesError) throw lecturesError;
+      
+      // Duplicate each lecture and its contents
+      for (const lecture of lectures || []) {
+        // Create new lecture
+        const { data: newLecture, error: lectureError } = await supabase
+          .from("classes")
+          .insert({
+            title: `${lecture.title} (Copy)`,
+            content: lecture.content,
+            folder_id: newFolder.id
+          })
+          .select()
+          .single();
+        
+        if (lectureError) throw lectureError;
+        
+        // Duplicate lecture topics
+        const { data: topics, error: topicsError } = await supabase
+          .from("classes_topics")
+          .select("*")
+          .eq("lecture_id", lecture.id);
+        
+        if (topicsError) throw topicsError;
+        
+        if (topics && topics.length > 0) {
+          const { error: insertTopicsError } = await supabase
+            .from("classes_topics")
+            .insert(
+              topics.map(topic => ({
+                name: topic.name,
+                lecture_id: newLecture.id,
+                order_position: topic.order_position,
+                completed: false // Reset completion status for copies
+              }))
+            );
+          
+          if (insertTopicsError) throw insertTopicsError;
+        }
+        
+        // Duplicate lecture files
+        const { data: files, error: filesError } = await supabase
+          .from("classes_files")
+          .select("*")
+          .eq("lecture_id", lecture.id);
+        
+        if (filesError) throw filesError;
+        
+        if (files && files.length > 0) {
+          const { error: insertFilesError } = await supabase
+            .from("classes_files")
+            .insert(
+              files.map(file => ({
+                file_name: file.file_name,
+                file_path: file.file_path,
+                file_type: file.file_type,
+                lecture_id: newLecture.id
+              }))
+            );
+          
+          if (insertFilesError) throw insertFilesError;
+        }
+        
+        // Duplicate lecture links
+        const { data: links, error: linksError } = await supabase
+          .from("lecture_links")
+          .select("*")
+          .eq("lecture_id", lecture.id);
+        
+        if (linksError) throw linksError;
+        
+        if (links && links.length > 0) {
+          const { error: insertLinksError } = await supabase
+            .from("lecture_links")
+            .insert(
+              links.map(link => ({
+                title: link.title,
+                url: link.url,
+                lecture_id: newLecture.id
+              }))
+            );
+          
+          if (insertLinksError) throw insertLinksError;
+        }
+      }
+      
+      toast.success("Folder duplicated successfully with all contents");
+      if (onFolderDeleted) onFolderDeleted(); // Refresh the folder list
+    } catch (error) {
+      console.error("Error duplicating folder:", error);
+      toast.error("Failed to duplicate folder");
+    }
   };
 
   // Save folder edit using classes_folders table
@@ -163,6 +277,15 @@ export function LecturesFoldersList({
                   >
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-primary"
+                    onClick={(e) => handleDuplicateClick(folder, e)}
+                  >
+                    <Copy className="h-4 w-4" />
+                    <span className="sr-only">Duplicate</span>
                   </Button>
                   <Button 
                     variant="ghost" 
