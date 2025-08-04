@@ -104,30 +104,29 @@ export default function StudentDashboard() {
               <StudentProfileCard />
             </div>
             
-            {/* Add Social Profiles Card above Tasks Card */}
-            <div className="w-full">
-              <SocialProfilesCard />
-            </div>
-            
-            {/* Tasks Card */}
-            <div className="w-full">
-              <TasksCard />
-            </div>
-            
-            {/* Top row with attendance summary and semester progress */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-1">
+            {/* Compact horizontal layout for main cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[400px]">
+              <div className="h-full">
+                <SocialProfilesCard />
+              </div>
+              
+              <div className="h-full">
+                <TasksCard />
+              </div>
+              
+              <div className="h-full">
                 <AttendanceSummaryWidget />
               </div>
-              <div className="md:col-span-1">
-                <Card>
+              
+              <div className="h-full">
+                <Card className="h-full flex flex-col">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg font-medium flex items-center">
                       <GraduationCap className="mr-2 h-5 w-5 text-primary" />
                       Academic Progress
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pb-4">
+                  <CardContent className="pb-4 flex-1">
                     <div className="space-y-4">
                       <div>
                         <div className="flex items-center justify-between">
