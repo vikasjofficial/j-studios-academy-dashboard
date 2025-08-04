@@ -79,8 +79,8 @@ export function LecturesCard() {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex justify-between items-center">
           <CardTitle className="text-base font-medium flex items-center">
             <BookOpen className="mr-2 h-4 w-4 text-primary" />
@@ -89,12 +89,12 @@ export function LecturesCard() {
           {!isLoading && lectures && lectures.length > 0 && (
             <div className="flex items-center text-sm text-muted-foreground">
               <CircleCheck className={`mr-1 h-4 w-4 ${averageProgress === 100 ? "text-green-500" : "text-primary"}`} />
-              <span>{averageProgress}% completed</span>
+              <span>{averageProgress}%</span>
             </div>
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center py-6">
             <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -105,8 +105,8 @@ export function LecturesCard() {
           </div>
         ) : (
           <>
-            {/* Add overall progress bar at the top */}
-            <div className="mb-4">
+            {/* Overall progress bar */}
+            <div className="mb-4 flex-shrink-0">
               <Progress 
                 value={averageProgress} 
                 className="h-2" 
@@ -114,18 +114,18 @@ export function LecturesCard() {
               />
             </div>
             
-            <div className="space-y-3">
-              {displayedLectures?.map((lecture: any) => (
+            <div className="space-y-3 flex-1 overflow-y-auto">
+              {displayedLectures?.slice(0, 4).map((lecture: any) => (
                 <div key={lecture.id} className="border-b pb-2 last:border-0 last:pb-0">
                   <div className="flex justify-between items-center mb-1">
-                    <div className="font-medium">{lecture.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {format(new Date(lecture.created_at), "MMM d, yyyy")}
+                    <div className="font-medium text-sm truncate">{lecture.title}</div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                      {format(new Date(lecture.created_at), "MMM d")}
                     </div>
                   </div>
                   
-                  <div className="text-sm text-muted-foreground mb-1">
-                    Folder: {lecture.classes_folders.name}
+                  <div className="text-xs text-muted-foreground mb-1 truncate">
+                    {lecture.classes_folders.name}
                   </div>
                   
                   {lecture.classes_topics && lecture.classes_topics.length > 0 && (
@@ -136,7 +136,7 @@ export function LecturesCard() {
                       </div>
                       <Progress 
                         value={calculateProgress(lecture)} 
-                        className="h-2" 
+                        className="h-1" 
                         indicatorClassName={calculateProgress(lecture) === 100 ? "bg-green-500" : undefined}
                       />
                     </div>
@@ -145,18 +145,9 @@ export function LecturesCard() {
               ))}
             </div>
             
-            <div className="flex justify-between items-center mt-4">
-              {lectures && lectures.length > 3 && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowAll(!showAll)}
-                >
-                  {showAll ? "Show Less" : `Show All (${lectures.length})`}
-                </Button>
-              )}
-              <Button size="sm" onClick={navigateToLectures}>
-                View All Lectures
+            <div className="flex-shrink-0 mt-4">
+              <Button size="sm" onClick={navigateToLectures} className="w-full">
+                View All
               </Button>
             </div>
           </>
